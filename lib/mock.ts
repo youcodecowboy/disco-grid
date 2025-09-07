@@ -52,6 +52,24 @@ export function mockSeries(blockId = "default", days = 7, seriesCount = 1) {
   }))
 }
 
+export function mockKPI(blockId = "default", label = "Value") {
+  const rnd = seedRandom(blockId + label)
+  const sign = rnd() > 0.5 ? 1 : -1
+  const deltaAbs = (rnd() * 5).toFixed(1)
+  const base = Math.floor(rnd() * 5000 + 20)
+  const trend = Array.from({ length: 7 }, () => Math.floor(rnd() * 30 + 5))
+  return {
+    value: base.toLocaleString(),
+    delta: `${sign > 0 ? "+" : "-"}${deltaAbs}%`,
+    trend
+  }
+}
+
+export function mockSlices(blockId = "default", labels: string[] = ["A", "B", "C", "D"]) {
+  const rnd = seedRandom(blockId)
+  return labels.map(l => ({ label: l, value: Math.floor(rnd() * 40 + 10) }))
+}
+
 export function mockDonut(blockId = "default") {
   const random = seedRandom(blockId)
   const labels = ["Desktop", "Mobile", "Tablet", "Other"]
@@ -180,41 +198,72 @@ export function defaultPropsForType(type: string, blockId = "default"): Record<s
   switch (type) {
     case "table.orders":
       return { orders: mockOrders(blockId) }
-    case "table.generic":
+    case "table.malleable":
       return {
-        data: Array.from({ length: 8 }, (_, i) => ({
-          name: `Item ${i + 1}`,
-          value: `Value ${i + 1}`,
-          updated: new Date(Date.now() - i * 86400000).toLocaleDateString(),
-        })),
+        columns: [
+          { id: "name", name: "Task Name", type: "text", width: 200 },
+          { id: "status", name: "Status", type: "status", width: 120 },
+          { id: "priority", name: "Priority", type: "select", width: 100, options: ["Low", "Medium", "High"] },
+          { id: "dueDate", name: "Due Date", type: "date", width: 120 },
+          { id: "progress", name: "Progress", type: "number", width: 100 }
+        ],
+        data: [
+          { id: "1", name: "Design Review", status: "active", priority: "High", dueDate: "2024-12-25", progress: 75 },
+          { id: "2", name: "Material Sourcing", status: "pending", priority: "Medium", dueDate: "2024-12-28", progress: 45 },
+          { id: "3", name: "Quality Testing", status: "completed", priority: "High", dueDate: "2024-12-22", progress: 100 }
+        ]
       }
-    case "metric.kpi":
-      const random = seedRandom(blockId)
+    case "calendar":
       return {
-        value: `$${(random() * 10000 + 1000).toFixed(0)}`,
-        delta: `${random() > 0.5 ? "+" : "-"}${(random() * 20).toFixed(1)}%`,
-        trend: Array.from({ length: 7 }, () => random() * 100),
+        events: [
+          { id: "1", title: "Team Meeting", date: new Date(2024, 11, 20), type: "meeting", description: "Weekly sync" },
+          { id: "2", title: "Product Launch", date: new Date(2024, 11, 25), type: "deadline", description: "Final prep" },
+          { id: "3", title: "Quality Review", date: new Date(2024, 11, 22), type: "task", description: "Review batch" }
+        ]
       }
-    case "chart.line":
-      return { series: mockSeries(blockId, 7, 1) }
-    case "chart.bar":
-      return { series: mockSeries(blockId, 5, 2) }
     case "chart.area":
-      return { series: mockSeries(blockId, 7, 1) }
+      return { series: mockSeries(blockId, 14, 1) }
+    case "chart.line":
+      const ls = mockSeries(blockId, 10, 1)[0]
+      return { data: ls.points.map(p => ({ name: p.x.slice(5), value: p.y })) }
+    case "chart.bar":
+      return { series: mockSeries(blockId, 8, 2) }
     case "chart.donut":
-      return { slices: mockDonut(blockId) }
+      return { slices: mockSlices(blockId, ["A", "B", "C", "D"]) }
+    case "chart.scatter":
+      return {
+        points: Array.from({ length: 20 }, (_, i) => ({ x: i * 5 + 10, y: 60 + (i % 5) * 5 })),
+        xAxis: { label: "Workload", min: 0, max: 100 },
+        yAxis: { label: "Performance", min: 0, max: 100 },
+        categories: ["Engineering", "Design", "Product"]
+      }
+    case "chart.area.interactive":
+      return {} // Chart data is handled internally
     case "activity.timeline":
       return { events: mockActivity(blockId) }
-    case "messages.preview":
-      return { messages: mockMessages(blockId) }
-    case "commands.quick":
+    case "metric":
+      const random = seedRandom(blockId)
       return {
-        commands: ["Create Order", "Add Note", "Generate Report", "Export CSV", "Send Email", "Update Status"],
+        value: `${(random() * 20 + 80).toFixed(1)}%`,
+        delta: `${random() > 0.5 ? "+" : "-"}${(random() * 5).toFixed(1)}% vs last week`
       }
-    case "kanban.simple":
-      return mockKanban(blockId)
-    case "calendar.mini":
-      return mockCalendar(blockId)
+    case "note":
+      return {
+        body: `# Welcome to Your Dashboard! 🚀
+
+**Groovy** is your AI-powered workspace where you can create, customize, and organize everything exactly how you want it.
+
+## ✨ What You Can Do:
+- **🎯 Drag & Drop** - Move any component anywhere
+- **📏 Resize** - Click and drag the blue handles
+- **🎨 Customize** - Click the edit button to change colors, data, and more
+- **🤖 AI Assistant** - Click the robot button to create new components
+- **➕ Add More** - Click the expand button to add extensions
+
+*This is YOUR workspace - make it perfect for you!* ✨`
+      }
+    case "metric.kpi":
+      return mockKPI(blockId, "KPI")
     default:
       return {}
   }
@@ -222,18 +271,19 @@ export function defaultPropsForType(type: string, blockId = "default"): Record<s
 
 export function defaultTitleForType(type: string): string {
   const titles: Record<string, string> = {
-    "table.orders": "Recent Orders",
-    "table.generic": "Data Table",
-    "metric.kpi": "KPI Metric",
+    "table.orders": "Production Table",
+    "table.malleable": "Table",
+    "calendar": "Calendar",
+    "chart.area.interactive": "Area Chart",
+    "chart.area": "Area Chart",
     "chart.line": "Line Chart",
     "chart.bar": "Bar Chart",
-    "chart.area": "Area Chart",
-    "chart.donut": "Breakdown",
-    "activity.timeline": "Recent Activity",
-    "messages.preview": "Messages",
-    "commands.quick": "Quick Actions",
-    "kanban.simple": "Task Board",
-    "calendar.mini": "Calendar",
+    "chart.donut": "Donut Chart",
+    "chart.scatter": "Scatter Plot",
+    "activity.timeline": "Activity Timeline",
+    "metric": "Metric",
+    "metric.kpi": "KPI",
+    "note": "Note",
   }
 
   return titles[type] || "New Block"

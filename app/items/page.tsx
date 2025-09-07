@@ -22,6 +22,8 @@ import MessagesPreview from "@/components/blocks/MessagesPreview"
 import CommandsQuick from "@/components/blocks/CommandsQuick"
 import KanbanSimple from "@/components/blocks/KanbanSimple"
 import CalendarMini from "@/components/blocks/CalendarMini"
+import { FilterItems } from "@/components/blocks/FilterItems"
+import { MetricChart } from "@/components/blocks/MetricChart"
 import Sidebar from "@/components/Sidebar"
 
 const SearchIcon = ({ className }: { className?: string }) => (
@@ -188,18 +190,12 @@ type BlockType =
   | "table"
   | "note"
   | "metric"
+  | "metric.chart"
   | "table.orders"
-  | "table.generic"
-  | "metric.kpi"
-  | "chart.line"
-  | "chart.bar"
-  | "chart.area"
-  | "chart.donut"
+  | "table.malleable"
+  | "chart.area.interactive"
   | "activity.timeline"
-  | "messages.preview"
-  | "commands.quick"
-  | "kanban.simple"
-  | "calendar.mini"
+  | "filter.items"
 
 type Block = {
   id: string
@@ -276,189 +272,144 @@ const NotificationIcon = () => (
 const initialState: DashboardState = {
   mode: "edit",
   layout: [
-    { x: 0, y: 0, w: 6, h: 3, i: "production-metrics" }, // Compact production metrics
-    { x: 6, y: 0, w: 6, h: 12, i: "welcome-groovy" }, // Welcome section
-    { x: 0, y: 3, w: 6, h: 6, i: "production-table" }, // Production items table
-    { x: 0, y: 9, w: 6, h: 4, i: "efficiency-metric" }, // Efficiency metric - more height
-    { x: 0, y: 13, w: 6, h: 8, i: "production-chart" }, // Production chart - positioned after efficiency
-    { x: 0, y: 21, w: 6, h: 6, i: "recent-activity" }, // Recent activity - pushed down
-    { x: 6, y: 12, w: 6, h: 14, i: "new-block" }, // AI block
-    { x: 0, y: 27, w: 12, h: 10, i: "analytics-chart" }, // Beautiful interactive area chart at bottom
-    { x: 0, y: 37, w: 8, h: 12, i: "malleable-table" }, // Malleable table component
-    { x: 8, y: 37, w: 4, h: 12, i: "calendar-block" }, // Calendar component
+    { x: 0, y: 0, w: 3, h: 4, i: "total-items" },
+    { x: 3, y: 0, w: 3, h: 4, i: "categories" },
+    { x: 6, y: 0, w: 3, h: 4, i: "low-stock" },
+    { x: 9, y: 0, w: 3, h: 4, i: "total-value" },
+    { x: 0, y: 4, w: 12, h: 8, i: "items-table" },
+    { x: 0, y: 12, w: 3, h: 6, i: "welcome-items" },
+    { x: 0, y: 18, w: 12, h: 6, i: "items-analytics" },
   ],
   blocks: {
-    "production-metrics": {
-      id: "production-metrics",
-      type: "metric",
-      title: "Production Pipeline",
+    "total-items": {
+      id: "total-items",
+      type: "metric.chart",
+      title: "Total Items",
       props: {
-        stages: [
-          { name: "Planning", count: 24, icon: "planning" },
-          { name: "Cutting", count: 18, icon: "cutting" },
-          { name: "Sewing", count: 32, icon: "sewing" },
-          { name: "Finishing", count: 15, icon: "finishing" },
-          { name: "Packing", count: 8, icon: "packing" },
-        ],
+        value: "1,247",
+        trend: "+12% vs last month",
+        trendDirection: "up",
+        description: "Growing inventory base"
       },
     },
-    "welcome-groovy": {
-      id: "welcome-groovy",
-      type: "note",
-      title: "🎉 Welcome to Groovy!",
+    "categories": {
+      id: "categories",
+      type: "metric.chart",
+      title: "Categories",
       props: {
-        body: `# Welcome to Your New Dashboard! 🚀
+        value: "89",
+        trend: "+3 new",
+        trendDirection: "up",
+        description: "Expanding product range"
+      },
+    },
+    "low-stock": {
+      id: "low-stock",
+      type: "metric.chart",
+      title: "Low Stock",
+      props: {
+        value: "23",
+        trend: "-5 items",
+        trendDirection: "down",
+        description: "Improving stock levels"
+      },
+    },
+    "total-value": {
+      id: "total-value",
+      type: "metric.chart",
+      title: "Total Value",
+      props: {
+        value: "$45.2K",
+        trend: "+8.5%",
+        trendDirection: "up",
+        description: "Strong value growth"
+      },
+    },
 
-**Groovy** is your AI-powered workspace where you can create, customize, and organize everything exactly how you want it.
+    "items-table": {
+      id: "items-table",
+      type: "table.malleable",
+      title: "Inventory Items",
+      props: {
+        columns: [
+          { id: "name", name: "Item Name", type: "text", width: 200 },
+          { id: "sku", name: "SKU", type: "text", width: 120 },
+          { id: "category", name: "Category", type: "select", width: 120, options: ["Clothing", "Accessories", "Footwear", "Electronics", "Home & Garden"] },
+          { id: "stock", name: "Stock Level", type: "number", width: 100 },
+          { id: "price", name: "Price", type: "number", width: 100 },
+          { id: "status", name: "Status", type: "status", width: 100 },
+          { id: "lastUpdated", name: "Last Updated", type: "date", width: 120 }
+        ],
+        data: [
+          { id: "1", name: "Denim Jeans", sku: "DJ-001", category: "Clothing", stock: 156, price: 89.99, status: "active", lastUpdated: "2024-12-19" },
+          { id: "2", name: "Cotton T-Shirt", sku: "CT-002", category: "Clothing", stock: 89, price: 24.99, status: "active", lastUpdated: "2024-12-18" },
+          { id: "3", name: "Leather Belt", sku: "LB-003", category: "Accessories", stock: 12, price: 45.00, status: "pending", lastUpdated: "2024-12-17" },
+          { id: "4", name: "Sneakers", sku: "SN-004", category: "Footwear", stock: 67, price: 129.99, status: "active", lastUpdated: "2024-12-16" },
+          { id: "5", name: "Hoodie", sku: "HD-005", category: "Clothing", stock: 34, price: 59.99, status: "active", lastUpdated: "2024-12-15" },
+          { id: "6", name: "Wireless Headphones", sku: "WH-006", category: "Electronics", stock: 8, price: 199.99, status: "pending", lastUpdated: "2024-12-14" },
+          { id: "7", name: "Coffee Mug", sku: "CM-007", category: "Home & Garden", stock: 45, price: 12.99, status: "active", lastUpdated: "2024-12-13" },
+          { id: "8", name: "Running Shoes", sku: "RS-008", category: "Footwear", stock: 23, price: 89.99, status: "active", lastUpdated: "2024-12-12" }
+        ]
+      }
+    },
+    "welcome-items": {
+      id: "welcome-items",
+      type: "note",
+      title: "🎯 Welcome to Items Management",
+      props: {
+        body: `# Welcome to Your Items Dashboard! 📦
+
+**Groovy Items** is your intelligent inventory management system where you can track, organize, and optimize your product catalog.
 
 ## ✨ What You Can Do:
 
-**🎯 Drag & Drop** - Move any component anywhere on the grid
-**📏 Resize** - Click and drag the blue handles to resize components  
-**🎨 Customize** - Click the edit button to change colors, data, and more
-**🤖 AI Assistant** - Click the robot button to create new components with AI
-**➕ Add More** - Click the expand button to add extensions to any component
+**📋 Manage Inventory** - Use the table below to add, edit, and organize your items
+**📊 Track Metrics** - Monitor stock levels, categories, and inventory value
+**📈 View Analytics** - See trends and patterns in your inventory data
+**🎨 Customize Views** - Resize, move, and customize any component
 
-## 🎮 Try It Now:
-• **Drag this welcome card** around the dashboard
-• **Resize it** using the blue handles on the bottom-right
-• **Click the robot button** to create something new with AI
-• **Explore the sidebar** to see all your pages
+## 🎮 Getting Started:
 
-## 💡 Quick Tips & Tricks:
+**📝 Add New Items:**
+• Click "Add Row" in the table to add new items
+• Use the settings icon in column headers to customize columns
+• Click any cell to edit item details directly
 
-**🎨 Customization Tips:**
+**📊 Monitor Stock:**
+• Watch the metrics cards for real-time inventory overview
+• Use the analytics chart to spot trends
+• Set up alerts for low stock items
+
+**🔍 Organize Efficiently:**
+• Filter by category, status, or stock level
+• Sort by any column to find items quickly
+• Use the search to locate specific items
+
+## 💡 Pro Tips:
 • **Double-click** any title to edit it instantly
-• **Right-click** components for quick actions
-• **Use the AI assistant** to create complex charts and tables
-• **Save your layouts** - they'll remember your preferences
+• **Drag and drop** components to rearrange your workspace
+• **Resize** components to see more or less detail
+• **Use AI** to create new components and insights
 
-**🚀 Pro Features:**
-• **Keyboard shortcuts** - Press 'E' for edit mode, 'S' to save
-• **Component library** - Access hundreds of pre-built components
-• **Data connections** - Connect to your databases and APIs
-• **Real-time collaboration** - Work together with your team
-
-**🎯 Getting Started:**
-1. **Explore** - Try dragging and resizing components
-2. **Customize** - Change colors, fonts, and layouts
-3. **Create** - Use AI to build new components
-4. **Organize** - Arrange everything perfectly for your workflow
-
-*This is YOUR workspace - make it perfect for you!* ✨`,
-      },
+*This is YOUR inventory workspace - make it perfect for your business!* ✨`
+      }
     },
-    "production-table": {
-      id: "production-table",
-      type: "table",
-      title: "Production Items",
-    },
-
-    "new-block": {
-      id: "new-block",
-      type: "empty",
-      title: "🤖 Create Something Amazing",
-    },
-    "analytics-chart": {
-      id: "analytics-chart",
+    "items-analytics": {
+      id: "items-analytics",
       type: "chart.area.interactive",
-      title: "📊 Manufacturing Analytics",
-    },
-    "malleable-table": {
-      id: "malleable-table",
-      type: "table.malleable",
-      title: "📋 Table",
-      props: {
-        columns: [
-          { id: "name", name: "Name", type: "text", width: 150 },
-          { id: "status", name: "Status", type: "status", width: 120 },
-          { id: "priority", name: "Priority", type: "select", width: 100, options: ["Low", "Medium", "High"] },
-          { id: "dueDate", name: "Due Date", type: "date", width: 120 },
-          { id: "progress", name: "Progress", type: "number", width: 100 }
-        ],
-        data: [
-          { id: "1", name: "Product Design", status: "active", priority: "High", dueDate: "2024-12-25", progress: 75 },
-          { id: "2", name: "Material Sourcing", status: "pending", priority: "Medium", dueDate: "2024-12-28", progress: 45 },
-          { id: "3", name: "Quality Testing", status: "completed", priority: "High", dueDate: "2024-12-22", progress: 100 },
-          { id: "4", name: "Packaging Design", status: "active", priority: "Low", dueDate: "2024-12-30", progress: 30 }
-        ]
-      }
-    },
-    "calendar-block": {
-      id: "calendar-block",
-      type: "calendar",
-      title: "📅 Calendar",
-      props: {
-        events: [
-          { id: "1", title: "Team Meeting", date: new Date(2024, 11, 20), type: "meeting", description: "Weekly team sync" },
-          { id: "2", title: "Product Launch", date: new Date(2024, 11, 25), type: "deadline", description: "Final launch preparation" },
-          { id: "3", title: "Quality Review", date: new Date(2024, 11, 22), type: "task", description: "Review latest batch" },
-          { id: "4", title: "Client Call", date: new Date(2024, 11, 23), type: "meeting", description: "Discuss new requirements" }
-        ]
-      }
-    },
-    "efficiency-metric": {
-      id: "efficiency-metric",
-      type: "metric",
-      title: "Production Efficiency",
-      props: {
-        value: "87.3%",
-        delta: "+2.1% vs last week",
-      },
-    },
-    "production-chart": {
-      id: "production-chart",
-      type: "chart.line",
-      title: "Production Trends",
-      props: {
-        data: [
-          { name: "Mon", value: 145 },
-          { name: "Tue", value: 162 },
-          { name: "Wed", value: 138 },
-          { name: "Thu", value: 175 },
-          { name: "Fri", value: 189 },
-          { name: "Sat", value: 156 },
-          { name: "Sun", value: 142 },
-        ],
-        color: "#3b82f6",
-      },
-    },
-    "recent-activity": {
-      id: "recent-activity",
-      type: "activity.timeline",
-      title: "Recent Activity",
-      props: {
-        activities: [
-          { id: 1, type: "production", message: "Batch #2847 moved to Sewing", time: "2 min ago", status: "info" },
-          {
-            id: 2,
-            type: "quality",
-            message: "Quality check completed for Batch #2845",
-            time: "15 min ago",
-            status: "success",
-          },
-          { id: 3, type: "delay", message: "Cutting delayed for Batch #2849", time: "1 hour ago", status: "warning" },
-          {
-            id: 4,
-            type: "completion",
-            message: "Batch #2843 shipped to customer",
-            time: "2 hours ago",
-            status: "success",
-          },
-        ],
-      },
+      title: "📈 Inventory Analytics",
     },
   },
 }
 
-export default function GroovyGrid() {
+export default function ItemsPage() {
   const [state, setState] = useState<DashboardState>(initialState)
   const [sidebarExpanded, setSidebarExpanded] = useState(false)
   const [aiInput, setAiInput] = useState("")
   const [activeAiBlock, setActiveAiBlock] = useState<string | null>(null)
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null)
-  const [pageTitle, setPageTitle] = useState("Manufacturing Dashboard")
-  const [pageSubtext, setPageSubtext] = useState("Track production stages and workflow efficiency")
+  const [pageTitle, setPageTitle] = useState("Items Management")
+  const [pageSubtext, setPageSubtext] = useState("Manage inventory and product catalog")
   const [pageIcon, setPageIcon] = useState("📊")
   const [editingTitle, setEditingTitle] = useState(false)
   const [editingSubtext, setEditingSubtext] = useState(false)
@@ -479,13 +430,21 @@ export default function GroovyGrid() {
   const [contentHeights, setContentHeights] = useState<Record<string, number>>({})
   const [savedState, setSavedState] = useState<DashboardState | null>(null)
   const [isFrozen, setIsFrozen] = useState(false)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isEditing, setIsEditing] = useState(false)
+  const [metrics, setMetrics] = useState([
+    { name: "Production Efficiency", value: "87.3%", delta: "+2.1%", icon: "⚡" },
+    { name: "Quality Score", value: "94.2%", delta: "+1.8%", icon: "🎯" },
+    { name: "On-Time Delivery", value: "91.7%", delta: "+3.2%", icon: "🚚" },
+    { name: "Cost per Unit", value: "$12.45", delta: "-5.1%", icon: "💰" }
+  ])
   const gridRef = useRef<HTMLDivElement>(null)
   const isFixingOverlaps = useRef(false)
 
   useEffect(() => {
     // Load saved state from localStorage if it exists
-    const savedState = localStorage.getItem(STORAGE_KEY)
-    const frozenState = localStorage.getItem('groovy-frozen-state')
+    const savedState = localStorage.getItem('groovy:items:v4')
+    const frozenState = localStorage.getItem('groovy:items:frozen')
     
     if (frozenState) {
       // If there's a frozen state, load it and set frozen mode
@@ -497,18 +456,22 @@ export default function GroovyGrid() {
       } catch (error) {
         console.error('Error loading frozen state:', error)
         setState(initialState)
+        setIsFrozen(false)
       }
     } else if (savedState) {
       // Load regular saved state
       try {
         const parsedState = JSON.parse(savedState)
         setState(parsedState)
+        setIsFrozen(false)
       } catch (error) {
         console.error('Error loading saved state:', error)
         setState(initialState)
+        setIsFrozen(false)
       }
     } else {
       setState(initialState)
+      setIsFrozen(false)
     }
   }, [])
 
@@ -520,19 +483,21 @@ export default function GroovyGrid() {
     }
   }, [state.layout])
 
-  // Function to reset dashboard to initial state
-  const resetDashboard = () => {
-    setState(initialState)
-    setIsFrozen(false)
-    setSavedState(null)
-    localStorage.removeItem(STORAGE_KEY)
-    localStorage.removeItem('groovy-frozen-state')
+  // Function to reset items page to initial state
+  const resetItemsPage = () => {
+    if (confirm("Are you sure you want to reset the items page? This will clear all saved state.")) {
+      setState(initialState)
+      setIsFrozen(false)
+      setSavedState(null)
+      localStorage.removeItem('groovy:items:v4')
+      localStorage.removeItem('groovy:items:frozen')
+    }
   }
 
   useEffect(() => {
     // Only save to localStorage if not in frozen mode, or if it's a frozen state being saved
     if (!isFrozen || state.mode === "save") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      localStorage.setItem('groovy:items:v4', JSON.stringify(state))
     }
   }, [state, isFrozen])
 
@@ -545,8 +510,8 @@ export default function GroovyGrid() {
       setState(frozenState)
       
       // Save to localStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(frozenState))
-      localStorage.setItem('groovy-frozen-state', JSON.stringify(frozenState))
+      localStorage.setItem('groovy:items:v4', JSON.stringify(frozenState))
+      localStorage.setItem('groovy:items:frozen', JSON.stringify(frozenState))
     } else {
       // Unfreeze and return to edit mode
       const editState = { ...state, mode: "edit" }
@@ -554,8 +519,8 @@ export default function GroovyGrid() {
       setState(editState)
       
       // Update localStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(editState))
-      localStorage.removeItem('groovy-frozen-state')
+      localStorage.setItem('groovy:items:v4', JSON.stringify(editState))
+      localStorage.removeItem('groovy:items:frozen')
     }
   }
 
@@ -705,7 +670,7 @@ export default function GroovyGrid() {
   }
 
   const handleDragStart = (e: React.DragEvent, blockId: string) => {
-    if (state.mode !== "edit" || isFrozen) return
+    if (state.mode !== "edit") return
     
     const layoutItem = state.layout.find((item) => item.i === blockId)
     if (!layoutItem) return
@@ -858,7 +823,6 @@ export default function GroovyGrid() {
       case "chart.line":
         // For production chart, render slideshow flip component with proper charts
         if (block.id === "production-chart") {
-          const [currentSlide, setCurrentSlide] = useState(0)
           
           const slides = [
             {
@@ -972,23 +936,46 @@ export default function GroovyGrid() {
           return <ChartDonut block={block} />
         case "chart.area.interactive":
           return <ChartAreaInteractive block={block} />
-        case "table.malleable":
-          return (
-            <TableMalleable
-              title={block.title}
-              columns={block.props?.columns || []}
-              data={block.props?.data || []}
-              className="h-full"
-            />
-          )
-        case "calendar":
-          return (
-            <CalendarBlock
-              title={block.title}
-              events={block.props?.events || []}
-              className="h-full"
-            />
-          )
+              case "table.malleable":
+        return (
+          <TableMalleable
+            title={block.title}
+            columns={block.props?.columns || []}
+            data={block.props?.data || []}
+            className="h-full"
+            showFilters={true}
+          />
+        )
+      case "calendar":
+        return (
+          <CalendarBlock
+            title={block.title}
+            events={block.props?.events || []}
+            className="h-full"
+          />
+        )
+      case "metric.chart":
+        return (
+          <MetricChart
+            title={block.title || "Metric"}
+            value={block.props?.value || "0"}
+            trend={block.props?.trend || "0%"}
+            trendDirection={block.props?.trendDirection || "neutral"}
+            description={block.props?.description}
+            className="h-full"
+          />
+        )
+      case "filter.items":
+        return (
+          <FilterItems
+            title={block.title}
+            onFilterChange={(filters) => {
+              console.log('Filters changed:', filters)
+              // Here you would filter the table data based on the filters
+            }}
+            className="h-full"
+          />
+        )
         case "activity.timeline":
         return <ActivityTimeline block={block} />
       case "messages.preview":
@@ -1212,13 +1199,6 @@ export default function GroovyGrid() {
         }
         // Enhanced metric rendering for the 87% efficiency metric
         if (block.id === "efficiency-metric") {
-          const [isEditing, setIsEditing] = useState(false)
-          const [metrics, setMetrics] = useState([
-            { name: "Production Efficiency", value: "87.3%", delta: "+2.1%", icon: "⚡" },
-            { name: "Quality Score", value: "94.2%", delta: "+1.8%", icon: "🎯" },
-            { name: "On-Time Delivery", value: "91.7%", delta: "+3.2%", icon: "🚚" },
-            { name: "Cost per Unit", value: "$12.45", delta: "-5.1%", icon: "💰" }
-          ])
 
           return (
             <div className="h-full flex flex-col">
@@ -1468,9 +1448,9 @@ export default function GroovyGrid() {
             </Button>
             <Button 
               variant="outline" 
-              onClick={resetDashboard}
+              onClick={resetItemsPage}
               className="text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
-              title="Reset Dashboard"
+              title="Reset Items Page"
             >
               Reset
             </Button>
@@ -1597,13 +1577,14 @@ export default function GroovyGrid() {
                         </>
                       )}
 
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 border-b-2 h-8">
-                        <h3 className="font-medium text-sm">{block.title}</h3>
-                        <div className="flex items-center gap-1">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2 sm:px-3 md:px-4 border-b-2 h-6 sm:h-7 md:h-8">
+                        <h3 className="font-medium text-[8px] sm:text-[10px] md:text-xs lg:text-sm truncate flex-shrink-0">{block.title}</h3>
+                        {state.mode === "edit" && !isFrozen && (
+                          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-7 w-7 ${
+                            className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 ${
                               isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-yellow-100'
                             }`}
                             onClick={() => {
@@ -1619,7 +1600,7 @@ export default function GroovyGrid() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-7 w-7 ${
+                            className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 ${
                               isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-100'
                             }`}
                             onClick={() => !isFrozen && setActiveAiBlock(activeAiBlock === item.i ? null : item.i)}
@@ -1631,7 +1612,7 @@ export default function GroovyGrid() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-7 w-7 ${
+                            className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 ${
                               isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-100'
                             }`}
                             onClick={() => !isFrozen && handleOpenEditModal(block)}
@@ -1643,7 +1624,7 @@ export default function GroovyGrid() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-7 w-7 ${
+                            className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 ${
                               isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-100'
                             }`}
                             onClick={() => !isFrozen && extendBlock(item.i)}
@@ -1655,7 +1636,7 @@ export default function GroovyGrid() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className={`h-7 w-7 ${
+                            className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 ${
                               isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-100'
                             }`}
                             onClick={() => !isFrozen && deleteBlock(item.i)}
@@ -1665,6 +1646,7 @@ export default function GroovyGrid() {
                             <Trash2Icon />
                           </Button>
                         </div>
+                        )}
                       </CardHeader>
                       <CardContent className="p-0 flex flex-col min-h-0" style={{ height: "calc(100% - 32px)" }}>
                         <div

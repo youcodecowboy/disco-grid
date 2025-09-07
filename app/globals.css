@@ -98,6 +98,50 @@
   transition-property: left, top;
 }
 
+/* Container queries for shadcn components */
+@container (max-width: 640px) {
+  [data-slot="card-header"] {
+    padding: 0.5rem !important;
+  }
+  
+  [data-slot="card-content"] {
+    padding: 0.5rem !important;
+  }
+  
+  [data-slot="card-title"] {
+    font-size: 0.75rem !important;
+  }
+}
+
+@container (max-width: 480px) {
+  [data-slot="card-header"] {
+    padding: 0.25rem !important;
+  }
+  
+  [data-slot="card-content"] {
+    padding: 0.25rem !important;
+  }
+  
+  [data-slot="card-title"] {
+    font-size: 0.625rem !important;
+  }
+}
+
+/* Additional responsive scaling for metric cards */
+@container (max-width: 320px) {
+  [data-slot="card-header"] {
+    padding: 0.125rem !important;
+  }
+  
+  [data-slot="card-content"] {
+    padding: 0.125rem !important;
+  }
+  
+  [data-slot="card-title"] {
+    font-size: 0.5rem !important;
+  }
+}
+
 .react-grid-item.cssTransforms {
   transition-property: transform;
 }

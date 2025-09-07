@@ -1,4 +1,4 @@
-import type { Block } from "@/app/page"
+import { BlockProps } from "./types"
 
 interface CalendarDay {
   date: number
@@ -6,12 +6,17 @@ interface CalendarDay {
   isToday: boolean
 }
 
-interface Props {
-  block: Block
+interface CalendarMiniData {
+  month?: string
+  days?: CalendarDay[]
 }
 
-export default function CalendarMini({ block }: Props) {
-  const { month = "January 2024", days = [] } = block.props || {}
+interface Props extends BlockProps {
+  data: CalendarMiniData
+}
+
+export default function CalendarMini({ title, data, className = "" }: Props) {
+  const { month = "January 2024", days = [] } = data || {}
   const weekDays = ["S", "M", "T", "W", "T", "F", "S"]
 
   return (
