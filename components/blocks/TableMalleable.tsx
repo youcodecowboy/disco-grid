@@ -1,16 +1,14 @@
 "use client"
 
 import React, { useState, useCallback, useMemo } from 'react'
-import { Plus, X, Edit3, Settings, Trash2, Save, RotateCcw, Search, Filter, ChevronDown } from 'lucide-react'
+import { Plus, X, Settings, Trash2, Search, Filter, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent } from '@/components/ui/popover'
 import { format } from 'date-fns'
-import { CalendarIcon } from 'lucide-react'
-import { cn, generateId } from '@/lib/utils'
+import { generateId } from '@/lib/utils'
 
 export interface Column {
   id: string
@@ -139,39 +137,40 @@ export function TableMalleable({
   const activeFiltersCount = Object.values(filters).filter(value => value !== '').length
 
   const handleCellEdit = useCallback((rowId: string, columnId: string, value: any) => {
-    setLocalData(prev => 
-      prev.map(row => 
+    setLocalData(prev => {
+      const updatedData = prev.map(row => 
         row.id === rowId 
           ? { ...row, [columnId]: value }
           : row
       )
-    )
-    
-    if (onDataChange) {
-      const updatedData = localData.map(row => 
-        row.id === rowId 
-          ? { ...row, [columnId]: value }
-          : row
-      )
-      onDataChange(updatedData)
-    }
-  }, [localData, onDataChange])
+      
+      if (onDataChange) {
+        onDataChange(updatedData)
+      }
+      
+      return updatedData
+    })
+  }, [onDataChange])
 
   const handleAddRow = useCallback(() => {
     const newRow: TableData = {
       id: generateId("row"),
       ...Object.fromEntries(localColumns.map(col => [col.id, col.type === 'number' ? 0 : '']))
     }
-    const updatedData = [...localData, newRow]
-    setLocalData(updatedData)
-    if (onDataChange) onDataChange(updatedData)
-  }, [localData, localColumns, onDataChange])
+    setLocalData(prev => {
+      const updatedData = [...prev, newRow]
+      if (onDataChange) onDataChange(updatedData)
+      return updatedData
+    })
+  }, [localColumns, onDataChange])
 
   const handleDeleteRow = useCallback((rowId: string) => {
-    const updatedData = localData.filter(row => row.id !== rowId)
-    setLocalData(updatedData)
-    if (onDataChange) onDataChange(updatedData)
-  }, [localData, onDataChange])
+    setLocalData(prev => {
+      const updatedData = prev.filter(row => row.id !== rowId)
+      if (onDataChange) onDataChange(updatedData)
+      return updatedData
+    })
+  }, [onDataChange])
 
   const handleAddColumn = useCallback(() => {
     const newColumn: Column = {
@@ -184,30 +183,34 @@ export function TableMalleable({
     setLocalColumns(updatedColumns)
     
     // Add empty values for new column to all rows
-    const updatedData = localData.map(row => ({
-      ...row,
-      [newColumn.id]: ''
-    }))
-    setLocalData(updatedData)
+    setLocalData(prev => {
+      const updatedData = prev.map(row => ({
+        ...row,
+        [newColumn.id]: ''
+      }))
+      if (onDataChange) onDataChange(updatedData)
+      return updatedData
+    })
     
     if (onColumnsChange) onColumnsChange(updatedColumns)
-    if (onDataChange) onDataChange(updatedData)
-  }, [localColumns, localData, onColumnsChange, onDataChange])
+  }, [localColumns, onColumnsChange, onDataChange])
 
   const handleDeleteColumn = useCallback((columnId: string) => {
     const updatedColumns = localColumns.filter(col => col.id !== columnId)
     setLocalColumns(updatedColumns)
     
     // Remove column data from all rows
-    const updatedData = localData.map(row => {
-      const { [columnId]: removed, ...rest } = row
-      return rest
+    setLocalData(prev => {
+      const updatedData = prev.map(row => {
+        const { [columnId]: removed, ...rest } = row
+        return rest
+      })
+      if (onDataChange) onDataChange(updatedData)
+      return updatedData
     })
-    setLocalData(updatedData)
     
     if (onColumnsChange) onColumnsChange(updatedColumns)
-    if (onDataChange) onDataChange(updatedData)
-  }, [localColumns, localData, onColumnsChange, onDataChange])
+  }, [localColumns, onColumnsChange, onDataChange])
 
   const handleColumnEdit = useCallback((columnId: string, updates: Partial<Column>) => {
     const updatedColumns = localColumns.map(col => 
