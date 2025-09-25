@@ -22,7 +22,7 @@ export default function ChartBar({ block }: Props) {
   const maxY = Math.max(...allPoints.map((p: DataPoint) => p.y))
 
   return (
-    <div className="p-4 h-full flex flex-col">
+    <div className="p-4 h-full flex flex-col" style={{ containerType: "inline-size" }}>
       <div className="flex-1 flex items-end justify-between gap-1">
         {series[0]?.points.map((point: DataPoint, i: number) => (
           <div key={i} className="flex flex-col items-center gap-1 flex-1">

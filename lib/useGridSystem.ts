@@ -49,6 +49,7 @@ export type Block = {
   title?: string
   props?: Record<string, any>
   extensions?: Block[]
+  slots?: Record<string, Block | null>
 }
 
 export type GridState = {

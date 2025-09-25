@@ -87,7 +87,7 @@ export default function ChartScatter({
   }
 
   return (
-    <div className="h-full flex flex-col p-3 sm:p-4">
+    <div className="h-full flex flex-col p-3 sm:p-4" style={{ containerType: "inline-size" }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <h3 className="text-[8px] sm:text-[10px] md:text-xs lg:text-sm font-semibold text-gray-900 truncate flex-1 min-w-0 mr-2">
@@ -141,17 +141,20 @@ export default function ChartScatter({
           </text>
 
           {/* Data Points */}
-          {points.map((point, index) => (
+          {points.map((point, index) => {
+            const radius = Math.max(0.6, Math.min(2.4, ((point.size ?? 8) / 6)))
+            return (
             <circle
               key={index}
               cx={scaleX(point.x)}
               cy={scaleY(point.y)}
-              r={point.size ? point.size / 10 : 0.8}
+              r={radius}
               className={`${getCategoryColor(point.category)} opacity-80 hover:opacity-100 transition-opacity cursor-pointer`}
             >
               <title>{point.label || `Point ${index + 1}`}</title>
             </circle>
-          ))}
+            )
+          })}
 
           {/* Trend Line (simplified) */}
           <path
@@ -205,4 +208,3 @@ export default function ChartScatter({
     </div>
   )
 }
-

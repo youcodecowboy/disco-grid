@@ -20,7 +20,7 @@ export default function ChartLine({ block }: Props) {
   const range = maxY - minY || 1
 
   return (
-    <div className="p-2 h-full flex flex-col">
+    <div className="p-2 h-full flex flex-col" style={{ containerType: "inline-size" }}>
       <div className="flex-1 relative">
         <svg className="w-full h-full" viewBox="0 0 320 120" preserveAspectRatio="xMidYMid meet">
           <path

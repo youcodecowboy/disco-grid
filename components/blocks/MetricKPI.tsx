@@ -1,69 +1,99 @@
+import { cn } from "@/lib/utils"
 import { BlockProps, MetricData } from "./types"
 
 interface Props extends BlockProps {
   data: MetricData
+  variant?: "kpi" | "chart" | "items"
 }
 
-export default function MetricKPI({ title, data, className = "" }: Props) {
-  const { value = "0", delta = "No change", trend = [] } = data || {}
+export default function MetricKPI({ title, data, className = "", variant = "kpi" }: Props) {
+  const { value = "0", delta = "No change", trend = [], timeRange } = data || {}
+
+  const variantStyles: Record<Required<Props["variant"]>, { wrapper: string; chip: string }> = {
+    kpi: {
+      wrapper: "bg-card",
+      chip: "bg-muted text-muted-foreground",
+    },
+    chart: {
+      wrapper: "bg-gradient-to-br from-blue-50 to-purple-50",
+      chip: "bg-blue-100 text-blue-700",
+    },
+    items: {
+      wrapper: "bg-gradient-to-br from-amber-50 to-orange-50",
+      chip: "bg-amber-100 text-amber-700",
+    },
+  }
+
+  const chipLabel = variant === "chart" ? (timeRange ? `Trend • ${timeRange}` : "Trend") : variant === "items" ? "Inventory" : "KPI"
 
   return (
     <div
-      className="h-full flex flex-col p-2 overflow-hidden"
+      className={cn(
+        "h-full flex flex-col overflow-hidden rounded-lg border border-border/60 p-3 transition-colors",
+        variantStyles[variant].wrapper,
+        className,
+      )}
       style={{ containerType: "inline-size" }}
     >
-      {/* First line: METRIC + GRAPH */}
-      <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-        {/* Metric value */}
+      <div className="flex items-center justify-between gap-2 pb-2">
+        <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium", variantStyles[variant].chip)}>
+          {chipLabel}
+        </span>
+        <span className="text-[11px] text-muted-foreground">{variant === "items" ? "Units" : "Live"}</span>
+      </div>
+
+      <div className="flex-1 flex items-center justify-between gap-3 min-w-0">
         <div
           className="font-bold text-gray-900 truncate min-w-0"
-          // Clamp by container width: min 1rem, scale with 12cqw, max 1.75rem
-          // This keeps numbers readable but prevents overflow at small widths
-          style={{ fontSize: "clamp(1rem, 12cqw, 1.75rem)" }}
+          style={{ fontSize: "clamp(1rem, 12cqw, 2.25rem)" }}
         >
           {value}
         </div>
-        
-        {/* Trend chart */}
+
         {Array.isArray(trend) && trend.length > 0 && (
           <div
             className="flex-shrink-0"
             style={{
-              height: "clamp(16px, 8cqh, 40px)",
-              width: "clamp(48px, 35%, 96px)",
+              height: "clamp(20px, 10cqh, 48px)",
+              width: variant === "chart" ? "clamp(72px, 45%, 160px)" : "clamp(48px, 35%, 120px)",
             }}
           >
             <div className="flex items-end gap-1 h-full">
-              {trend.map((point: number, i: number) => (
-                <div
-                  key={i}
-                  className="bg-gray-300 flex-1 min-w-0 rounded-sm"
-                  style={{ height: `${(point / Math.max(...trend)) * 100}%` }}
-                />
-              ))}
+              {trend.map((point: number, index: number) => {
+                const max = Math.max(...trend)
+                const height = max === 0 ? 0 : (point / max) * 100
+                return (
+                  <div
+                    key={index}
+                    className={cn(
+                      "flex-1 min-w-0 rounded-sm",
+                      variant === "items" ? "bg-amber-400/60" : "bg-blue-500/50",
+                    )}
+                    style={{ height: `${height}%` }}
+                  />
+                )
+              })}
             </div>
           </div>
         )}
       </div>
 
-              {/* Second line: NAME + TREND */}
-        <div className="flex items-center justify-between min-h-0 gap-2">
-          {/* Title - Better responsive scaling */}
-          <div
-            className="font-medium text-gray-600 truncate flex-1 min-w-0"
-            style={{ fontSize: "clamp(0.5rem, 4.5cqw, 0.75rem)" }}
-          >
-            {title || "KPI Metric"}
-          </div>
-          
-          {/* Delta indicator */}
-          <div
-            className="text-gray-600 flex-shrink-0"
-            style={{ fontSize: "clamp(0.5rem, 4.5cqw, 0.75rem)" }}
-          >
-            {delta}
-          </div>
+      <div className="flex items-center justify-between gap-2 pt-2">
+        <div
+          className="font-medium text-muted-foreground truncate flex-1 min-w-0"
+          style={{ fontSize: "clamp(0.65rem, 4.5cqw, 0.9rem)" }}
+        >
+          {title || (variant === "items" ? "Inventory Metric" : "KPI Metric")}
         </div>
+        <div
+          className={cn(
+            "flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
+            variant === "items" ? "bg-amber-500/10 text-amber-700" : "bg-emerald-500/10 text-emerald-700",
+          )}
+        >
+          {delta}
+        </div>
+      </div>
     </div>
   )
 }

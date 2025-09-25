@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Popover, PopoverContent } from '@/components/ui/popover'
 import { format } from 'date-fns'
-import { generateId } from '@/lib/utils'
+import { cn, generateId } from '@/lib/utils'
 
 export interface Column {
   id: string
@@ -42,6 +42,7 @@ interface TableMalleableProps {
   className?: string
   showFilters?: boolean
   hideTitle?: boolean
+  density?: 'comfortable' | 'compact'
 }
 
 export function TableMalleable({
@@ -53,7 +54,8 @@ export function TableMalleable({
   editable = true,
   className = "",
   showFilters = false,
-  hideTitle = false
+  hideTitle = false,
+  density = 'comfortable'
 }: TableMalleableProps) {
   const [localData, setLocalData] = useState<TableData[]>(data)
   const [localColumns, setLocalColumns] = useState<Column[]>(columns)
@@ -71,6 +73,9 @@ export function TableMalleable({
     stockLevel: ''
   })
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false)
+
+  const headerPaddingClass = density === 'compact' ? 'py-2 text-[11px]' : 'py-3 text-xs'
+  const cellPaddingClass = density === 'compact' ? 'py-2 text-xs' : 'py-3 text-sm'
 
   // Update local data when props change
   React.useEffect(() => {
@@ -526,14 +531,22 @@ export function TableMalleable({
               {localColumns.map((column) => (
                 <th
                   key={column.id}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className={cn(
+                    'px-4 text-left font-medium text-gray-500 uppercase tracking-wider',
+                    headerPaddingClass,
+                  )}
                   style={{ width: column.width || 'auto' }}
                 >
                   {renderColumnHeader(column)}
                 </th>
               ))}
               {editable && (
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                <th
+                  className={cn(
+                    'px-4 text-left font-medium text-gray-500 uppercase tracking-wider w-16',
+                    headerPaddingClass,
+                  )}
+                >
                   Actions
                 </th>
               )}
@@ -545,7 +558,7 @@ export function TableMalleable({
                 {localColumns.map((column) => (
                   <td
                     key={column.id}
-                    className="px-4 py-3 text-sm"
+                    className={cn('px-4', cellPaddingClass)}
                     onClick={() => {
                       if (editable) {
                         setEditingCell({ rowId: row.id, columnId: column.id })
@@ -558,7 +571,7 @@ export function TableMalleable({
                   </td>
                 ))}
                 {editable && (
-                  <td className="px-4 py-3 text-sm">
+                  <td className={cn('px-4', cellPaddingClass)}>
                     <Button
                       variant="ghost"
                       size="sm"

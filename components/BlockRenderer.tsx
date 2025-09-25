@@ -1,14 +1,17 @@
 import React from "react"
-import { Block } from "@/lib/useGridSystem"
+import type { BlockConfig } from "@/lib/grid-v2/types"
+import type { Block as LegacyBlock } from "@/lib/useGridSystem"
 import TableOrders from "@/components/blocks/TableOrders"
 import TableGeneric from "@/components/blocks/TableGeneric"
 import MetricKPI from "@/components/blocks/MetricKPI"
+import { MetricChart } from "@/components/blocks/MetricChart"
 import ChartLine from "@/components/blocks/ChartLine"
 import ChartBar from "@/components/blocks/ChartBar"
 import ChartArea from "@/components/blocks/ChartArea"
 import ChartDonut from "@/components/blocks/ChartDonut"
 import { ChartAreaInteractive } from "@/components/blocks/ChartAreaInteractive"
 import { TableMalleable } from "@/components/blocks/TableMalleable"
+import TableItems from "@/components/blocks/TableItems"
 import { CalendarBlock } from "@/components/blocks/CalendarBlock"
 import ActivityTimeline from "@/components/blocks/ActivityTimeline"
 import MessagesPreview from "@/components/blocks/MessagesPreview"
@@ -27,13 +30,34 @@ import OverdueShipments from "@/components/blocks/OverdueShipments"
 import SupplierLeadTimes from "@/components/blocks/SupplierLeadTimes"
 // Content blocks
 import NoteBlock from "@/components/blocks/NoteBlock"
+import { TabsBlock } from "@/components/blocks/TabsBlock"
+import { LayoutContainer } from "@/components/blocks/LayoutContainer"
+import { LayoutSplit } from "@/components/blocks/LayoutSplit"
+import { LayoutStack } from "@/components/blocks/LayoutStack"
+import { LayoutGridBlock } from "@/components/blocks/LayoutGridBlock"
+// Navigation components
+import NavBreadcrumbs from "@/components/blocks/NavBreadcrumbs"
+import NavQuickSearch from "@/components/blocks/NavQuickSearch"
+import FilterPanel from "@/components/blocks/FilterPanel"
+import ToolbarActions from "@/components/blocks/ToolbarActions"
+import StatusBadges from "@/components/blocks/StatusBadges"
+// Form components
+import FormBuilder from "@/components/blocks/FormBuilder"
+import FormInput from "@/components/blocks/FormInput"
+import FormSelect from "@/components/blocks/FormSelect"
+import FormTextarea from "@/components/blocks/FormTextarea"
+import FormCheckbox from "@/components/blocks/FormCheckbox"
+import FormUpload from "@/components/blocks/FormUpload"
+import FormSection from "@/components/blocks/FormSection"
 
 interface BlockRendererProps {
-  block: Block
+  block: BlockConfig
   showFilters?: boolean
 }
 
 export default function BlockRenderer({ block, showFilters = false }: BlockRendererProps) {
+  const legacyBlock = block as unknown as LegacyBlock
+
   // Helper function to normalize data for TableMalleable
   const normalizeTableData = (props: any) => {
     if (!props) return { columns: [], data: [] }
@@ -79,26 +103,41 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
 
   switch (block.type) {
     case "table.orders":
-      return <TableOrders block={block} />
+      return <TableOrders block={legacyBlock} />
     case "table.generic":
-      return <TableGeneric block={block} />
+      return <TableGeneric block={legacyBlock} />
     case "metric.kpi":
-      return <MetricKPI title={block.title} data={block.props} />
+      return <MetricKPI title={block.title} data={block.props} variant="kpi" />
     case "metric.chart":
-      return <MetricKPI title={block.title} data={block.props} />
+      return <MetricKPI title={block.title} data={block.props} variant="chart" />
     case "metric.items":
-      return <MetricKPI title={block.title} data={block.props} />
+      return <MetricKPI title={block.title} data={block.props} variant="items" />
+    case "metric.sparkline":
+      return (
+        <MetricChart
+          title={block.title || "Metric"}
+          value={(block.props as any)?.value ?? "0"}
+          trend={(block.props as any)?.trend ?? ""}
+          trendDirection={(block.props as any)?.trendDirection ?? "neutral"}
+          description={(block.props as any)?.description}
+        />
+      )
     case "chart.line":
+    case "chart.line.forecast":
       return <ChartLine block={block} />
     case "chart.bar":
+    case "chart.bar.utilization":
       return <ChartBar block={block} />
     case "chart.area":
+    case "chart.area.cumulative":
       return <ChartArea block={block} />
     case "chart.donut":
+    case "chart.donut.utilization":
       return <ChartDonut block={block} />
     case "chart.area.interactive":
       return <ChartAreaInteractive data={block.props} />
     case "chart.scatter":
+    case "chart.scatter.capacity":
       return <ChartScatter data={block.props} />
     case "table.malleable":
       const tableData = normalizeTableData(block.props)
@@ -109,8 +148,98 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
           data={tableData.data}
           showFilters={showFilters}
           hideTitle
+          density={(block.props as any)?.density}
         />
       )
+    case "table.items":
+      return (
+        <TableItems
+          items={(block.props as any)?.items}
+          showColumnCustomization={(block.props as any)?.showColumnCustomization ?? true}
+        />
+      )
+    case "layout.container": {
+      const props = block.props as any
+      return (
+        <LayoutContainer
+          title={block.title || props?.title}
+          description={props?.description}
+          padding={props?.padding}
+          background={props?.background}
+          border={props?.border}
+          slots={block.slots}
+          onSlotClick={props?.onSlotClick}
+          isEditMode={props?.isEditMode}
+          renderSlot={(slotId, child) => (
+            <BlockRenderer
+              key={`${block.id}-${slotId}`}
+              block={{ ...child, props: { ...child.props } }}
+              showFilters={showFilters}
+            />
+          )}
+        />
+      )
+    }
+    case "layout.split": {
+      const props = block.props as any
+      return (
+        <LayoutSplit
+          direction={props?.direction}
+          ratio={props?.ratio}
+          primaryTitle={props?.primaryTitle}
+          secondaryTitle={props?.secondaryTitle}
+          slots={block.slots}
+          onSlotClick={props?.onSlotClick}
+          isEditMode={props?.isEditMode}
+          renderSlot={(_, child) => (
+            <BlockRenderer
+              block={{ ...child, props: { ...child.props } }}
+              showFilters={showFilters}
+            />
+          )}
+        />
+      )
+    }
+    case "layout.stack": {
+      const props = block.props as any
+      return (
+        <LayoutStack
+          direction={props?.direction}
+          gap={props?.gap}
+          sections={props?.sections}
+          slots={block.slots}
+          onSlotClick={props?.onSlotClick}
+          isEditMode={props?.isEditMode}
+          renderSlot={(slotId, child) => (
+            <BlockRenderer
+              key={`${block.id}-${slotId}`}
+              block={{ ...child, props: { ...child.props } }}
+              showFilters={showFilters}
+            />
+          )}
+        />
+      )
+    }
+    case "layout.grid": {
+      const props = block.props as any
+      return (
+        <LayoutGridBlock
+          columns={props?.columns}
+          gap={props?.gap}
+          areas={props?.areas}
+          slots={block.slots}
+          onSlotClick={props?.onSlotClick}
+          isEditMode={props?.isEditMode}
+          renderSlot={(slotId, child) => (
+            <BlockRenderer
+              key={`${block.id}-${slotId}`}
+              block={{ ...child, props: { ...child.props } }}
+              showFilters={showFilters}
+            />
+          )}
+        />
+      )
+    }
     case "messages.panel":
       return <MessagesPanel title={block.title} data={block.props} />
     case "capacity.tracker":
@@ -137,11 +266,54 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
     case "activity.timeline":
       return <ActivityTimeline title={block.title} data={block.props} />
     case "messages.preview":
-      return <MessagesPreview block={block} />
+      return <MessagesPreview block={legacyBlock} />
     case "commands.quick":
-      return <CommandsQuick block={block} />
+      return <CommandsQuick block={legacyBlock} />
     case "kanban.simple":
-      return <KanbanSimple block={block} />
+      return <KanbanSimple block={legacyBlock} />
+    case "tabs":
+      return <TabsBlock title={block.title} data={block.props} />
+    case "nav.breadcrumbs":
+      return <NavBreadcrumbs title={block.title} data={block.props} />
+    case "nav.quicksearch":
+      return <NavQuickSearch title={block.title} data={block.props} />
+    case "filter.panel":
+      return <FilterPanel title={block.title} data={block.props} />
+    case "toolbar.actions":
+      return <ToolbarActions title={block.title} data={block.props} />
+    case "status.badges":
+      return <StatusBadges title={block.title} data={block.props} />
+    case "form.builder": {
+      const props = block.props as any
+      return (
+        <FormBuilder
+          title={block.title || props?.title}
+          data={block.props}
+          slots={block.slots}
+          onSlotClick={props?.onSlotClick}
+          isEditMode={props?.isEditMode}
+          renderSlot={(slotId, child) => (
+            <BlockRenderer
+              key={`${block.id}-${slotId}`}
+              block={{ ...child, props: { ...child.props } }}
+              showFilters={showFilters}
+            />
+          )}
+        />
+      )
+    }
+    case "form.input":
+      return <FormInput title={block.title} data={block.props} />
+    case "form.select":
+      return <FormSelect title={block.title} data={block.props} />
+    case "form.textarea":
+      return <FormTextarea title={block.title} data={block.props} />
+    case "form.checkbox":
+      return <FormCheckbox title={block.title} data={block.props} />
+    case "form.upload":
+      return <FormUpload title={block.title} data={block.props} />
+    case "form.section":
+      return <FormSection title={block.title} data={block.props} />
     default:
       return (
         <div className="flex items-center justify-center h-full text-muted-foreground">

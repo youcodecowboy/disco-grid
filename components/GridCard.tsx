@@ -39,6 +39,16 @@ const ExpandIcon = () => (
   </svg>
 )
 
+
+const CollapseIcon = () => (
+  <svg className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5 lg:h-4 lg:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M4 9h16" />
+    <path d="M4 15h16" />
+    <path d="M10 3h4" />
+    <path d="M10 21h4" />
+  </svg>
+)
+
 const Trash2Icon = () => (
   <svg className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5 lg:h-4 lg:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path d="M3 6h18" />
@@ -65,6 +75,7 @@ interface GridCardProps {
   onExtend?: (blockId: string) => void
   onDelete?: (blockId: string) => void
   className?: string
+  controls?: ReactNode
 }
 
 export default function GridCard({
@@ -82,7 +93,8 @@ export default function GridCard({
   onEdit,
   onExtend,
   onDelete,
-  className = ""
+  className = "",
+  controls,
 }: GridCardProps) {
   const isDragging = draggedBlock === blockId
 
@@ -103,7 +115,7 @@ export default function GridCard({
       draggable={mode === "edit"}
       onDragStart={(e) => onDragStart(e, blockId)}
     >
-      <Card className="h-full shadow-sm border-2 rounded-none relative transition-all duration-200 ease-out hover:shadow-md">
+      <Card className="h-full relative transition-all duration-200 ease-out hover:shadow-md border border-border/70 bg-card rounded-xl">
         {mode === "edit" && (
           <>
             {/* Bottom-right corner: resize both width and height */}
@@ -123,84 +135,90 @@ export default function GridCard({
               className="absolute bottom-0 left-4 w-8 h-2 bg-blue-500/40 cursor-s-resize opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out hover:bg-blue-500/60"
               onMouseDown={(e) => onResizeStart(e, blockId, "s")}
             />
-            {onToggleCollapse && (
-              <div
-                className="absolute top-2 right-2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out cursor-pointer hover:text-foreground hover:bg-muted/50 px-1 py-0.5 rounded"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggleCollapse(blockId)
-                }}
-              >
-                ⤢
-              </div>
-            )}
           </>
         )}
 
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 px-2 sm:px-3 md:px-4 border-b-2 h-6 sm:h-7 md:h-8 transition-all duration-200 ease-out">
-          <h3 className="font-medium text-[8px] sm:text-[10px] md:text-xs lg:text-sm truncate flex-1 min-w-0 pr-2">{title}</h3>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-3 border-b transition-all duration-200 ease-out min-h-12">
+          <h3 className="font-semibold text-sm truncate flex-1 min-w-0 pr-4 text-foreground">{title}</h3>
           {mode === "edit" && (
             <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-              {onNotification && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-yellow-100 transition-all duration-150 ease-out hover:scale-105"
-                  onClick={() => onNotification(blockId)}
-                  title="Set Notifications"
-                >
-                  <NotificationIcon />
-                </Button>
-              )}
-              {onAiAssistant && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-blue-100 transition-all duration-150 ease-out hover:scale-105"
-                  onClick={() => onAiAssistant(blockId)}
-                  title="AI Assistant"
-                >
-                  <BotIcon />
-                </Button>
-              )}
-              {onEdit && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-green-100 transition-all duration-150 ease-out hover:scale-105"
-                  onClick={() => onEdit(blockId)}
-                  title="Edit Block"
-                >
-                  <EditIcon />
-                </Button>
-              )}
-              {onExtend && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-purple-100 transition-all duration-150 ease-out hover:scale-105"
-                  onClick={() => onExtend(blockId)}
-                  title="Extend Block"
-                >
-                  <ExpandIcon />
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-red-100 transition-all duration-150 ease-out hover:scale-105"
-                  onClick={() => onDelete(blockId)}
-                  title="Delete Block"
-                >
-                  <Trash2Icon />
-                </Button>
+              {controls ? (
+                controls
+              ) : (
+                <>
+                  {onToggleCollapse && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-slate-100 transition-all duration-150 ease-out hover:scale-105"
+                      onClick={() => onToggleCollapse(blockId)}
+                      title="Toggle block height"
+                    >
+                      <CollapseIcon />
+                    </Button>
+                  )}
+                  {onNotification && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-yellow-100 transition-all duration-150 ease-out hover:scale-105"
+                      onClick={() => onNotification(blockId)}
+                      title="Set Notifications"
+                    >
+                      <NotificationIcon />
+                    </Button>
+                  )}
+                  {onAiAssistant && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-blue-100 transition-all duration-150 ease-out hover:scale-105"
+                      onClick={() => onAiAssistant(blockId)}
+                      title="AI Assistant"
+                    >
+                      <BotIcon />
+                    </Button>
+                  )}
+                  {onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-green-100 transition-all duration-150 ease-out hover:scale-105"
+                      onClick={() => onEdit(blockId)}
+                      title="Edit Block"
+                    >
+                      <EditIcon />
+                    </Button>
+                  )}
+                  {onExtend && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-purple-100 transition-all duration-150 ease-out hover:scale-105"
+                      onClick={() => onExtend(blockId)}
+                      title="Extend Block"
+                    >
+                      <ExpandIcon />
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 hover:bg-red-100 transition-all duration-150 ease-out hover:scale-105"
+                      onClick={() => onDelete(blockId)}
+                      title="Delete Block"
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           )}
         </CardHeader>
-        <CardContent className="p-0 flex flex-col transition-all duration-200 ease-out" style={{ height: "calc(100% - 32px)" }}>
-          <div className="flex-1 min-h-0 flex flex-col">
+        <CardContent className="p-4 flex flex-col h-[calc(100%-3rem)] transition-all duration-200 ease-out">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             {children}
           </div>
         </CardContent>

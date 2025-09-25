@@ -39,7 +39,7 @@ export default function ChartDonut({ block }: Props) {
   })
 
   return (
-    <div className="p-4 h-full flex items-center gap-4">
+    <div className="p-4 h-full flex items-center gap-4" style={{ containerType: "inline-size" }}>
       <div className="flex-shrink-0">
         <svg width="100" height="100" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="35" fill="none" stroke="#f1f5f9" strokeWidth="2" />

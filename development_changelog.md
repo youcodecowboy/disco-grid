@@ -1,5 +1,151 @@
 # Development Changelog
 
+## 2025-09-26 10:55:00 - Onboarding Systems Pass
+
+### ✨ **Expanded Wizard Flow**
+- Added dedicated Systems and Operations steps with new grid cards for inventory/ERP intake, capacity lens, SKU strategy, and downstream configuration toggles.
+- Introduced quiz-style questions (seasonality, floorplan assets, scanning/bins, dashboard audience) that gate progress until required inputs are captured.
+- Reworked summary cards to surface go-live targets, compliance needs, integration priorities, and production modes for the generated presets.
+
+### 🎨 **UX Refinements**
+- Highlighted primary CTAs, tightened header spacing, and added inline hints when required answers are missing.
+- Ensured onboarding cards open with sufficient height/width defaults so copy and controls stay visible without manual resizing.
+- Added mood/motion selectors so style presets feel tailored from the first interaction.
+
+### 📄 **Documentation**
+- Updated `docs/onboarding-plan.md` and `docs/onboarding-backlog.md` with the new flow, completed checkpoints, and remaining polish tasks.
+
+## 2025-01-25 17:30:00 - Navigation & Context Components Implementation
+
+### 🧭 **Complete Navigation Component Library**
+- **Breadcrumbs Navigation**: Hierarchical navigation with home icon, chevron/slash separators, and active state indicators
+- **Quick Search**: Interactive search with recent searches, live results, and keyboard navigation
+- **Filter Panel**: Advanced filtering with multi-select, single-select, and range filters with collapsible groups
+- **Action Toolbar**: Configurable action buttons with icons, variants, badges, and flexible layouts
+- **Status Badges**: Status indicators with counts, trends, and color-coded states
+
+### 🎯 **Navigation Component Features**
+- **nav.breadcrumbs**: Home icon, separator options, active state, overflow handling
+- **nav.quicksearch**: Search dropdown, recent searches, live filtering, result navigation
+- **filter.panel**: Expandable groups, multiple filter types, active filter count, clear all functionality
+- **toolbar.actions**: Button variants (primary, outline, ghost), icon library, badge notifications, layout options
+- **status.badges**: Status colors, trend indicators, count displays, flexible layouts (grid/list/horizontal)
+
+### 🔧 **Technical Implementation**
+- **Registry Integration**: All components fully registered with proper defaults and schemas
+- **Block Type System**: Added "navigation" category with 5 new block types
+- **Component Architecture**: Consistent props interface with data objects and responsive design
+- **Icon Integration**: Lucide React icons throughout with proper sizing and hover states
+- **Mock Data**: Realistic default data for immediate use and demonstration
+
+### 📊 **Registry Coverage**
+- **nav.breadcrumbs**: 6x3 default size, hierarchical navigation with active states
+- **nav.quicksearch**: 4x6 default size, search with recent items and live results
+- **filter.panel**: 3x8 default size, advanced filtering with multiple criteria types
+- **toolbar.actions**: 6x4 default size, action buttons with flexible layouts
+- **status.badges**: 4x5 default size, status indicators with trends and counts
+
+### 🎨 **User Experience Features**
+- **Interactive Elements**: Hover states, focus indicators, and smooth transitions
+- **Responsive Design**: Components adapt to container sizes with proper scaling
+- **Accessibility**: Proper ARIA labels, keyboard navigation, and semantic markup
+- **Visual Hierarchy**: Clear typography, consistent spacing, and intuitive layouts
+- **State Management**: Visual feedback for active states, selections, and interactions
+
+### 🔧 **Component Integration**
+- **BlockRenderer.tsx**: Updated to handle all new navigation components
+- **Registry Types**: Added "navigation" category to block type system
+- **Mock Data**: Comprehensive default props for realistic demonstrations
+- **Layout Showcase**: Added navigation components demonstration in v2 grid
+
+### 📋 **Files Created**
+- **components/blocks/NavBreadcrumbs.tsx**: Hierarchical navigation breadcrumbs
+- **components/blocks/NavQuickSearch.tsx**: Interactive search with results
+- **components/blocks/FilterPanel.tsx**: Advanced filtering controls
+- **components/blocks/ToolbarActions.tsx**: Configurable action button toolbar
+- **components/blocks/StatusBadges.tsx**: Status indicators with trends
+
+### 📋 **Files Modified**
+- **lib/block-registry/definitions.ts**: Added 5 new navigation component definitions
+- **lib/block-registry/types.ts**: Added "navigation" category
+- **lib/grid-v2/types.ts**: Added new block types to type system
+- **components/BlockRenderer.tsx**: Added rendering support for navigation components
+- **app/v2/page.tsx**: Added navigation showcase grid with demo components
+
+### 🎯 **Success Metrics**
+- ✅ **Complete Navigation Suite**: 5 essential navigation components implemented
+- ✅ **Registry Integration**: All components properly registered with defaults
+- ✅ **Responsive Design**: Components work across all container sizes
+- ✅ **Interactive Features**: Hover states, dropdowns, and state management
+- ✅ **Mock Data**: Realistic defaults for immediate demonstration
+- ✅ **Type Safety**: Full TypeScript support throughout
+
+This expands the component library significantly, providing essential navigation and UI components that enable building comprehensive dashboard interfaces with proper navigation, search, filtering, and action capabilities.
+
+---
+
+## 2025-01-25 16:45:00 - Editable Layout Blocks Implementation
+
+### 🚀 **Revolutionary Layout Block System**
+- **Editable Layout Containers**: Layout blocks now support click-to-edit functionality for adding child components
+- **Slot-Based Architecture**: Each layout block defines slots where users can place child components
+- **Nested Component Rendering**: Layout blocks can contain and render actual child components, not just placeholders
+- **Registry Integration**: Layout blocks are fully integrated with the block registry system including slot definitions
+
+### 🎯 **Layout Block Features**
+- **LayoutContainer**: Two-slot container (primary/secondary) with click-to-edit functionality
+- **LayoutSplit**: Two-pane split view (primary/secondary) with adjustable ratios
+- **LayoutStack**: Vertical/horizontal stack with multiple sections (section-1, section-2)
+- **LayoutGrid**: Nested grid with 4 tiles (tile-1 through tile-4) for mini cards and KPIs
+- **Interactive Slots**: Click on empty slots to add components, click on filled slots to edit
+
+### 🔧 **Technical Implementation**
+- **Slot Definitions**: Registry includes slot metadata (id, label, description, allowed categories, default types)
+- **BlockRenderer Integration**: Layout components receive slots, edit mode, and click handlers
+- **Nested Rendering**: Child components render within layout slots using BlockRenderer
+- **Edit Mode Awareness**: Layout blocks show different UI in edit vs view mode
+- **Click Handlers**: Slot click events trigger component selection/editing workflows
+
+### 📊 **Registry Enhancements**
+- **Slot Metadata**: Each layout block defines its available slots with constraints
+- **Default Types**: Slots have default component types (metric.kpi, chart.line, etc.)
+- **Category Filtering**: Slots can restrict which component categories are allowed
+- **Schema Validation**: Slot definitions include proper TypeScript interfaces
+
+### 🎨 **User Experience**
+- **Visual Feedback**: Empty slots show dashed borders and "Click to add" text in edit mode
+- **Hover States**: Slots have hover effects when in edit mode
+- **Child Component Rendering**: Filled slots show actual child components, not placeholders
+- **Edit Mode Toggle**: Different behavior and appearance in edit vs view mode
+
+### 🔧 **Component Updates**
+- **LayoutContainer.tsx**: Now renders child blocks from slots with click-to-edit
+- **LayoutSplit.tsx**: Two-pane layout with child component support
+- **LayoutStack.tsx**: Stack layout with multiple child component slots
+- **LayoutGridBlock.tsx**: Grid layout with 4 child component tiles
+- **BlockRenderer.tsx**: Updated to pass slot props and edit mode to layout components
+
+### 📋 **Files Modified**
+- **lib/block-registry/definitions.ts**: Added slot definitions for all layout blocks
+- **components/blocks/LayoutContainer.tsx**: Implemented slot rendering and click handlers
+- **components/blocks/LayoutSplit.tsx**: Added child component support
+- **components/blocks/LayoutStack.tsx**: Implemented slot-based rendering
+- **components/blocks/LayoutGridBlock.tsx**: Added 4-tile grid with child components
+- **components/BlockRenderer.tsx**: Updated to handle layout block slot props
+- **app/v2/page.tsx**: Added example layout container with child components
+
+### 🎯 **Success Metrics**
+- ✅ **Editable Layouts**: Layout blocks support click-to-edit functionality
+- ✅ **Child Component Rendering**: Layout blocks render actual child components
+- ✅ **Registry Integration**: Layout blocks fully integrated with block registry
+- ✅ **Slot Definitions**: All layout blocks have proper slot metadata
+- ✅ **Edit Mode Awareness**: Different behavior in edit vs view mode
+- ✅ **Nested Rendering**: Child components render properly within layout slots
+
+This implementation transforms layout blocks from static placeholders into fully functional, editable containers that can hold and render child components, enabling users to build complex nested dashboard layouts through the grid system.
+
+---
+
 ## 2025-01-02 19:30:00 - Disco Mobile Dashboard Implementation
 
 ### 🚀 **Mobile-First Field Worker Dashboard**
@@ -1250,6 +1396,95 @@ Replaced simple responsive scaling with intelligent layout adaptation based on c
 - **Medium containers**: Scaled down proportionally
 - **Small containers**: Compact but readable
 - **No overflow**: Content always fits
+
+---
+
+## Form Builder & Input Components Implementation
+**Date:** January 25, 2025 17:45  
+**Status:** Complete
+
+### New Components Added
+- **FormBuilder** (`form.builder`): Main form container with slot-based architecture for dynamic form element addition
+- **FormInput** (`form.input`): Text input with support for various input types (text, email, password, number, tel, url)
+- **FormSelect** (`form.select`): Dropdown select with single/multiple selection and customizable options
+- **FormTextarea** (`form.textarea`): Multi-line text input with configurable rows and character limits
+- **FormCheckbox** (`form.checkbox`): Checkbox input supporting single checkboxes or multiple checkbox groups
+- **FormUpload** (`form.upload`): File upload component with drag-and-drop, file type validation, and size limits
+- **FormSection** (`form.section`): Form section dividers for organizing form elements with customizable spacing
+
+### Key Features
+1. **Slot-Based Architecture**: FormBuilder uses slot system similar to layout blocks, allowing dynamic addition of form elements
+2. **Click-to-Add Functionality**: Users can continuously add form elements at the bottom for fluid form building
+3. **Responsive Design**: All form components scale properly within grid containers using CSS containment
+4. **Validation Support**: Built-in required field validation and visual indicators
+5. **Accessibility**: Proper ARIA labels, keyboard navigation, and semantic HTML structure
+6. **Drag-and-Drop**: FormUpload includes sophisticated file drag-and-drop with preview and removal
+7. **Form State Management**: Centralized form data collection and submission handling
+
+### Technical Implementation
+- **Registry Integration**: Full block registry support with proper schemas, mock data, and quick-edit controls
+- **Type Safety**: Complete TypeScript coverage with Zod schema validation
+- **Grid Compatibility**: Seamless integration with both v1 and v2 grid systems
+- **Container Queries**: Responsive behavior using CSS containment for optimal scaling
+- **Mock Data**: Realistic default values and examples for immediate use in demos
+
+### Use Cases
+- **Onboarding Flows**: Multi-step user onboarding with progressive data collection
+- **Data Collection**: General purpose forms for gathering user input and feedback
+- **Survey/Quiz Building**: Dynamic form creation for assessments and surveys
+- **Application Forms**: Job applications, registrations, and other structured data entry
+
+All form components maintain the same design system consistency and functionality as existing blocks, including full quick-edit capabilities and data source integration.
+
+**Note:** While the form components are fully implemented, the FormBuilder's slot-based click-to-add functionality still requires debugging for reliable operation in the v2 grid system.
+
+---
+
+## Page Creator System Implementation
+**Date:** January 25, 2025 18:00  
+**Status:** Complete
+
+### New Features Added
+- **Page Management Interface** (`/pages`): Central hub for creating, managing, and organizing dashboard pages
+- **Dynamic Page Creator** (`/pages/[pageId]`): Creates new blank pages with full v2 grid functionality
+- **Page Templates**: Support for both blank pages and predefined templates (like the v2 demo)
+- **Navigation Integration**: Added "Pages" section to main sidebar navigation
+
+### Key Features
+1. **Create New Pages**: One-click page creation with custom names and descriptions
+2. **Blank Page Templates**: New pages start with a welcome block and edit mode enabled
+3. **Full Grid Functionality**: Each page includes complete v2 grid system with drag-drop, resize, editing
+4. **Page Management**: View, duplicate, delete, and organize pages in a card-based interface
+5. **Persistent Storage**: Pages use the same localStorage persistence as the main v2 system
+6. **Navigation**: Easy access from sidebar and breadcrumb navigation between pages
+
+### Technical Implementation
+- **Dynamic Routing**: Uses Next.js `[pageId]` dynamic routes for flexible page creation
+- **Template System**: Configurable page templates with predefined layouts and blank page defaults
+- **State Management**: Each page maintains its own grid state with unique storage keys
+- **Component Reuse**: Leverages existing v2 grid components (GridSurface, BlockShell, etc.)
+- **Type Safety**: Full TypeScript coverage with proper grid state typing
+
+### Use Cases
+- **Multi-Dashboard Apps**: Create separate dashboards for different teams, projects, or use cases
+- **Template Creation**: Build reusable page templates for onboarding or standardization
+- **Prototyping**: Quickly create new page layouts for testing and iteration
+- **Client Demos**: Generate custom dashboard demos for different client needs
+
+This system provides the foundation for building complex multi-page dashboard applications with the same powerful grid-based component system across all pages.
+
+### Update: Sidebar-Based Navigation
+**Date:** January 25, 2025 18:15
+
+**Improved Design**: Moved from directory-based page management to sidebar-integrated navigation:
+
+- **Removed** separate `/pages` directory (bad UX pattern)
+- **Added** "New Page" button at top of sidebar with inline input
+- **Integrated** dynamic page list directly in sidebar with proper active states
+- **Ensured** layout consistency - all new pages use same LayoutScaffold with sidebar
+- **Enhanced** page templates with better starter content (welcome note + sample metric/chart)
+
+The sidebar now shows a "Pages" section at the top with the ability to create new pages inline, followed by a list of all created pages. This follows proper navigation UX patterns where the sidebar is the source of truth for page navigation.
 
 ---
 

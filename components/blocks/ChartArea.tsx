@@ -34,7 +34,7 @@ export default function ChartArea({ block }: Props) {
   const areaPath = `${pathData} L 290 140 L 10 140 Z`
 
   return (
-    <div className="p-4 h-full flex flex-col">
+    <div className="p-4 h-full flex flex-col" style={{ containerType: "inline-size" }}>
       <div className="flex-1 relative">
         <svg className="w-full h-full" viewBox="0 0 300 150">
           <path d={areaPath} fill="#3b82f6" fillOpacity="0.1" />
