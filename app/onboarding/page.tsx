@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useReducer, useState } from "react"
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { useGrid, type GridState } from "@/lib/grid-v2"
 import { GridSurface, BlockShell } from "@/components/grid-v2"
 import type { GridCoordinates } from "@/lib/grid-v2/types"
+import { CheckCircle2 } from "lucide-react"
 
 const STEP_ORDER = [
   "path",
@@ -63,22 +64,21 @@ const stepCopy: Record<StepId, { title: string; description: string }> = {
   },
 }
 
-const stepComplete: Record<StepId, (state: OnboardingState) => boolean> = {
-  path: (state) => state.path !== null,
-  company: (state) => Boolean(state.companyName.trim() && state.headquarters.trim() && state.goLiveTarget.trim()),
-  style: () => true,
-  systems: (state) => Boolean(state.integrationPriority && state.traceability && state.processPreset),
-  capacity: (state) => state.capacityTracking !== null,
-  items: (state) => Boolean(state.skuStrategy && (state.assets.length > 0 || state.skuCategories.length > 0)),
-  operations: (state) => state.dashboardAudience.length > 0,
-  floorplan: () => true,
-  summary: () => true,
-}
-
 const stepIncompleteHint: Partial<Record<StepId, string>> = {
   company: "Add your name, HQ, and go-live target to continue.",
   capacity: "Pick how you track capacity so alerts make sense.",
   items: "Select what you produce or categories before continuing.",
+}
+
+const groupValidators: Record<string, (state: OnboardingState) => boolean> = {
+  "path-0": (state) => state.path === "manufacturing",
+  "company-1": (state) => Boolean(state.companyName.trim()),
+  "company-2": (state) => Boolean(state.goLiveTarget.trim()),
+  "capacity-2": (state) => state.capacityTracking !== null,
+  "items-0": (state) => Boolean(state.orderMode),
+  "items-1": (state) => Boolean(state.skuStrategy),
+  "items-3": (state) => state.assets.length > 0 || state.skuCategories.length > 0,
+  "operations-0": () => true,
 }
 
 type ZoneKey = "production" | "qa" | "staging" | "storage" | "shipping" | "unassigned"
@@ -517,98 +517,161 @@ const chartPreferenceOptions: Array<{ id: ChartPreference; label: string; descri
   { id: "balanced", label: "Balanced", description: "Mix of trends and counters" },
 ]
 
-function cloneGridState(state: GridState): GridState {
-  return {
-    mode: "edit",
-    layout: state.layout.map((item) => ({ ...item })),
-    blocks: Object.fromEntries(
-      Object.entries(state.blocks).map(([key, block]) => [key, { ...block }]),
-    ),
-  }
-}
-
 interface BlockCardDefinition {
   id: string
   title: string
   layout: GridCoordinates
+  group: number
 }
 
-function buildGrid(defs: BlockCardDefinition[]): GridState {
-  const layout = defs.map(({ id, layout }) => ({ ...layout, i: id }))
-  const blocks = Object.fromEntries(
-    defs.map(({ id, title }) => [id, { id, type: "note", title }]),
-  )
-  return { mode: "edit", layout, blocks }
+const stepDefinitions: Record<StepId, BlockCardDefinition[]> = {
+  path: [
+    { id: "path-manufacturing", title: "Manufacturing", group: 0, layout: { x: 0, y: 0, w: 4, h: 8 } },
+    { id: "path-construction", title: "Construction", group: 0, layout: { x: 4, y: 0, w: 4, h: 8 } },
+    { id: "path-defense", title: "Defense", group: 0, layout: { x: 8, y: 0, w: 4, h: 8 } },
+    { id: "path-note", title: "What to Expect", group: 1, layout: { x: 0, y: 8, w: 12, h: 4 } },
+  ],
+  company: [
+    { id: "company-logo", title: "Logo", group: 0, layout: { x: 0, y: 0, w: 4, h: 8 } },
+    { id: "company-info", title: "Company Details", group: 1, layout: { x: 4, y: 0, w: 4, h: 8 } },
+    { id: "company-readiness", title: "Readiness", group: 2, layout: { x: 8, y: 0, w: 4, h: 8 } },
+    { id: "company-sites", title: "Sites", group: 3, layout: { x: 0, y: 8, w: 4, h: 5 } },
+    { id: "company-story", title: "Mission", group: 4, layout: { x: 4, y: 8, w: 8, h: 5 } },
+  ],
+  style: [
+    { id: "style-heading", title: "Design Overview", group: 0, layout: { x: 0, y: 0, w: 12, h: 4 } },
+    { id: "style-theme", title: "Theme", group: 0, layout: { x: 0, y: 5, w: 3, h: 6 } },
+    { id: "style-accent", title: "Accent", group: 1, layout: { x: 3, y: 5, w: 3, h: 6 } },
+    { id: "style-density", title: "Density", group: 2, layout: { x: 6, y: 5, w: 3, h: 6 } },
+    { id: "style-layout", title: "Layout Focus", group: 3, layout: { x: 9, y: 5, w: 3, h: 6 } },
+    { id: "style-mood", title: "Mood", group: 4, layout: { x: 0, y: 12, w: 6, h: 5 } },
+    { id: "style-motion", title: "Motion", group: 5, layout: { x: 6, y: 12, w: 6, h: 5 } },
+    { id: "style-preview", title: "Preview", group: 6, layout: { x: 0, y: 18, w: 12, h: 6 } },
+  ],
+  systems: [
+    { id: "systems-inventory", title: "Inventory System", group: 0, layout: { x: 0, y: 0, w: 4, h: 7 } },
+    { id: "systems-erp", title: "ERP / MRP", group: 1, layout: { x: 4, y: 0, w: 4, h: 7 } },
+    { id: "systems-integration", title: "Integration Priority", group: 2, layout: { x: 8, y: 0, w: 4, h: 7 } },
+    { id: "systems-traceability", title: "Traceability", group: 3, layout: { x: 0, y: 7, w: 6, h: 6 } },
+    { id: "systems-process", title: "Process Preset", group: 4, layout: { x: 6, y: 7, w: 6, h: 6 } },
+  ],
+  capacity: [
+    { id: "capacity-volume", title: "Volume", group: 0, layout: { x: 0, y: 0, w: 6, h: 7 } },
+    { id: "capacity-team", title: "Team", group: 1, layout: { x: 6, y: 0, w: 6, h: 7 } },
+    { id: "capacity-method", title: "Capacity Tracking", group: 2, layout: { x: 0, y: 7, w: 6, h: 5 } },
+    { id: "capacity-seasonality", title: "Seasonality", group: 3, layout: { x: 6, y: 7, w: 6, h: 5 } },
+    { id: "capacity-summary", title: "Snapshot", group: 4, layout: { x: 0, y: 12, w: 12, h: 4 } },
+  ],
+  items: [
+    { id: "items-order-mode", title: "Order & Item Mode", group: 0, layout: { x: 0, y: 0, w: 6, h: 6 } },
+    { id: "items-strategy", title: "SKU Strategy", group: 1, layout: { x: 6, y: 0, w: 6, h: 6 } },
+    { id: "items-prefix", title: "SKU Prefix", group: 2, layout: { x: 0, y: 6, w: 4, h: 5 } },
+    { id: "items-assets", title: "Tracked Assets", group: 3, layout: { x: 4, y: 6, w: 8, h: 5 } },
+    { id: "items-categories", title: "Categories", group: 4, layout: { x: 0, y: 11, w: 6, h: 5 } },
+    { id: "items-attributes", title: "Attributes", group: 5, layout: { x: 6, y: 11, w: 6, h: 5 } },
+  ],
+  operations: [
+    { id: "operations-heading", title: "Team Structure", group: 0, layout: { x: 0, y: 0, w: 12, h: 4 } },
+    { id: "operations-brand", title: "Brand Portal", group: 0, layout: { x: 0, y: 5, w: 4, h: 6 } },
+    { id: "operations-scanning", title: "Scanning & Labels", group: 1, layout: { x: 4, y: 5, w: 4, h: 6 } },
+    { id: "operations-bins", title: "Bins & Locations", group: 2, layout: { x: 8, y: 5, w: 4, h: 6 } },
+    { id: "operations-teams", title: "Teams & Access", group: 3, layout: { x: 0, y: 12, w: 6, h: 6 } },
+    { id: "operations-sla", title: "SLA & Alerts", group: 4, layout: { x: 6, y: 12, w: 6, h: 6 } },
+    { id: "operations-dashboard", title: "Dashboard Focus", group: 5, layout: { x: 0, y: 19, w: 12, h: 5 } },
+  ],
+  floorplan: [
+    { id: "floor-grid", title: "Floorplan", group: 0, layout: { x: 0, y: 0, w: 8, h: 9 } },
+    { id: "floor-palette", title: "Zones", group: 1, layout: { x: 8, y: 0, w: 4, h: 5 } },
+    { id: "floor-floors", title: "Floors", group: 2, layout: { x: 8, y: 5, w: 4, h: 4 } },
+    { id: "floor-assets", title: "Assets", group: 3, layout: { x: 0, y: 9, w: 8, h: 4 } },
+    { id: "floor-units", title: "Units", group: 4, layout: { x: 8, y: 9, w: 4, h: 4 } },
+    { id: "floor-notes", title: "Usage", group: 5, layout: { x: 0, y: 13, w: 12, h: 3 } },
+  ],
+  summary: [
+    { id: "summary-company", title: "Company", group: 0, layout: { x: 0, y: 0, w: 6, h: 7 } },
+    { id: "summary-operations", title: "Operations", group: 1, layout: { x: 6, y: 0, w: 6, h: 7 } },
+    { id: "summary-sku", title: "Items", group: 2, layout: { x: 0, y: 7, w: 6, h: 7 } },
+    { id: "summary-floorplan", title: "Floorplan", group: 3, layout: { x: 6, y: 7, w: 6, h: 7 } },
+    { id: "summary-blocks", title: "Suggested Blocks", group: 4, layout: { x: 0, y: 14, w: 12, h: 5 } },
+  ],
 }
 
-const stepGrids: Record<StepId, GridState> = {
-  path: buildGrid([
-    { id: "path-manufacturing", title: "Manufacturing", layout: { x: 0, y: 0, w: 4, h: 8 } },
-    { id: "path-construction", title: "Construction", layout: { x: 4, y: 0, w: 4, h: 8 } },
-    { id: "path-defense", title: "Defense", layout: { x: 8, y: 0, w: 4, h: 8 } },
-    { id: "path-note", title: "What to Expect", layout: { x: 0, y: 8, w: 12, h: 4 } },
-  ]),
-  company: buildGrid([
-    { id: "company-logo", title: "Logo", layout: { x: 0, y: 0, w: 4, h: 8 } },
-    { id: "company-info", title: "Company Details", layout: { x: 4, y: 0, w: 4, h: 8 } },
-    { id: "company-readiness", title: "Readiness", layout: { x: 8, y: 0, w: 4, h: 8 } },
-    { id: "company-sites", title: "Sites", layout: { x: 0, y: 8, w: 4, h: 5 } },
-    { id: "company-story", title: "Mission", layout: { x: 4, y: 8, w: 8, h: 5 } },
-  ]),
-  style: buildGrid([
-    { id: "style-theme", title: "Theme", layout: { x: 0, y: 0, w: 3, h: 6 } },
-    { id: "style-accent", title: "Accent", layout: { x: 3, y: 0, w: 3, h: 6 } },
-    { id: "style-density", title: "Density", layout: { x: 6, y: 0, w: 3, h: 6 } },
-    { id: "style-layout", title: "Layout Focus", layout: { x: 9, y: 0, w: 3, h: 6 } },
-    { id: "style-mood", title: "Mood", layout: { x: 0, y: 6, w: 6, h: 5 } },
-    { id: "style-motion", title: "Motion", layout: { x: 6, y: 6, w: 6, h: 5 } },
-    { id: "style-preview", title: "Preview", layout: { x: 0, y: 11, w: 12, h: 6 } },
-  ]),
-  systems: buildGrid([
-    { id: "systems-inventory", title: "Inventory System", layout: { x: 0, y: 0, w: 4, h: 7 } },
-    { id: "systems-erp", title: "ERP / MRP", layout: { x: 4, y: 0, w: 4, h: 7 } },
-    { id: "systems-integration", title: "Integration Priority", layout: { x: 8, y: 0, w: 4, h: 7 } },
-    { id: "systems-traceability", title: "Traceability", layout: { x: 0, y: 7, w: 6, h: 6 } },
-    { id: "systems-process", title: "Process Preset", layout: { x: 6, y: 7, w: 6, h: 6 } },
-  ]),
-  capacity: buildGrid([
-    { id: "capacity-volume", title: "Volume", layout: { x: 0, y: 0, w: 6, h: 7 } },
-    { id: "capacity-team", title: "Team", layout: { x: 6, y: 0, w: 6, h: 7 } },
-    { id: "capacity-method", title: "Capacity Tracking", layout: { x: 0, y: 7, w: 6, h: 5 } },
-    { id: "capacity-seasonality", title: "Seasonality", layout: { x: 6, y: 7, w: 6, h: 5 } },
-    { id: "capacity-summary", title: "Snapshot", layout: { x: 0, y: 12, w: 12, h: 4 } },
-  ]),
-  items: buildGrid([
-    { id: "items-order-mode", title: "Order & Item Mode", layout: { x: 0, y: 0, w: 6, h: 6 } },
-    { id: "items-strategy", title: "SKU Strategy", layout: { x: 6, y: 0, w: 6, h: 6 } },
-    { id: "items-prefix", title: "SKU Prefix", layout: { x: 0, y: 6, w: 4, h: 5 } },
-    { id: "items-assets", title: "Tracked Assets", layout: { x: 4, y: 6, w: 8, h: 5 } },
-    { id: "items-categories", title: "Categories", layout: { x: 0, y: 11, w: 6, h: 5 } },
-    { id: "items-attributes", title: "Attributes", layout: { x: 6, y: 11, w: 6, h: 5 } },
-  ]),
-  operations: buildGrid([
-    { id: "operations-brand", title: "Brand Portal", layout: { x: 0, y: 0, w: 4, h: 6 } },
-    { id: "operations-scanning", title: "Scanning & Labels", layout: { x: 4, y: 0, w: 4, h: 6 } },
-    { id: "operations-bins", title: "Bins & Locations", layout: { x: 8, y: 0, w: 4, h: 6 } },
-    { id: "operations-teams", title: "Teams & Access", layout: { x: 0, y: 6, w: 6, h: 6 } },
-    { id: "operations-sla", title: "SLA & Alerts", layout: { x: 6, y: 6, w: 6, h: 6 } },
-    { id: "operations-dashboard", title: "Dashboard Focus", layout: { x: 0, y: 12, w: 12, h: 5 } },
-  ]),
-  floorplan: buildGrid([
-    { id: "floor-grid", title: "Floorplan", layout: { x: 0, y: 0, w: 8, h: 9 } },
-    { id: "floor-palette", title: "Zones", layout: { x: 8, y: 0, w: 4, h: 5 } },
-    { id: "floor-floors", title: "Floors", layout: { x: 8, y: 5, w: 4, h: 4 } },
-    { id: "floor-assets", title: "Assets", layout: { x: 0, y: 9, w: 8, h: 4 } },
-    { id: "floor-units", title: "Units", layout: { x: 8, y: 9, w: 4, h: 4 } },
-    { id: "floor-notes", title: "Usage", layout: { x: 0, y: 13, w: 12, h: 3 } },
-  ]),
-  summary: buildGrid([
-    { id: "summary-company", title: "Company", layout: { x: 0, y: 0, w: 6, h: 7 } },
-    { id: "summary-operations", title: "Operations", layout: { x: 6, y: 0, w: 6, h: 7 } },
-    { id: "summary-sku", title: "Items", layout: { x: 0, y: 7, w: 6, h: 7 } },
-    { id: "summary-floorplan", title: "Floorplan", layout: { x: 6, y: 7, w: 6, h: 7 } },
-    { id: "summary-blocks", title: "Suggested Blocks", layout: { x: 0, y: 14, w: 12, h: 5 } },
-  ]),
+const STEP_VERTICAL_GAP = 4
+
+interface FlowBlock extends BlockCardDefinition {
+  step: StepId
+}
+
+interface FlowGroup {
+  step: StepId
+  order: number
+  key: string
+  blocks: FlowBlock[]
+}
+
+const FLOW_GROUPS: FlowGroup[] = (() => {
+  let offset = 0
+  const groups: FlowGroup[] = []
+
+  STEP_ORDER.forEach((step) => {
+    const defs = stepDefinitions[step]
+    const map = new Map<number, FlowBlock[]>()
+    let stepMaxY = 0
+
+    defs.forEach((def) => {
+      const adjustedLayout = { ...def.layout, y: def.layout.y + offset }
+      const block: FlowBlock = { ...def, layout: adjustedLayout, step }
+      const list = map.get(def.group) ?? []
+      list.push(block)
+      map.set(def.group, list)
+      stepMaxY = Math.max(stepMaxY, adjustedLayout.y + adjustedLayout.h)
+    })
+
+    const sortedOrders = Array.from(map.keys()).sort((a, b) => a - b)
+    sortedOrders.forEach((order) => {
+      groups.push({ step, order, key: `${step}-${order}`, blocks: map.get(order)! })
+    })
+
+    offset = stepMaxY + STEP_VERTICAL_GAP
+  })
+
+  return groups
+})()
+
+const FLOW_BLOCKS: FlowBlock[] = FLOW_GROUPS.flatMap((group) => group.blocks)
+const FLOW_BLOCK_MAP = new Map<string, FlowBlock>(FLOW_BLOCKS.map((block) => [block.id, block]))
+
+const BLOCK_HEIGHT_OVERRIDES: Record<string, number> = {
+  "path-note": 5,
+  "style-heading": 6,
+  "operations-heading": 6,
+}
+
+function inferMinHeight(block: FlowBlock) {
+  const override = BLOCK_HEIGHT_OVERRIDES[block.id]
+  if (override !== undefined) {
+    return override
+  }
+
+  const width = block.layout.w
+
+  if (block.step === "floorplan") {
+    return 10
+  }
+
+  if (block.step === "summary") {
+    return 7
+  }
+
+  if (width >= 10) {
+    return 7
+  }
+
+  if (width >= 6) {
+    return 8
+  }
+
+  return 8
 }
 
 function useOnboardingReducer() {
@@ -617,45 +680,195 @@ function useOnboardingReducer() {
 
 export default function OnboardingPage() {
   const [state, dispatch] = useOnboardingReducer()
-  const [stepIndex, setStepIndex] = useState(0)
+  const [visibleGroupCount, setVisibleGroupCount] = useState(1)
+  const [activeGroupIndex, setActiveGroupIndex] = useState(0)
   const [activeZone, setActiveZone] = useState<ZoneKey>("production")
-  const currentStep = STEP_ORDER[stepIndex]
-  const progress = ((stepIndex + 1) / STEP_ORDER.length) * 100
 
-  const initialGridState = useMemo(() => cloneGridState(stepGrids[currentStep]), [currentStep])
+  const activeGroup = FLOW_GROUPS[activeGroupIndex] ?? FLOW_GROUPS[0]
+  const currentStep = activeGroup?.step ?? STEP_ORDER[0]
+  const stepIndex = STEP_ORDER.indexOf(currentStep)
+  const progress = Math.min((visibleGroupCount / FLOW_GROUPS.length) * 100, 100)
+
+  const initialGridState = useMemo(() => {
+    const layout = FLOW_BLOCKS.map((block) => {
+      const minHeight = inferMinHeight(block)
+      const height = Math.max(block.layout.h, minHeight)
+      return { ...block.layout, h: height, i: block.id }
+    })
+    const blocks = Object.fromEntries(
+      FLOW_BLOCKS.map((block) => [block.id, { id: block.id, type: "note", title: block.title }]),
+    )
+    return { mode: "edit", layout, blocks }
+  }, [])
+
+  const blockGroupIndex = useMemo(() => {
+    const map = new Map<string, number>()
+    FLOW_GROUPS.forEach((group, index) => {
+      group.blocks.forEach((block) => map.set(block.id, index))
+    })
+    return map
+  }, [])
+
+  const minHeightForLayout = useCallback((item: GridCoordinates) => {
+    const block = FLOW_BLOCK_MAP.get(item.i)
+    return block ? inferMinHeight(block) : 4
+  }, [])
+
   const {
     state: gridState,
-    setState: setGridState,
-    draggedBlock,
     dragPreview,
+    draggedBlock,
     gridRef,
     maxY,
     handleDragStart,
     handleDragOver,
     handleDrop,
     handleResizeStart,
-  } = useGrid(initialGridState)
+    resizing,
+  } = useGrid(initialGridState, undefined, {
+    autoFit: true,
+    minHeight: minHeightForLayout,
+  })
 
-  const handleStepChange = (step: StepId) => {
-    const nextIndex = STEP_ORDER.indexOf(step)
-    if (nextIndex === -1) return
-    setStepIndex(nextIndex)
-    setGridState(cloneGridState(stepGrids[step]))
-  }
+  const visibleIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (let i = 0; i < visibleGroupCount; i++) {
+      FLOW_GROUPS[i]?.blocks.forEach((block) => ids.add(block.id))
+    }
+    return ids
+  }, [visibleGroupCount])
+
+  const completedIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (let i = 0; i < activeGroupIndex; i++) {
+      FLOW_GROUPS[i]?.blocks.forEach((block) => ids.add(block.id))
+    }
+    return ids
+  }, [activeGroupIndex])
+
+  const activeIds = useMemo(() => {
+    const ids = new Set<string>()
+    activeGroup?.blocks.forEach((block) => ids.add(block.id))
+    return ids
+  }, [activeGroup])
+
+  const activeAccentClass = useMemo(() => {
+    switch (state.accent) {
+      case "amber":
+        return "ring-amber-400 shadow-[0_12px_30px_rgba(217,119,6,0.18)]"
+      case "emerald":
+        return "ring-emerald-400 shadow-[0_12px_30px_rgba(5,150,105,0.18)]"
+      case "violet":
+        return "ring-violet-400 shadow-[0_12px_30px_rgba(139,92,246,0.20)]"
+      default:
+        return "ring-sky-400 shadow-[0_12px_30px_rgba(14,116,144,0.18)]"
+    }
+  }, [state.accent])
+
+  const stepStatus = useMemo(() => {
+    return STEP_ORDER.map((step) => {
+      const indices: number[] = []
+      FLOW_GROUPS.forEach((group, idx) => {
+        if (group.step === step) {
+          indices.push(idx)
+        }
+      })
+
+      if (!indices.length) {
+        return {
+          step,
+          firstIndex: -1,
+          lastIndex: -1,
+          reachable: false,
+          completed: false,
+          isActive: step === currentStep,
+        }
+      }
+
+      const firstIndex = indices[0]
+      const lastIndex = indices[indices.length - 1]
+
+      return {
+        step,
+        firstIndex,
+        lastIndex,
+        reachable: firstIndex < visibleGroupCount,
+        completed: lastIndex < activeGroupIndex,
+        isActive: step === currentStep,
+      }
+    })
+  }, [activeGroupIndex, currentStep, visibleGroupCount])
+
+  const blockRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const headerRef = useRef<HTMLElement | null>(null)
+  const autoScrollEnabledRef = useRef(false)
+
+  useEffect(() => {
+    if (!autoScrollEnabledRef.current) return
+
+    const focusBlock = activeGroup?.blocks[0]
+    if (!focusBlock) {
+      autoScrollEnabledRef.current = false
+      return
+    }
+
+    const element = blockRefs.current[focusBlock.id]
+    if (!element) {
+      autoScrollEnabledRef.current = false
+      return
+    }
+
+    const headerHeight = headerRef.current?.offsetHeight ?? 0
+    const offset = headerHeight + 24
+
+    const scrollToTarget = () => {
+      const rect = element.getBoundingClientRect()
+      const targetTop = rect.top + window.scrollY - offset
+      const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0)
+      window.scrollTo({
+        top: Math.min(Math.max(targetTop, 0), maxScroll),
+        behavior: "smooth",
+      })
+      autoScrollEnabledRef.current = false
+    }
+
+    const frame = window.requestAnimationFrame(scrollToTarget)
+    return () => window.cancelAnimationFrame(frame)
+  }, [activeGroup, activeGroupIndex, visibleGroupCount])
+
+  const validator = groupValidators[activeGroup?.key ?? ""] ?? (() => true)
+  const atLastGroup = activeGroupIndex >= FLOW_GROUPS.length - 1
+  const nextDisabled = atLastGroup || !validator(state)
 
   const handleNext = () => {
-    setStepIndex((idx) => Math.min(idx + 1, STEP_ORDER.length - 1))
-    const nextStep = STEP_ORDER[Math.min(stepIndex + 1, STEP_ORDER.length - 1)]
-    setGridState(cloneGridState(stepGrids[nextStep]))
+    if (atLastGroup) return
+    if (!validator(state)) return
+    autoScrollEnabledRef.current = true
+    const nextIndex = Math.min(activeGroupIndex + 1, FLOW_GROUPS.length - 1)
+    setVisibleGroupCount((count) => Math.max(count, nextIndex + 1))
+    setActiveGroupIndex(nextIndex)
   }
 
   const handleBack = () => {
-    setStepIndex((idx) => Math.max(idx - 1, 0))
-    const prevStep = STEP_ORDER[Math.max(stepIndex - 1, 0)]
-    setGridState(cloneGridState(stepGrids[prevStep]))
+    if (activeGroupIndex === 0) return
+    autoScrollEnabledRef.current = true
+    setActiveGroupIndex((index) => Math.max(index - 1, 0))
   }
 
-  const nextDisabled = !stepComplete[currentStep](state)
+  const handleBlockActivate = (blockId: string) => {
+    const targetGroup = blockGroupIndex.get(blockId)
+    if (targetGroup === undefined) return
+    if (targetGroup >= visibleGroupCount) return
+    autoScrollEnabledRef.current = true
+    setActiveGroupIndex(targetGroup)
+  }
+
+  const handleStepJump = (step: StepId) => {
+    const target = stepStatus.find((status) => status.step === step)
+    if (!target || !target.reachable || target.firstIndex === -1) return
+    autoScrollEnabledRef.current = true
+    setActiveGroupIndex(target.firstIndex)
+  }
 
   return (
     <div
@@ -664,7 +877,10 @@ export default function OnboardingPage() {
         state.theme === "dark" && "bg-slate-950 text-slate-100",
       )}
     >
-      <header className="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header
+        ref={headerRef}
+        className="sticky top-0 z-50 border-b bg-background/85 backdrop-blur shadow-sm supports-[backdrop-filter]:bg-background/60"
+      >
         <div className={gridContainerClass("flex items-center justify-between gap-4 px-6 py-3", "wide")}>
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 overflow-hidden rounded-full border bg-card shadow-sm">
@@ -695,16 +911,16 @@ export default function OnboardingPage() {
         </div>
       </header>
 
-      <main className="flex-1 pb-28">
-        <div className={gridContainerClass("px-6 pt-8 pb-12", "full")}>
-          <StepBreadcrumbs currentStep={currentStep} onJump={handleStepChange} />
+      <main className="flex-1 pb-40">
+        <div className={gridContainerClass("px-6 pt-8 pb-12 space-y-8", "full")}>
+          <StepBreadcrumbs activeStep={currentStep} stepStatus={stepStatus} onJump={handleStepJump} />
 
-          <Card className="mt-6 shadow-lg border-border/70">
+          <Card className="shadow-lg border-border/70">
             <CardHeader className="pb-0">
               <h2 className="text-lg font-semibold">{stepCopy[currentStep].title}</h2>
               <p className="text-sm text-muted-foreground">{stepCopy[currentStep].description}</p>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-8 pb-4">
               <div className="relative">
                 <GridSurface
                   ref={gridRef}
@@ -718,17 +934,40 @@ export default function OnboardingPage() {
                   {gridState.layout.map((item) => {
                     const block = gridState.blocks[item.i]
                     const renderer = blockRenderers[item.i]
+                    const meta = FLOW_BLOCK_MAP.get(item.i)
+
+                    if (!meta || !visibleIds.has(item.i)) {
+                      return null
+                    }
+
+                    const isActive = activeIds.has(item.i)
+                    const isCompleted = completedIds.has(item.i)
+                    const dimmed = !isActive && isCompleted
+                    const stepNumber = STEP_ORDER.indexOf(meta.step) + 1
+                    const stepBadge = `Step ${stepNumber}`
+
                     return (
                       <BlockShell
                         key={item.i}
+                        ref={(element) => {
+                          blockRefs.current[item.i] = element
+                        }}
                         blockId={item.i}
-                        title={block?.title || "Untitled"}
+                        title={block?.title || meta.title}
                         mode="edit"
                         gridPos={item}
                         draggedBlock={draggedBlock}
                         onDragStart={handleDragStart}
                         onResizeStart={handleResizeStart}
                         controls={null}
+                        className={cn(
+                          "transition-opacity duration-300",
+                          isActive && `ring-2 ring-offset-2 ${activeAccentClass}`,
+                          !isActive && !isCompleted && "opacity-30",
+                          dimmed && "opacity-60 hover:opacity-90 cursor-pointer",
+                        )}
+                        onActivate={dimmed ? handleBlockActivate : undefined}
+                        stepLabel={stepBadge}
                       >
                         {renderer ? (
                           renderer({
@@ -749,7 +988,7 @@ export default function OnboardingPage() {
         </div>
       </main>
 
-      <footer className="sticky bottom-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <footer className="sticky bottom-0 z-50 border-t bg-background/95 backdrop-blur shadow-lg supports-[backdrop-filter]:bg-background/70">
         <div className={gridContainerClass("px-6 py-4", "full")}
         >
           <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -918,6 +1157,18 @@ const blockRenderers: Record<string, Renderer> = {
   "company-story": () => (
     <div className="h-full rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
       Drop a short mission statement or leave notes for the solutions team. This card travels with the engagement file.
+    </div>
+  ),
+
+  "style-heading": () => (
+    <div className="flex h-full flex-col justify-center gap-3 rounded-xl border border-dashed border-primary/20 bg-primary/5 p-5 text-sm text-muted-foreground">
+      <p className="text-xs font-semibold uppercase tracking-wide text-primary">Design Sprint</p>
+      <p>
+        We’ll tailor the demo’s look and feel. Pick the theme, accent, and layout density so the workspace matches the vibe you want to showcase.
+      </p>
+      <p className="text-xs text-muted-foreground/80">
+        Expect a handful of quick choices—color, spacing, motion—and we’ll refresh the preview as you go.
+      </p>
     </div>
   ),
 
@@ -1420,6 +1671,18 @@ const blockRenderers: Record<string, Renderer> = {
     />
   ),
 
+  "operations-heading": () => (
+    <div className="flex h-full flex-col justify-center gap-3 rounded-xl border border-dashed border-blue-300/40 bg-blue-500/5 p-5 text-sm text-muted-foreground">
+      <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Team Structure</p>
+      <p>
+        Up next: decide who gets access, how work is routed, and which alerts matter. These choices wire the roles, scanning defaults, and escalation rules in the generated workspace.
+      </p>
+      <p className="text-xs text-muted-foreground/80">
+        We’ll start with brand-facing visibility, then move into labels, binning, teams, and SLA safeguards.
+      </p>
+    </div>
+  ),
+
   "operations-brand": ({ state, dispatch }) => (
     <SelectableCard title="Brand portal" description="Share live status with partners when enabled.">
       <div className="space-y-3">
@@ -1836,12 +2099,21 @@ function IndustryCard({
       onClick={disabled ? undefined : onSelect}
       onKeyDown={handleKeyDown}
       className={cn(
-        "flex h-full w-full flex-col rounded-xl border p-5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        active ? "border-foreground bg-card shadow" : "border-border",
+        "group relative flex h-full w-full flex-col rounded-xl border p-5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        active
+          ? "border-primary bg-primary/10 shadow-[0_12px_28px_rgba(14,116,144,0.18)]"
+          : "border-border hover:border-primary/40 hover:shadow-sm",
         disabled && "cursor-not-allowed opacity-50",
       )}
+      aria-pressed={active}
     >
-      <div className="flex-1 space-y-2">
+      {active && (
+        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-2 py-1 text-[10px] font-semibold uppercase tracking-wide">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Selected
+        </span>
+      )}
+      <div className="flex-1 space-y-3">
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
@@ -2030,21 +2302,44 @@ function ChipSelector({
   )
 }
 
-function StepBreadcrumbs({ currentStep, onJump }: { currentStep: StepId; onJump: (step: StepId) => void }) {
+interface StepStatusInfo {
+  step: StepId
+  firstIndex: number
+  lastIndex: number
+  reachable: boolean
+  completed: boolean
+  isActive: boolean
+}
+
+function StepBreadcrumbs({
+  activeStep,
+  stepStatus,
+  onJump,
+}: {
+  activeStep: StepId
+  stepStatus: StepStatusInfo[]
+  onJump: (step: StepId) => void
+}) {
   return (
     <nav className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-      {STEP_ORDER.map((step) => {
-        const isActive = step === currentStep
-        const isCompleted = STEP_ORDER.indexOf(step) < STEP_ORDER.indexOf(currentStep)
+      {stepStatus.map(({ step, reachable, completed, isActive }) => {
+        const disabled = !reachable && !isActive
         return (
           <button
             key={step}
             type="button"
-            onClick={() => onJump(step)}
+            onClick={() => !disabled && onJump(step)}
             className={cn(
               "flex items-center gap-2 rounded-full border px-3 py-1 transition",
-              isActive ? "border-foreground text-foreground" : isCompleted ? "border-emerald-400 text-emerald-600" : "border-border",
+              isActive
+                ? "border-foreground text-foreground"
+                : completed
+                  ? "border-emerald-400 text-emerald-600"
+                  : disabled
+                    ? "border-border/60 text-muted-foreground/60 cursor-not-allowed"
+                    : "border-border",
             )}
+            disabled={disabled}
           >
             <span className="font-semibold uppercase">{stepCopy[step].title}</span>
           </button>

@@ -31,6 +31,7 @@ The demo onboarding flow shifts from a form-stack into a guided, step-by-step ex
 - Reuse design tokens: existing cards, buttons, typography, and the grid container helper to preserve spacing guidelines.
 - Ensure uploads/sliders remain mock/local for now; state shape should anticipate future persistence.
 - Final step exposes a CTA to “Generate my workspace” (stub for now) and displays the selected block families.
+- Next iteration: cards reveal sequentially—only the active block is full color, prior answers stay dimmed but clickable and auto-scroll brings the new card into view.
 
 ## Status Log
 - (25/09/25 14:05) Initial interactive wizard shipped at `app/onboarding/page.tsx` with bespoke step components, progress UI, and summary preview.

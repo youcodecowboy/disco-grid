@@ -6,6 +6,7 @@ Working list that tracks everything we still owe the onboarding wizard before th
 - Add “This or That” component presentation picker (table-first vs. KPI-first vs. map-first) so presets feel co-designed.
 - Polish quick-edit chip styles and accent previews to match the richer onboarding cards.
 - Layer friendly microcopy/tooltips on new cards so first-time users know why we ask each question.
+- Transition wizard to a sequential reveal (one active card at a time) with dimmed history blocks and auto-scroll.
 
 ## Agentic Foundations
 - Define a state machine map describing which questions unlock next based on natural-language answers.

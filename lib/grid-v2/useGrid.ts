@@ -1,8 +1,20 @@
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useLayoutEffect } from "react"
 import { generateId } from "@/lib/utils"
 import { createBlockConfig, defaultBlockSize } from "@/lib/block-registry"
 import type { GridState, BlockConfig, BlockType, GridCoordinates } from "./types"
+
+const DEFAULT_ROW_HEIGHT = 40
+const DEFAULT_VERTICAL_OFFSET = 8
+
+interface GridOptions {
+  autoFit?: boolean
+  rowHeight?: number
+  verticalOffset?: number
+  defaultMinHeight?: number
+  minHeight?: (item: GridCoordinates) => number
+  cardSelector?: string
+}
 
 function isColliding(a: GridCoordinates, b: GridCoordinates) {
   const overlapsX = a.x < b.x + b.w && a.x + a.w > b.x
@@ -32,7 +44,28 @@ function resolveOverlaps(layout: GridCoordinates[]): GridCoordinates[] {
   return layout.map((item) => map.get(item.i) ?? item)
 }
 
-export function useGrid(initialState: GridState, storageKey?: string) {
+export function useGrid(
+  initialState: GridState,
+  storageKeyOrOptions?: string | GridOptions,
+  maybeOptions?: GridOptions,
+) {
+  let storageKey: string | undefined
+  let options: GridOptions | undefined
+
+  if (typeof storageKeyOrOptions === "string" || storageKeyOrOptions === undefined) {
+    storageKey = storageKeyOrOptions
+    options = maybeOptions
+  } else {
+    options = storageKeyOrOptions
+  }
+
+  const autoFit = options?.autoFit ?? true
+  const rowHeight = options?.rowHeight ?? DEFAULT_ROW_HEIGHT
+  const verticalOffset = options?.verticalOffset ?? DEFAULT_VERTICAL_OFFSET
+  const defaultMinHeight = options?.defaultMinHeight ?? 4
+  const minHeightForItem = options?.minHeight
+  const cardSelector = options?.cardSelector ?? "[data-grid-card-root]"
+
   const [state, setState] = useState<GridState>(initialState)
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null)
   const [dragPreview, setDragPreview] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
@@ -286,7 +319,6 @@ export function useGrid(initialState: GridState, storageKey?: string) {
 
     const totalWidth = rect.width
     const gridUnitWidth = totalWidth / 12
-    const rowHeight = 40
 
     const newX = Math.max(0, Math.min(11, Math.floor(mouseX / gridUnitWidth)))
     const newY = Math.max(0, Math.floor(mouseY / rowHeight))
@@ -370,8 +402,6 @@ export function useGrid(initialState: GridState, storageKey?: string) {
       const deltaY = e.clientY - resizing.startY
 
       const gridSize = 100
-      const rowHeight = 40
-
       const deltaW = Math.round(deltaX / gridSize)
       const deltaH = Math.round(deltaY / rowHeight)
 
@@ -470,6 +500,60 @@ export function useGrid(initialState: GridState, storageKey?: string) {
   }, [])
 
   const maxY = Math.max(...state.layout.map((item) => item.y + item.h), 0)
+
+  useLayoutEffect(() => {
+    if (!autoFit) return
+    if (draggedBlock || resizing) return
+
+    const gridElement = gridRef.current
+    if (!gridElement) return
+
+    setState((prev) => {
+      let changed = false
+
+      const nextLayout = prev.layout.map((item) => {
+        const blockElement = gridElement.querySelector<HTMLElement>(`[data-block-id="${item.i}"]`)
+        if (!blockElement) {
+          return item
+        }
+
+        const card = blockElement.querySelector<HTMLElement>(cardSelector)
+        if (!card) {
+          return item
+        }
+
+        const measuredHeight = Math.ceil(card.scrollHeight)
+        if (!measuredHeight) {
+          return item
+        }
+
+        const minUnits = Math.max(
+          minHeightForItem ? minHeightForItem(item) : defaultMinHeight,
+          1,
+        )
+        const desiredUnits = Math.max(
+          minUnits,
+          Math.ceil((measuredHeight + verticalOffset) / rowHeight),
+        )
+
+        if (desiredUnits !== item.h) {
+          changed = true
+          return { ...item, h: desiredUnits }
+        }
+
+        return item
+      })
+
+      if (!changed) {
+        return prev
+      }
+
+      return {
+        ...prev,
+        layout: resolveOverlaps(nextLayout),
+      }
+    })
+  }, [autoFit, cardSelector, draggedBlock, minHeightForItem, resizing, rowHeight, verticalOffset, state.blocks, state.layout])
 
   return {
     state,

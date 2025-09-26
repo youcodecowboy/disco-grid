@@ -1,6 +1,6 @@
 "use client"
 
-import React, { ReactNode } from "react"
+import { forwardRef, type DragEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -66,8 +66,8 @@ interface GridCardProps {
   mode: "edit" | "save"
   gridPos: { x: number; y: number; w: number; h: number; i: string }
   draggedBlock: string | null
-  onDragStart: (e: React.DragEvent, blockId: string) => void
-  onResizeStart: (e: React.MouseEvent, blockId: string, direction: "se" | "e" | "s") => void
+  onDragStart: (e: DragEvent<HTMLDivElement>, blockId: string) => void
+  onResizeStart: (e: MouseEvent<HTMLDivElement>, blockId: string, direction: "se" | "e" | "s") => void
   onToggleCollapse?: (blockId: string) => void
   onNotification?: (blockId: string) => void
   onAiAssistant?: (blockId: string) => void
@@ -76,31 +76,48 @@ interface GridCardProps {
   onDelete?: (blockId: string) => void
   className?: string
   controls?: ReactNode
+  onActivate?: (blockId: string) => void
+  stepLabel?: string
 }
 
-export default function GridCard({
-  blockId,
-  title,
-  children,
-  mode,
-  gridPos,
-  draggedBlock,
-  onDragStart,
-  onResizeStart,
-  onToggleCollapse,
-  onNotification,
-  onAiAssistant,
-  onEdit,
-  onExtend,
-  onDelete,
-  className = "",
-  controls,
-}: GridCardProps) {
+const GridCard = forwardRef<HTMLDivElement, GridCardProps>(function GridCard(
+  {
+    blockId,
+    title,
+    children,
+    mode,
+    gridPos,
+    draggedBlock,
+    onDragStart,
+    onResizeStart,
+    onToggleCollapse,
+    onNotification,
+    onAiAssistant,
+    onEdit,
+    onExtend,
+    onDelete,
+    className = "",
+    controls,
+    onActivate,
+    stepLabel,
+  },
+  ref,
+) {
   const isDragging = draggedBlock === blockId
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!onActivate) return
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      onActivate(blockId)
+    }
+  }
 
   return (
     <div
-      className={`absolute group transition-all duration-200 ease-out ${
+      data-block-id={blockId}
+      ref={ref}
+      className={`absolute group transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary ${
         mode === "edit" ? "cursor-move" : ""
       } ${isDragging ? "z-30" : "z-10"} ${className}`}
       style={{
@@ -114,8 +131,15 @@ export default function GridCard({
       }}
       draggable={mode === "edit"}
       onDragStart={(e) => onDragStart(e, blockId)}
+      onClick={() => onActivate?.(blockId)}
+      onKeyDown={handleKeyDown}
+      tabIndex={onActivate ? 0 : undefined}
+      role={onActivate ? "button" : undefined}
     >
-      <Card className="h-full relative transition-all duration-200 ease-out hover:shadow-md border border-border/70 bg-card rounded-xl">
+      <Card
+        data-grid-card-root
+        className="h-full relative transition-all duration-200 ease-out hover:shadow-md border border-border/70 bg-card rounded-xl"
+      >
         {mode === "edit" && (
           <>
             {/* Bottom-right corner: resize both width and height */}
@@ -138,8 +162,18 @@ export default function GridCard({
           </>
         )}
 
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-3 border-b transition-all duration-200 ease-out min-h-12">
-          <h3 className="font-semibold text-sm truncate flex-1 min-w-0 pr-4 text-foreground">{title}</h3>
+        <CardHeader
+          data-grid-card-header
+          className="flex flex-row items-center justify-between space-y-0 px-4 py-3 border-b transition-all duration-200 ease-out min-h-12"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            {stepLabel ? (
+              <span className="inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full border border-primary/40 bg-primary/10 px-2 text-xs font-semibold uppercase tracking-wide text-primary">
+                {stepLabel}
+              </span>
+            ) : null}
+            <h3 className="font-semibold text-sm truncate text-foreground">{title}</h3>
+          </div>
           {mode === "edit" && (
             <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
               {controls ? (
@@ -217,12 +251,17 @@ export default function GridCard({
             </div>
           )}
         </CardHeader>
-        <CardContent className="p-4 flex flex-col h-[calc(100%-3rem)] transition-all duration-200 ease-out">
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        <CardContent
+          data-grid-card-body
+          className="p-4 flex flex-col h-[calc(100%-3rem)] transition-all duration-200 ease-out"
+        >
+          <div data-grid-card-inner className="flex-1 min-h-0 flex flex-col overflow-hidden">
             {children}
           </div>
         </CardContent>
       </Card>
     </div>
   )
-}
+})
+
+export default GridCard

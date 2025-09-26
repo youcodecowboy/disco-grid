@@ -38,6 +38,7 @@ _Documentation rule: every feature change must create/update the matching doc en
   - [x] Seed demo onboarding preset (5-step wizard + helper panels) accessible via dynamic pages. (25/09/25 13:30)
 - [x] Audit onboarding component coverage: confirm form builder, navigation, and layout blocks meet wizard requirements (25/09/25 13:30)
 - [~] Build interactive onboarding wizard (branding → style → industry → capacity → SKU → floorplan → summary) with bespoke components. (25/09/25 13:45)
+  - [ ] Keep `docs/onboarding-plan.md` + `docs/onboarding-backlog.md` updated as wizard layout/logic shifts.
 
 
 ### 2. Mission Control (Generated Canvas Pages)
