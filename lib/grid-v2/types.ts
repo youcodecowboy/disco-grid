@@ -63,6 +63,22 @@ export type BlockType =
   | "form.checkbox"
   | "form.upload"
   | "form.section"
+  // Construction/Worksite components
+  | "construction.metric.large"
+  | "construction.material.progress"
+  | "construction.zone.status"
+  | "construction.site.map"
+  | "construction.installation.dots"
+  | "construction.delivery.timeline"
+  | "worksite.sitemap"
+  | "worksite.delivery.calendar"
+  | "worksite.scan.timeline"
+  | "worksite.stock.grid"
+  | "worksite.metric"
+  // Items management components
+  | "items.table.comprehensive"
+  | "items.workflow.overview"
+  | "items.activity.timeline"
 
 export type BlockConfig = {
   id: string

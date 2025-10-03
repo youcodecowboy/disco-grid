@@ -522,7 +522,63 @@ export function useGrid(
           return item
         }
 
+        const body = card.querySelector<HTMLElement>("[data-grid-card-body]")
+        const inner = card.querySelector<HTMLElement>("[data-grid-card-inner]")
+
+        const prevBlockHeight = blockElement.style.height
+        const prevBlockMinHeight = blockElement.style.minHeight
+        const prevBlockMaxHeight = blockElement.style.maxHeight
+        blockElement.style.height = "auto"
+        blockElement.style.minHeight = "0px"
+        blockElement.style.maxHeight = "none"
+
+        const prevCardHeight = card.style.height
+        const prevCardMinHeight = card.style.minHeight
+        const prevCardMaxHeight = card.style.maxHeight
+        card.style.height = "auto"
+        card.style.minHeight = "0px"
+        card.style.maxHeight = "none"
+
+        const prevBodyHeight = body?.style.height
+        const prevBodyMinHeight = body?.style.minHeight
+        const prevBodyMaxHeight = body?.style.maxHeight
+        const prevBodyFlex = body?.style.flex
+        const prevBodyDisplay = body?.style.display
+        if (body) {
+          body.style.height = "auto"
+          body.style.minHeight = "0px"
+          body.style.maxHeight = "none"
+          body.style.flex = "initial"
+          body.style.display = "block"
+        }
+
+        const prevInnerMinHeight = inner?.style.minHeight
+        const prevInnerFlex = inner?.style.flex
+        if (inner) {
+          inner.style.minHeight = "0px"
+          inner.style.flex = "initial"
+        }
+
         const measuredHeight = Math.ceil(card.scrollHeight)
+
+        blockElement.style.height = prevBlockHeight
+        blockElement.style.minHeight = prevBlockMinHeight
+        blockElement.style.maxHeight = prevBlockMaxHeight
+        card.style.height = prevCardHeight
+        card.style.minHeight = prevCardMinHeight
+        card.style.maxHeight = prevCardMaxHeight
+        if (body) {
+          body.style.height = prevBodyHeight ?? ""
+          body.style.minHeight = prevBodyMinHeight ?? ""
+          body.style.maxHeight = prevBodyMaxHeight ?? ""
+          body.style.flex = prevBodyFlex ?? ""
+          body.style.display = prevBodyDisplay ?? ""
+        }
+        if (inner) {
+          inner.style.minHeight = prevInnerMinHeight ?? ""
+          inner.style.flex = prevInnerFlex ?? ""
+        }
+
         if (!measuredHeight) {
           return item
         }
@@ -536,7 +592,7 @@ export function useGrid(
           Math.ceil((measuredHeight + verticalOffset) / rowHeight),
         )
 
-        if (desiredUnits !== item.h) {
+        if (desiredUnits > item.h) {
           changed = true
           return { ...item, h: desiredUnits }
         }
@@ -553,7 +609,17 @@ export function useGrid(
         layout: resolveOverlaps(nextLayout),
       }
     })
-  }, [autoFit, cardSelector, draggedBlock, minHeightForItem, resizing, rowHeight, verticalOffset, state.blocks, state.layout])
+  }, [
+    autoFit,
+    cardSelector,
+    draggedBlock,
+    minHeightForItem,
+    resizing,
+    rowHeight,
+    verticalOffset,
+    state.blocks,
+    state.layout,
+  ])
 
   return {
     state,

@@ -641,6 +641,17 @@ const FLOW_GROUPS: FlowGroup[] = (() => {
 const FLOW_BLOCKS: FlowBlock[] = FLOW_GROUPS.flatMap((group) => group.blocks)
 const FLOW_BLOCK_MAP = new Map<string, FlowBlock>(FLOW_BLOCKS.map((block) => [block.id, block]))
 
+const STEP_GROUP_MINIMUMS: Partial<Record<StepId, number>> = {
+  path: 2,
+  company: 4,
+  style: 4,
+  systems: 4,
+  capacity: 4,
+  items: 5,
+  operations: 5,
+  floorplan: 6,
+}
+
 const BLOCK_HEIGHT_OVERRIDES: Record<string, number> = {
   "path-note": 5,
   "style-heading": 6,
@@ -688,6 +699,15 @@ export default function OnboardingPage() {
   const currentStep = activeGroup?.step ?? STEP_ORDER[0]
   const stepIndex = STEP_ORDER.indexOf(currentStep)
   const progress = Math.min((visibleGroupCount / FLOW_GROUPS.length) * 100, 100)
+
+  useEffect(() => {
+    const minimum = STEP_GROUP_MINIMUMS[currentStep]
+    if (!minimum) {
+      setVisibleGroupCount((count) => count)
+      return
+    }
+    setVisibleGroupCount((count) => (count < minimum ? minimum : count))
+  }, [currentStep])
 
   const initialGridState = useMemo(() => {
     const layout = FLOW_BLOCKS.map((block) => {
@@ -799,6 +819,13 @@ export default function OnboardingPage() {
     })
   }, [activeGroupIndex, currentStep, visibleGroupCount])
 
+  useEffect(() => {
+    const info = stepStatus.find((status) => status.step === currentStep)
+    if (!info || info.lastIndex === -1) return
+    const required = info.lastIndex + 1
+    setVisibleGroupCount((count) => Math.max(count, required))
+  }, [currentStep, stepStatus])
+
   const blockRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const headerRef = useRef<HTMLElement | null>(null)
   const autoScrollEnabledRef = useRef(false)
@@ -858,8 +885,8 @@ export default function OnboardingPage() {
   const handleBlockActivate = (blockId: string) => {
     const targetGroup = blockGroupIndex.get(blockId)
     if (targetGroup === undefined) return
-    if (targetGroup >= visibleGroupCount) return
     autoScrollEnabledRef.current = true
+    setVisibleGroupCount((count) => Math.max(count, targetGroup + 1))
     setActiveGroupIndex(targetGroup)
   }
 
@@ -867,6 +894,7 @@ export default function OnboardingPage() {
     const target = stepStatus.find((status) => status.step === step)
     if (!target || !target.reachable || target.firstIndex === -1) return
     autoScrollEnabledRef.current = true
+    setVisibleGroupCount((count) => Math.max(count, target.lastIndex + 1))
     setActiveGroupIndex(target.firstIndex)
   }
 

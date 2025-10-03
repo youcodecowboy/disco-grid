@@ -12,6 +12,7 @@ export interface MetricData {
   value: string
   delta: string
   trend: number[]
+  timeRange?: string
 }
 
 export interface TableData {

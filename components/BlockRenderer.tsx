@@ -49,13 +49,31 @@ import FormTextarea from "@/components/blocks/FormTextarea"
 import FormCheckbox from "@/components/blocks/FormCheckbox"
 import FormUpload from "@/components/blocks/FormUpload"
 import FormSection from "@/components/blocks/FormSection"
+// Construction/Worksite components
+import SiteMapBlock from "@/components/blocks/SiteMapBlock"
+import DeliveryCalendar from "@/components/blocks/DeliveryCalendar"
+import ScanActivityTimeline from "@/components/blocks/ScanActivityTimeline"
+import MaterialStockGrid from "@/components/blocks/MaterialStockGrid"
+import WorksiteMetric from "@/components/blocks/WorksiteMetric"
+// New construction components
+import LargeMetricCard from "@/components/blocks/construction/LargeMetricCard"
+import MaterialProgressCard from "@/components/blocks/construction/MaterialProgressCard"
+import ZoneStatusGrid from "@/components/blocks/construction/ZoneStatusGrid"
+import InstallationDotMatrix from "@/components/blocks/construction/InstallationDotMatrix"
+import DeliveryTimelineCard from "@/components/blocks/construction/DeliveryTimelineCard"
+import SiteMapGrid from "@/components/blocks/construction/SiteMapGrid"
+// Items-specific components
+import ComprehensiveItemsTable from "@/components/blocks/items/ComprehensiveItemsTable"
+import WorkflowOverview from "@/components/blocks/items/WorkflowOverview"
+import ItemActivityTimeline from "@/components/blocks/items/ItemActivityTimeline"
 
 interface BlockRendererProps {
   block: BlockConfig
   showFilters?: boolean
+  isEditing?: boolean
 }
 
-export default function BlockRenderer({ block, showFilters = false }: BlockRendererProps) {
+export default function BlockRenderer({ block, showFilters = false, isEditing = false }: BlockRendererProps) {
   const legacyBlock = block as unknown as LegacyBlock
 
   // Helper function to normalize data for TableMalleable
@@ -105,7 +123,7 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
     case "table.orders":
       return <TableOrders block={legacyBlock} />
     case "table.generic":
-      return <TableGeneric block={legacyBlock} />
+      return <TableGeneric block={legacyBlock} isEditing={isEditing} />
     case "metric.kpi":
       return <MetricKPI title={block.title} data={block.props} variant="kpi" />
     case "metric.chart":
@@ -144,11 +162,12 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
       return (
         <TableMalleable
           title={block.title}
+          source={(block.props as any)?.source}
           columns={tableData.columns}
           data={tableData.data}
           showFilters={showFilters}
-          hideTitle
           density={(block.props as any)?.density}
+          editable={(block.props as any)?.editable ?? isEditing}
         />
       )
     case "table.items":
@@ -175,6 +194,7 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
               key={`${block.id}-${slotId}`}
               block={{ ...child, props: { ...child.props } }}
               showFilters={showFilters}
+              isEditing={isEditing}
             />
           )}
         />
@@ -195,6 +215,7 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
             <BlockRenderer
               block={{ ...child, props: { ...child.props } }}
               showFilters={showFilters}
+              isEditing={isEditing}
             />
           )}
         />
@@ -215,6 +236,7 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
               key={`${block.id}-${slotId}`}
               block={{ ...child, props: { ...child.props } }}
               showFilters={showFilters}
+              isEditing={isEditing}
             />
           )}
         />
@@ -235,6 +257,7 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
               key={`${block.id}-${slotId}`}
               block={{ ...child, props: { ...child.props } }}
               showFilters={showFilters}
+              isEditing={isEditing}
             />
           )}
         />
@@ -314,6 +337,37 @@ export default function BlockRenderer({ block, showFilters = false }: BlockRende
       return <FormUpload title={block.title} data={block.props} />
     case "form.section":
       return <FormSection title={block.title} data={block.props} />
+    // Construction/Worksite components
+    case "worksite.sitemap":
+      return <SiteMapBlock zones={block.props?.zones} />
+    case "worksite.delivery.calendar":
+      return <DeliveryCalendar {...block.props} />
+    case "worksite.scan.timeline":
+      return <ScanActivityTimeline activities={block.props?.activities} />
+    case "worksite.stock.grid":
+      return <MaterialStockGrid items={block.props?.items} />
+    case "worksite.metric":
+      return <WorksiteMetric title={block.title} data={block.props} />
+    // New construction components
+    case "construction.metric.large":
+      return <LargeMetricCard title={block.title} data={block.props} />
+    case "construction.material.progress":
+      return <MaterialProgressCard title={block.title} data={block.props} />
+    case "construction.zone.status":
+      return <ZoneStatusGrid title={block.title} data={block.props} />
+    case "construction.site.map":
+      return <SiteMapGrid title={block.title} data={block.props} />
+    case "construction.installation.dots":
+      return <InstallationDotMatrix title={block.title} data={block.props} />
+    case "construction.delivery.timeline":
+      return <DeliveryTimelineCard title={block.title} data={block.props} />
+    // Items-specific components
+    case "items.table.comprehensive":
+      return <ComprehensiveItemsTable title={block.title} {...block.props} />
+    case "items.workflow.overview":
+      return <WorkflowOverview title={block.title} {...block.props} />
+    case "items.activity.timeline":
+      return <ItemActivityTimeline title={block.title} {...block.props} />
     default:
       return (
         <div className="flex items-center justify-center h-full text-muted-foreground">

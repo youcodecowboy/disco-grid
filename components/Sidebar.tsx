@@ -16,7 +16,8 @@ import {
   CreditCard,
   Layout,
   Plus,
-  MoreHorizontal
+  PlusCircle,
+  CalendarClock,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,8 +37,8 @@ export default function Sidebar({
   const [newPageName, setNewPageName] = useState('');
 
   // Mock dynamic pages - in a real app this would come from a database/API
-  const [dynamicPages, setDynamicPages] = useState([
-    { id: 'v2', label: 'Dashboard V2', href: '/v2' }
+  const [dynamicPages, setDynamicPages] = useState<Array<{ id: string; label: string; href: string }>>([
+    // { id: 'v2', label: 'Dashboard V2', href: '/v2' }
   ]);
 
   const handleCreatePage = () => {
@@ -46,7 +47,7 @@ export default function Sidebar({
     const pageId = newPageName.toLowerCase().replace(/\s+/g, '-');
     
     // Reserved routes that shouldn't be overridden
-    const reservedRoutes = ['v2', 'disco', 'billing', 'customers', 'items', 'materials', 'messages', 'orders', 'reports', 'teams', 'workflows'];
+    const reservedRoutes = ['v2', 'disco', 'billing', 'customers', 'items', 'items-v2', 'materials', 'messages', 'orders', 'planner', 'reports', 'teams', 'workflows'];
     
     if (reservedRoutes.includes(pageId)) {
       alert(`"${newPageName}" is a reserved name. Please choose a different name.`);
@@ -66,6 +67,35 @@ export default function Sidebar({
     // Navigate to the new page
     router.push(newPage.href);
   };
+
+  const newOrderActive = pathname === "/orders/new" || pathname.startsWith("/orders/new/");
+
+  const coreItems = [
+    { 
+      icon: Layout, 
+      label: "Dashboard V2", 
+      href: "/v2",
+      active: pathname === "/v2"
+    },
+    { 
+      icon: Package, 
+      label: "Items V2", 
+      href: "/items-v2",
+      active: pathname === "/items-v2"
+    },
+    { 
+      icon: CalendarClock, 
+      label: "Planner", 
+      href: "/planner",
+      active: pathname === "/planner"
+    },
+    { 
+      icon: MessageSquare, 
+      label: "Messages", 
+      href: "/messages",
+      active: pathname === "/messages"
+    },
+  ];
 
   const navigationItems = [
     { 
@@ -117,12 +147,6 @@ export default function Sidebar({
       active: pathname === "/reports"
     },
     { 
-      icon: MessageSquare, 
-      label: "Messages", 
-      href: "/messages",
-      active: pathname === "/messages"
-    },
-    { 
       icon: CreditCard, 
       label: "Billing", 
       href: "/billing",
@@ -137,79 +161,42 @@ export default function Sidebar({
       onMouseLeave={onMouseLeave}
     >
       <div className="p-3 h-full overflow-y-auto flex flex-col">
-        {/* Pages Section */}
+        <div className="mb-5">
+          <Link
+            href="/orders/new"
+            className={`group flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+              newOrderActive
+                ? 'bg-blue-600 text-white'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            <PlusCircle className="h-4 w-4" />
+            {sidebarExpanded && <span>New order</span>}
+          </Link>
+        </div>
+
+        {/* CORE Section */}
         <div className="mb-6">
           {sidebarExpanded && (
             <div className="px-2 py-2 mb-2">
-              <div className="flex items-center justify-between text-xs font-medium text-sidebar-foreground/60 uppercase tracking-wider">
-                <span>Pages</span>
-                <button
-                  onClick={() => setShowNewPageInput(true)}
-                  className="p-1 hover:bg-sidebar-accent rounded text-sidebar-foreground"
-                  title="New Page"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
+              <div className="flex items-center gap-2 text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
+                <span>Core</span>
+                <span className="text-[10px] bg-sidebar-accent px-1.5 py-0.5 rounded">New</span>
               </div>
             </div>
           )}
           
-          {!sidebarExpanded && (
-            <button
-              onClick={() => setShowNewPageInput(true)}
-              className="w-full flex items-center justify-center px-3 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent mb-2"
-              title="New Page"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          )}
-
-          {/* New Page Input */}
-          {showNewPageInput && sidebarExpanded && (
-            <div className="px-2 pb-2 mb-2">
-              <div className="flex gap-1">
-                <input
-                  type="text"
-                  value={newPageName}
-                  onChange={(e) => setNewPageName(e.target.value)}
-                  placeholder="Page name"
-                  className="flex-1 px-2 py-1 text-xs border border-border rounded bg-background text-foreground"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreatePage();
-                    if (e.key === 'Escape') {
-                      setShowNewPageInput(false);
-                      setNewPageName('');
-                    }
-                  }}
-                  autoFocus
-                />
-                <button
-                  onClick={handleCreatePage}
-                  disabled={!newPageName.trim()}
-                  className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded disabled:opacity-50"
-                >
-                  ✓
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Dynamic Pages List */}
           <div className="space-y-1">
-            {dynamicPages.map((page) => (
+            {coreItems.map(({ icon: Icon, label, href, active }) => (
               <Link
-                key={page.href}
-                href={page.href}
+                key={label}
+                href={href}
                 className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-sidebar-accent cursor-pointer transition-colors ${
-                  pathname === page.href || pathname.startsWith(page.href + '/')
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                    : 'text-sidebar-foreground'
+                  active ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground'
                 }`}
               >
-                <Layout className="h-4 w-4 flex-shrink-0" />
-                {sidebarExpanded && (
-                  <span className="text-sm font-medium whitespace-nowrap">{page.label}</span>
-                )}
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                {sidebarExpanded && <span className="text-sm font-medium whitespace-nowrap">{label}</span>}
               </Link>
             ))}
           </div>
@@ -218,11 +205,95 @@ export default function Sidebar({
         {/* Separator */}
         {sidebarExpanded && <div className="border-t border-sidebar-border mb-4" />}
 
+        {/* Pages Section */}
+        {(dynamicPages.length > 0 || showNewPageInput || sidebarExpanded) && (
+          <div className="mb-6">
+            {sidebarExpanded && (
+              <div className="px-2 py-2 mb-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
+                  <span>Pages</span>
+                  <button
+                    onClick={() => setShowNewPageInput(true)}
+                    className="p-1 hover:bg-sidebar-accent rounded text-sidebar-foreground"
+                    title="New Page"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {!sidebarExpanded && (
+              <button
+                onClick={() => setShowNewPageInput(true)}
+                className="w-full flex items-center justify-center px-3 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent mb-2"
+                title="New Page"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* New Page Input */}
+            {showNewPageInput && sidebarExpanded && (
+              <div className="px-2 pb-2 mb-2">
+                <div className="flex gap-1">
+                  <input
+                    type="text"
+                    value={newPageName}
+                    onChange={(e) => setNewPageName(e.target.value)}
+                    placeholder="Page name"
+                    className="flex-1 px-2 py-1 text-xs border border-border rounded bg-background text-foreground"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreatePage();
+                      if (e.key === 'Escape') {
+                        setShowNewPageInput(false);
+                        setNewPageName('');
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleCreatePage}
+                    disabled={!newPageName.trim()}
+                    className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded disabled:opacity-50"
+                  >
+                    ✓
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Dynamic Pages List */}
+            {dynamicPages.length > 0 && (
+              <div className="space-y-1">
+                {dynamicPages.map((page) => (
+                  <Link
+                    key={page.href}
+                    href={page.href}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-sidebar-accent cursor-pointer transition-colors ${
+                      pathname === page.href || pathname.startsWith(page.href + '/')
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground'
+                    }`}
+                  >
+                    <Layout className="h-4 w-4 flex-shrink-0" />
+                    {sidebarExpanded && (
+                      <span className="text-sm font-medium whitespace-nowrap">{page.label}</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {/* Separator */}
+        {sidebarExpanded && dynamicPages.length > 0 && <div className="border-t border-sidebar-border mb-4" />}
+
         {/* Regular Navigation */}
         <nav className="space-y-1">
           {sidebarExpanded && (
             <div className="px-2 py-2 mb-2">
-              <span className="text-xs font-medium text-sidebar-foreground/60 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
                 Navigation
               </span>
             </div>

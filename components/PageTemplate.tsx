@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
-import { generateId } from "@/lib/utils"
+import { cn, generateId } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import BlockEditModal from "@/components/BlockEditModal"
@@ -178,6 +178,8 @@ export default function PageTemplate({
   const [dragPreview, setDragPreview] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const [savedState, setSavedState] = useState<DashboardState | null>(null)
   const [isFrozen, setIsFrozen] = useState(false)
+  const [activeControlPanel, setActiveControlPanel] = useState<string | null>(null)
+  const [expandedColorPicker, setExpandedColorPicker] = useState<string | null>(null)
   const [resizing, setResizing] = useState<{
     blockId: string
     direction: "se" | "e" | "s"
@@ -712,7 +714,7 @@ export default function PageTemplate({
                 return (
                   <div
                     key={item.i}
-                    className={`absolute group transition-all duration-200 ease-out ${state.mode === "edit" ? "cursor-move" : ""} ${draggedBlock === item.i ? "z-30" : "z-10"}`}
+                    className={`absolute transition-all duration-200 ease-out ${state.mode === "edit" ? "cursor-move" : ""} ${draggedBlock === item.i ? "z-30" : "z-10"}`}
                     style={{
                       left: `calc(${(item.x / 12) * 100}% + ${item.x > 0 ? "8px" : "0px"})`,
                       top: `${item.y * 40 + (item.y > 0 ? 8 : 0)}px`,
@@ -725,22 +727,32 @@ export default function PageTemplate({
                     draggable={state.mode === "edit"}
                     onDragStart={(e) => handleDragStart(e, item.i)}
                   >
-                    <Card className="h-full shadow-sm border-2 rounded-none relative">
+                    <Card
+                      className={cn(
+                        "group relative flex h-full flex-col rounded-none border-2 border-slate-200 bg-white shadow-sm transition",
+                        block.type?.startsWith("metric") && "border-none bg-transparent shadow-none",
+                        block.type?.startsWith("table") && "border-none bg-white shadow-none",
+                        block.type?.startsWith("construction.") && "border-none bg-transparent shadow-none rounded-none p-0",
+                        block.type?.startsWith("worksite.") && "border-none bg-transparent shadow-none rounded-none p-0",
+                        block.type?.startsWith("analytics.") && "border-none bg-transparent shadow-none rounded-none p-0"
+                      )}
+                      onMouseEnter={() => setActiveControlPanel(item.i)}
+                    >
                       {state.mode === "edit" && !isFrozen && (
                         <>
                           {/* Bottom-right corner: resize both width and height */}
                           <div
-                            className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500/50 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500/50 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity z-40"
                             onMouseDown={(e) => handleResizeStart(e, item.i, "se")}
                           />
                           {/* Right edge: resize width only */}
                           <div
-                            className="absolute top-4 right-0 w-1 h-8 bg-blue-500/30 cursor-e-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-4 right-0 w-1 h-8 bg-blue-500/30 cursor-e-resize opacity-0 group-hover:opacity-100 transition-opacity z-40"
                             onMouseDown={(e) => handleResizeStart(e, item.i, "e")}
                           />
                           {/* Bottom edge: resize height only */}
                           <div
-                            className="absolute bottom-0 left-4 w-8 h-1 bg-blue-500/30 cursor-s-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute bottom-0 left-4 w-8 h-1 bg-blue-500/30 cursor-s-resize opacity-0 group-hover:opacity-100 transition-opacity z-40"
                             onMouseDown={(e) => handleResizeStart(e, item.i, "s")}
                           />
                           <div
@@ -762,103 +774,212 @@ export default function PageTemplate({
                         </>
                       )}
 
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 border-b-2 h-8">
-                        {editingTitleId === item.i ? (
-                          <input
-                            value={titleInput}
-                            onChange={(e) => setTitleInput(e.target.value)}
-                            onBlur={commitEditTitle}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") commitEditTitle()
-                              if (e.key === "Escape") cancelEditTitle()
-                            }}
-                            className="flex-1 min-w-0 pr-2 text-sm font-medium bg-transparent outline-none border-b border-dashed border-transparent focus:border-muted-foreground/40"
-                            autoFocus
-                          />
-                        ) : (
-                          <h3
-                            className={`font-medium text-sm truncate flex-1 min-w-0 pr-2 ${state.mode === "edit" && !isFrozen ? "cursor-text" : ""}`}
-                            title={block.title}
-                            onDoubleClick={() => beginEditTitle(item.i)}
-                          >
-                            {block.title}
-                          </h3>
-                        )}
-                        {state.mode === "edit" && !isFrozen && (
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-7 w-7 ${
-                              isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-yellow-100'
-                            }`}
-                            onClick={() => {
-                              if (!isFrozen) {
-                                /* TODO: Add notification functionality */
-                              }
-                            }}
-                            title="Set Notifications"
-                            disabled={isFrozen}
-                          >
-                            <NotificationIcon />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-7 w-7 ${
-                              isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-100'
-                            }`}
-                            onClick={() => !isFrozen && setActiveAiBlock(activeAiBlock === item.i ? null : item.i)}
-                            title="AI Assistant"
-                            disabled={isFrozen}
-                          >
-                            <BotIcon />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-7 w-7 ${
-                              isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-100'
-                            }`}
-                            onClick={() => !isFrozen && handleOpenEditModal(block)}
-                            title="Edit Block"
-                            disabled={isFrozen}
-                          >
-                            <EditIcon />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-7 w-7 ${
-                              isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-100'
-                            }`}
-                            onClick={() => !isFrozen && extendBlock(item.i)}
-                            title="Extend Block"
-                            disabled={isFrozen}
-                          >
-                            <ExpandIcon />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-7 w-7 ${
-                              isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-100'
-                            }`}
-                            onClick={() => !isFrozen && deleteBlock(item.i)}
-                            title="Delete Block"
-                            disabled={isFrozen}
-                          >
-                            <Trash2Icon />
-                          </Button>
-                        </div>
-                        )}
-                      </CardHeader>
-                      <CardContent className="p-0 flex flex-col min-h-0" style={{ height: "calc(100% - 32px)" }}>
-                        <div
-                          className={`flex-1 min-h-0 ${block.type !== "metric" ? "p-4" : ""} ${block.type === "metric" ? "" : "overflow-auto"} flex flex-col`}
+                      {!(state.mode === "save" && (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics."))) && (
+                        <CardHeader
+                          className={cn(
+                            "flex flex-row items-center justify-between space-y-0 border-b-2 px-4 h-8",
+                            (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics.")) && "absolute -top-10 left-0 right-0 z-30 border border-slate-300 bg-white/95 backdrop-blur-sm rounded-t-lg shadow-lg h-auto px-2 py-1 transition-opacity duration-200 pointer-events-none",
+                            (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics.")) && activeControlPanel === item.i ? "opacity-100" : "opacity-0"
+                          )}
                         >
-                          <BlockRenderer block={block} showFilters={showFilters} />
-                        </div>
+                          {!block.type?.startsWith("construction.") && !block.type?.startsWith("worksite.") && !block.type?.startsWith("analytics.") && !block.type?.startsWith("metric") && (
+                            editingTitleId === item.i ? (
+                              <input
+                                value={titleInput}
+                                onChange={(e) => setTitleInput(e.target.value)}
+                                onBlur={commitEditTitle}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") commitEditTitle()
+                                  if (e.key === "Escape") cancelEditTitle()
+                                }}
+                                className="flex-1 min-w-0 pr-2 text-sm font-medium bg-transparent outline-none border-b border-dashed border-transparent focus:border-muted-foreground/40"
+                                autoFocus
+                              />
+                            ) : (
+                              <h3
+                                className={`font-medium text-sm truncate flex-1 min-w-0 pr-2 ${state.mode === "edit" && !isFrozen ? "cursor-text" : ""}`}
+                                title={block.title}
+                                onDoubleClick={() => beginEditTitle(item.i)}
+                              >
+                                {block.title}
+                              </h3>
+                            )
+                          )}
+                          {state.mode === "edit" && !isFrozen && (
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Color Picker for Construction Metrics - Collapsible */}
+                            {block.type?.startsWith("construction.metric") && (() => {
+                              const colorMap: Record<string, string> = {
+                                blue: 'bg-blue-500',
+                                green: 'bg-green-500',
+                                purple: 'bg-purple-500',
+                                orange: 'bg-orange-500',
+                                red: 'bg-red-500',
+                                amber: 'bg-amber-500',
+                                cyan: 'bg-cyan-500',
+                                rose: 'bg-rose-500',
+                              }
+                              const colors = ['blue', 'green', 'purple', 'orange', 'red', 'amber', 'cyan', 'rose']
+                              const activeColor = (block.props as any)?.color || 'blue'
+                              const isExpanded = expandedColorPicker === item.i
+                              
+                              return (
+                                <div className="flex items-center gap-1 border-r border-slate-300 pr-2">
+                                  {/* Active color dot */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setExpandedColorPicker(isExpanded ? null : item.i)
+                                    }}
+                                    className={`w-5 h-5 rounded-full ${colorMap[activeColor]} ring-2 ring-slate-900 ring-offset-1 transition-all pointer-events-auto hover:scale-110`}
+                                    title={`Color: ${activeColor} (click to ${isExpanded ? 'collapse' : 'expand'})`}
+                                  />
+                                  
+                                  {/* Expand/collapse button */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setExpandedColorPicker(isExpanded ? null : item.i)
+                                    }}
+                                    className="w-4 h-4 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors pointer-events-auto"
+                                    title={isExpanded ? 'Collapse' : 'Expand colors'}
+                                  >
+                                    <svg 
+                                      className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </button>
+                                  
+                                  {/* All color options - only show when expanded */}
+                                  {isExpanded && (
+                                    <div className="flex items-center gap-1 ml-1 pl-1 border-l border-slate-300">
+                                      {colors.filter(c => c !== activeColor).map((color) => (
+                                        <button
+                                          key={color}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            setState(prev => ({
+                                              ...prev,
+                                              blocks: {
+                                                ...prev.blocks,
+                                                [item.i]: {
+                                                  ...block,
+                                                  props: {
+                                                    ...block.props,
+                                                    color
+                                                  }
+                                                }
+                                              }
+                                            }))
+                                            setExpandedColorPicker(null) // Auto-collapse after selection
+                                          }}
+                                          className={`w-5 h-5 rounded-full ${colorMap[color]} transition-all pointer-events-auto hover:scale-110 hover:ring-2 hover:ring-slate-400 hover:ring-offset-1`}
+                                          title={color}
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })()}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-7 w-7 pointer-events-auto ${
+                                isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-100'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (!isFrozen) handleOpenEditModal(block)
+                              }}
+                              title="Edit Block"
+                              disabled={isFrozen}
+                            >
+                              <EditIcon />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-7 w-7 pointer-events-auto ${
+                                isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-100'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                !isFrozen && setActiveAiBlock(activeAiBlock === item.i ? null : item.i)
+                              }}
+                              title="AI Assistant"
+                              disabled={isFrozen}
+                            >
+                              <BotIcon />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-7 w-7 pointer-events-auto ${
+                                isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-100'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                !isFrozen && extendBlock(item.i)
+                              }}
+                              title="Extend Block"
+                              disabled={isFrozen}
+                            >
+                              <ExpandIcon />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className={`h-7 w-7 pointer-events-auto ${
+                                isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-100'
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                !isFrozen && deleteBlock(item.i)
+                              }}
+                              title="Delete Block"
+                              disabled={isFrozen}
+                            >
+                              <Trash2Icon />
+                            </Button>
+                          </div>
+                          )}
+                        </CardHeader>
+                      )}
+                      <CardContent
+                        className={cn(
+                          "flex flex-1 flex-col min-h-0 p-0",
+                          block.type?.startsWith("metric") && "p-0",
+                          block.type?.startsWith("table") && "p-0",
+                          block.type?.startsWith("construction.") && "p-0",
+                          block.type?.startsWith("worksite.") && "p-0",
+                          block.type?.startsWith("analytics.") && "p-0"
+                        )}
+                      >
+                        {(() => {
+                          const type = block.type || ""
+                          const isMetric = type.startsWith("metric")
+                          const isTable = type.startsWith("table")
+                          const isConstruction = type.startsWith("construction.")
+                          const isWorksite = type.startsWith("worksite.")
+                          const isAnalytics = type.startsWith("analytics.")
+                          const isMessages = type.startsWith("messages")
+                          const allowScroll = isTable || isMessages
+
+                          return (
+                            <div
+                              className={`${
+                                isMetric || isTable || isConstruction || isWorksite || isAnalytics ? "p-0" : "p-4"
+                              } flex-1 min-h-0 flex flex-col ${allowScroll ? "overflow-auto" : "overflow-hidden"}`}
+                            >
+                              <BlockRenderer block={block} showFilters={showFilters} />
+                            </div>
+                          )
+                        })()}
 
                         {block.extensions?.map((ext, i) => (
                           <div key={i}>

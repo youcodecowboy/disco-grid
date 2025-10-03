@@ -50,11 +50,10 @@ export function LayoutScaffold({
       <header className="sticky top-0 z-50 h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className={gridContainerClass("flex h-full items-center justify-between px-4", "full")}
         >
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <img src="/groovy-logo.png" alt="Groovy" className="h-8" />
-            </div>
-            <div className="text-sm text-muted-foreground">{pageTitle}</div>
+          <div className="flex items-center gap-3">
+            <img src="/groovy-logo.png" alt="Groovy" className="h-8" />
+            <div className="h-6 w-px bg-slate-300" />
+            <h1 className="text-lg font-semibold">{pageTitle}</h1>
           </div>
 
           <div className="flex items-center gap-4">
@@ -84,22 +83,15 @@ export function LayoutScaffold({
           onMouseLeave={() => setSidebarExpanded(false)}
         />
 
-        <main className="flex-1 p-4">
-          <div className={gridContainerClass("mb-4 pb-2 border-b-2", "full")}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-lg">
-                <span className="font-medium">{pageTitle}</span>
-                {pageSubtext && (
-                  <>
-                    <span className="text-muted-foreground">/</span>
-                    <span className="text-muted-foreground">{pageSubtext}</span>
-                  </>
-                )}
+        <main className="flex-1 p-4 pt-6">
+          {actions && (
+            <div className={gridContainerClass("mb-4 pb-2 border-b-2", "full")}
+            >
+              <div className="flex items-center justify-end">
+                <div className="flex items-center gap-2">{actions}</div>
               </div>
-              <div className="flex items-center gap-2">{actions}</div>
             </div>
-          </div>
+          )}
 
           <div className={gridContainerClass("px-4", "full")}>{children}</div>
        </main>

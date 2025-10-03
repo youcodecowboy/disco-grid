@@ -34,6 +34,7 @@ interface FilterState {
 
 interface TableMalleableProps {
   title?: string
+  source?: string
   columns: Column[]
   data: TableData[]
   onDataChange?: (data: TableData[]) => void
@@ -47,6 +48,7 @@ interface TableMalleableProps {
 
 export function TableMalleable({
   title = "Table",
+  source,
   columns,
   data,
   onDataChange,
@@ -324,55 +326,47 @@ export function TableMalleable({
   }
 
   return (
-    <div className={`bg-white rounded-lg border ${className}`}>
-      {/* Header */}
-      {!hideTitle && (
-      <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="font-semibold text-lg">{title}</h3>
-        <div className="flex items-center gap-2">
-          {showFilters && (
-            <div className="flex items-center gap-2">
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  {activeFiltersCount} active
-                </Badge>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
-                className="text-xs"
-              >
-                <Filter className="h-3 w-3 mr-1" />
-                Filters
-                <ChevronDown className={`h-3 w-3 ml-1 transition-transform ${isFiltersExpanded ? 'rotate-180' : ''}`} />
-              </Button>
-            </div>
-          )}
-          {editable && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddColumn}
-                className="text-xs"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Add Column
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddRow}
-                className="text-xs"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Add Row
-              </Button>
-            </>
-          )}
+    <div className={cn("flex h-full flex-col rounded-2xl bg-white ring-1 ring-slate-200", className)}>
+      {(title || source || showFilters || editable) && !hideTitle && (
+        <div className="flex flex-wrap items-start justify-between gap-4 px-5 py-4">
+          <div className="min-w-0">
+            {title && <h3 className="text-sm font-semibold text-slate-900">{title}</h3>}
+            {source && <p className="text-xs text-slate-500">{source}</p>}
+          </div>
+          <div className="flex items-center gap-2">
+            {showFilters && (
+              <div className="flex items-center gap-2">
+                {activeFiltersCount > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {activeFiltersCount} active
+                  </Badge>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+                  className="text-xs"
+                >
+                  <Filter className="mr-2 h-3 w-3" />
+                  Filters
+                  <ChevronDown className={`ml-1 h-3 w-3 transition-transform ${isFiltersExpanded ? 'rotate-180' : ''}`} />
+                </Button>
+              </div>
+            )}
+            {editable && (
+              <div className="hidden sm:flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleAddColumn} className="text-xs">
+                  <Plus className="mr-1 h-3 w-3" />
+                  Column
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleAddRow} className="text-xs">
+                  <Plus className="mr-1 h-3 w-3" />
+                  Row
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       {/* Search Bar - Always Visible when filters are enabled */}
