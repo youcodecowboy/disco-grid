@@ -2,19 +2,30 @@
 
 import PageTemplate from "@/components/PageTemplate"
 import type { GridState } from "@/lib/useGridSystem"
+import { MOCK_ITEM_CODES, getItemCodeProgress } from "@/lib/data/itemCodes"
 
 type DashboardState = GridState
+
+// Calculate real metrics from Item Codes data
+const totalItemCodes = MOCK_ITEM_CODES.length
+const totalLineItems = MOCK_ITEM_CODES.reduce((sum, ic) => sum + ic.quantity, 0)
+const inProductionCount = MOCK_ITEM_CODES.filter(ic => ic.status === "In Production").length
+const completedCount = MOCK_ITEM_CODES.filter(ic => ic.status === "Completed" || ic.status === "Ready").length
+const avgProgress = Math.round(
+  MOCK_ITEM_CODES.reduce((sum, ic) => sum + getItemCodeProgress(ic), 0) / MOCK_ITEM_CODES.length
+)
+const totalCompleted = MOCK_ITEM_CODES.reduce((sum, ic) => sum + ic.lineItemsCompleted, 0)
 
 const itemsInitialState: DashboardState = {
   mode: "save",
   layout: [
-    // Top row - Item metrics
-    { i: "metric-total-items", x: 0, y: 0, w: 3, h: 4 },
-    { i: "metric-in-production", x: 3, y: 0, w: 3, h: 4 },
-    { i: "metric-completed", x: 6, y: 0, w: 3, h: 4 },
-    { i: "metric-value", x: 9, y: 0, w: 3, h: 4 },
+    // Top row - Item Code metrics
+    { i: "metric-item-codes", x: 0, y: 0, w: 3, h: 4 },
+    { i: "metric-line-items", x: 3, y: 0, w: 3, h: 4 },
+    { i: "metric-in-production", x: 6, y: 0, w: 3, h: 4 },
+    { i: "metric-avg-progress", x: 9, y: 0, w: 3, h: 4 },
     
-    // Main items table - comprehensive view (MUCH LARGER for thousands of items)
+    // Main items table - Item Codes view (MUCH LARGER for comprehensive data)
     { i: "items-table-main", x: 0, y: 4, w: 12, h: 32 },
     
     // Bottom row - Workflow and Activity
@@ -25,16 +36,28 @@ const itemsInitialState: DashboardState = {
     { i: "item-analytics", x: 0, y: 44, w: 12, h: 6 },
   ],
   blocks: {
-    "metric-total-items": {
-      id: "metric-total-items",
+    "metric-item-codes": {
+      id: "metric-item-codes",
       type: "construction.metric.large",
-      title: "Total Items",
+      title: "Item Codes",
       props: {
-        value: "2,847",
-        delta: "+156",
-        subtitle: "Active in system",
-        trend: [2420, 2550, 2620, 2710, 2780, 2847],
+        value: totalItemCodes.toString(),
+        delta: `${inProductionCount} active`,
+        subtitle: "Unique item variants",
+        trend: [5, 6, 7, 7, 8, 8],
         color: "blue"
+      },
+    },
+    "metric-line-items": {
+      id: "metric-line-items",
+      type: "construction.metric.large",
+      title: "Total Line Items",
+      props: {
+        value: totalLineItems.toLocaleString(),
+        delta: `${totalCompleted} done`,
+        subtitle: "Individual units tracked",
+        trend: [1100, 1150, 1200, 1250, 1280, 1300],
+        color: "purple"
       },
     },
     "metric-in-production": {
@@ -42,208 +65,31 @@ const itemsInitialState: DashboardState = {
       type: "construction.metric.large",
       title: "In Production",
       props: {
-        value: "1,284",
-        delta: "+89",
-        subtitle: "Currently being tracked",
-        trend: [980, 1050, 1120, 1180, 1240, 1284],
+        value: inProductionCount.toString(),
+        delta: `${completedCount} ready`,
+        subtitle: "Active item codes",
+        trend: [4, 5, 6, 6, 6, 6],
         color: "orange"
       },
     },
-    "metric-completed": {
-      id: "metric-completed",
+    "metric-avg-progress": {
+      id: "metric-avg-progress",
       type: "construction.metric.large",
-      title: "Completed",
+      title: "Avg Progress",
       props: {
-        value: "1,563",
-        delta: "+67",
-        subtitle: "This month",
-        trend: [1280, 1340, 1420, 1480, 1520, 1563],
+        value: `${avgProgress}%`,
+        delta: "+8% this week",
+        subtitle: "Overall completion",
+        trend: [45, 50, 55, 58, 60, 62],
         color: "green"
-      },
-    },
-    "metric-value": {
-      id: "metric-value",
-      type: "construction.metric.large",
-      title: "Total Value",
-      props: {
-        value: "$1.2M",
-        delta: "+$125K",
-        subtitle: "Inventory value",
-        trend: [980000, 1020000, 1080000, 1140000, 1180000, 1200000],
-        color: "purple"
       },
     },
     "items-table-main": {
       id: "items-table-main",
-      type: "items.table.comprehensive",
-      title: "Items Management",
+      type: "items.itemcodes.table",
+      title: "Item Codes • Click any row to view line items",
       props: {
-        enableFiltering: true,
-        enableSearch: true,
-        enableGrouping: true,
-        showWorkflows: true,
-        showMessaging: true,
-        columns: [
-          { id: "itemCode", name: "Item Code", type: "text", width: 140, pinned: true },
-          { id: "itemName", name: "Item Name", type: "text", width: 220 },
-          { id: "order", name: "Order", type: "link", width: 150, linkTo: "orders" },
-          { id: "customer", name: "Customer", type: "link", width: 180, linkTo: "customers" },
-          { id: "workflow", name: "Workflow", type: "badge", width: 160 },
-          { id: "stage", name: "Current Stage", type: "status", width: 140 },
-          { id: "quantity", name: "Qty", type: "number", width: 80 },
-          { id: "completed", name: "Completed", type: "number", width: 100 },
-          { id: "progress", name: "Progress", type: "progress", width: 120 },
-          { id: "assignedTo", name: "Assigned To", type: "text", width: 140 },
-          { id: "dueDate", name: "Due Date", type: "date", width: 120 },
-          { id: "status", name: "Status", type: "status", width: 120 },
-          { id: "actions", name: "Actions", type: "actions", width: 120 },
-        ],
-        data: [
-          {
-            id: "item-001",
-            itemCode: "JKT-AURORA-001",
-            itemName: "Aurora Flight Jacket",
-            order: "ORD-24-1089",
-            customer: "Horizon Apparel Co.",
-            workflow: "Cut & Sew Apparel v4",
-            stage: "Panel Assembly",
-            quantity: 320,
-            completed: 240,
-            progress: 75,
-            assignedTo: "Sewing Line A",
-            dueDate: "2025-11-28",
-            status: "on-track",
-            components: 4,
-            hasMessages: true,
-            priority: "high"
-          },
-          {
-            id: "item-002",
-            itemCode: "PNT-ATLAS-204",
-            itemName: "Atlas Cargo Pant",
-            order: "ORD-24-1090",
-            customer: "Horizon Apparel Co.",
-            workflow: "Cut & Sew Apparel v4",
-            stage: "Finishing",
-            quantity: 540,
-            completed: 486,
-            progress: 90,
-            assignedTo: "Finishing Team",
-            dueDate: "2025-11-04",
-            status: "on-track",
-            components: 0,
-            hasMessages: false,
-            priority: "normal"
-          },
-          {
-            id: "item-003",
-            itemCode: "VST-VOLT-342",
-            itemName: "Volt Thermal Vest",
-            order: "ORD-24-1091",
-            customer: "Nova Fashion Group",
-            workflow: "Cut & Sew Apparel v4",
-            stage: "QA & Pack",
-            quantity: 280,
-            completed: 266,
-            progress: 95,
-            assignedTo: "Quality Team",
-            dueDate: "2025-10-12",
-            status: "priority",
-            components: 2,
-            hasMessages: true,
-            priority: "high"
-          },
-          {
-            id: "item-004",
-            itemCode: "SHL-HALO-672",
-            itemName: "Halo Rain Shell",
-            order: "ORD-24-1092",
-            customer: "Nimbus Outerwear",
-            workflow: "Cut & Sew Apparel v4",
-            stage: "Fabric Cutting",
-            quantity: 180,
-            completed: 36,
-            progress: 20,
-            assignedTo: "Cut Room",
-            dueDate: "2025-10-20",
-            status: "starting",
-            components: 3,
-            hasMessages: false,
-            priority: "normal"
-          },
-          {
-            id: "item-005",
-            itemCode: "HOD-APEX-891",
-            itemName: "Apex Performance Hoodie",
-            order: "ORD-24-1093",
-            customer: "Atlas Activewear",
-            workflow: "Cut & Sew Apparel v4",
-            stage: "Panel Assembly",
-            quantity: 420,
-            completed: 189,
-            progress: 45,
-            assignedTo: "Sewing Line B",
-            dueDate: "2025-11-15",
-            status: "watch",
-            components: 1,
-            hasMessages: true,
-            priority: "normal"
-          },
-          {
-            id: "item-006",
-            itemCode: "JGR-NOVA-445",
-            itemName: "Nova Jogger Pant",
-            order: "ORD-24-1094",
-            customer: "Atlas Activewear",
-            workflow: "Cut & Sew Apparel v4",
-            stage: "Finishing",
-            quantity: 360,
-            completed: 320,
-            progress: 89,
-            assignedTo: "Finishing Team",
-            dueDate: "2025-11-08",
-            status: "on-track",
-            components: 0,
-            hasMessages: false,
-            priority: "normal"
-          },
-          {
-            id: "item-007",
-            itemCode: "BZR-TITAN-223",
-            itemName: "Titan Blazer",
-            order: "ORD-24-1095",
-            customer: "Nova Fashion Group",
-            workflow: "Premium Finishing QA",
-            stage: "Quality Inspection",
-            quantity: 120,
-            completed: 108,
-            progress: 90,
-            assignedTo: "QA Premium",
-            dueDate: "2025-10-25",
-            status: "on-track",
-            components: 5,
-            hasMessages: true,
-            priority: "high"
-          },
-          {
-            id: "item-008",
-            itemCode: "TSH-BASIC-789",
-            itemName: "Basic Cotton Tee",
-            order: "ORD-24-1096",
-            customer: "Horizon Apparel Co.",
-            workflow: "Cut & Sew Apparel v4",
-            stage: "Panel Assembly",
-            quantity: 840,
-            completed: 588,
-            progress: 70,
-            assignedTo: "Sewing Line C",
-            dueDate: "2025-10-30",
-            status: "on-track",
-            components: 0,
-            hasMessages: false,
-            priority: "low"
-          },
-        ],
+        itemCodes: MOCK_ITEM_CODES,
       },
     },
     "workflow-overview": {
@@ -284,45 +130,45 @@ const itemsInitialState: DashboardState = {
         activities: [
           {
             type: "stage-complete",
-            itemCode: "JKT-AURORA-001",
-            itemName: "Aurora Flight Jacket",
-            stage: "Fabric Cutting",
-            user: "Cut Room Team",
-            timestamp: "5 minutes ago",
+            itemCode: "JKT-AURORA-M-001",
+            itemName: "Aurora Flight Jacket - Medium",
+            stage: "Sewing",
+            user: "Sewing Line A",
+            timestamp: "3 minutes ago",
             icon: "check"
           },
           {
             type: "message",
-            itemCode: "VST-VOLT-342",
-            itemName: "Volt Thermal Vest",
-            message: "QA inspection completed - approved",
-            user: "Jordan (QA Supervisor)",
-            timestamp: "18 minutes ago",
+            itemCode: "VEST-TAC-STD-001",
+            itemName: "Tactical Vest - Standard",
+            message: "Material cutting in progress",
+            user: "Defense Team",
+            timestamp: "12 minutes ago",
             icon: "message"
           },
           {
             type: "item-created",
-            itemCode: "TSH-BASIC-789",
-            itemName: "Basic Cotton Tee",
-            user: "Amelia Chen",
-            timestamp: "32 minutes ago",
+            itemCode: "BAG-CROSS-BLK-001",
+            itemName: "Leather Crossbody Bag",
+            user: "A. Moretti",
+            timestamp: "28 minutes ago",
             icon: "plus"
           },
           {
             type: "workflow-assigned",
-            itemCode: "BZR-TITAN-223",
-            itemName: "Titan Blazer",
-            workflow: "Premium Finishing QA",
+            itemCode: "HD-METRO-M-001",
+            itemName: "Metro Hoodie - Medium",
+            workflow: "Knit & Finish Workflow",
             user: "System",
-            timestamp: "1 hour ago",
+            timestamp: "45 minutes ago",
             icon: "workflow"
           },
           {
             type: "stage-complete",
-            itemCode: "PNT-ATLAS-204",
-            itemName: "Atlas Cargo Pant",
-            stage: "Panel Assembly",
-            user: "Sewing Line B",
+            itemCode: "JEAN-SEL-32X34-001",
+            itemName: "Selvedge Denim Jean",
+            stage: "QC & Pack",
+            user: "Quality Team",
             timestamp: "1 hour ago",
             icon: "check"
           },
@@ -379,26 +225,26 @@ export default function ItemsV2Page() {
   return (
     <PageTemplate
       pageTitle="Items Management"
-      pageSubtext="Track and manage all items across orders and workflows"
-      storageKey="items-v2-dashboard-v2-fixed"
-      frozenStorageKey="items-v2-dashboard-frozen-v2-fixed"
+      pageSubtext="Track item codes and drill into individual line items • Level 1 of 3"
+      storageKey="items-v2-dashboard-itemcodes-v1"
+      frozenStorageKey="items-v2-dashboard-itemcodes-frozen-v1"
       initialState={itemsInitialState}
       showFilters={true}
       functionButtons={[
         {
-          label: "Create item",
+          label: "Print QR labels",
           variant: "default",
-          onClick: () => console.log("create new item"),
+          onClick: () => alert("Print QR code labels for all line items"),
         },
         {
-          label: "Export list",
+          label: "Export data",
           variant: "outline",
-          onClick: () => console.log("export items list"),
+          onClick: () => alert("Export item codes data"),
         },
         {
-          label: "Print labels",
+          label: "View orders",
           variant: "outline",
-          onClick: () => console.log("print item labels"),
+          onClick: () => alert("Navigate to orders page"),
         },
       ]}
     />

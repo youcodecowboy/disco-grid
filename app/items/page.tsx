@@ -24,7 +24,9 @@ import KanbanSimple from "@/components/blocks/KanbanSimple"
 import CalendarMini from "@/components/blocks/CalendarMini"
 import { FilterItems } from "@/components/blocks/FilterItems"
 import { MetricChart } from "@/components/blocks/MetricChart"
+import { ItemCodesTable } from "@/components/blocks/items/ItemCodesTable"
 import Sidebar from "@/components/Sidebar"
+import { MOCK_ITEM_CODES, getItemCodeProgress } from "@/lib/data/itemCodes"
 
 const SearchIcon = ({ className }: { className?: string }) => (
   <svg className={className || "h-5 w-5"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,6 +195,7 @@ type BlockType =
   | "metric.chart"
   | "table.orders"
   | "table.malleable"
+  | "table.itemcodes"
   | "chart.area.interactive"
   | "activity.timeline"
   | "filter.items"
@@ -269,129 +272,101 @@ const NotificationIcon = () => (
   </svg>
 )
 
+// Calculate metrics from mock data
+const totalItemCodes = MOCK_ITEM_CODES.length
+const totalLineItems = MOCK_ITEM_CODES.reduce((sum, ic) => sum + ic.quantity, 0)
+const inProductionCount = MOCK_ITEM_CODES.filter(ic => ic.status === "In Production").length
+const completedCount = MOCK_ITEM_CODES.filter(ic => ic.status === "Completed" || ic.status === "Ready").length
+const avgProgress = Math.round(
+  MOCK_ITEM_CODES.reduce((sum, ic) => sum + getItemCodeProgress(ic), 0) / MOCK_ITEM_CODES.length
+)
+
 const initialState: DashboardState = {
   mode: "edit",
   layout: [
-    { x: 0, y: 0, w: 3, h: 4, i: "total-items" },
-    { x: 3, y: 0, w: 3, h: 4, i: "categories" },
-    { x: 6, y: 0, w: 3, h: 4, i: "low-stock" },
-    { x: 9, y: 0, w: 3, h: 4, i: "total-value" },
-    { x: 0, y: 4, w: 12, h: 8, i: "items-table" },
-    { x: 0, y: 12, w: 3, h: 6, i: "welcome-items" },
-    { x: 0, y: 18, w: 12, h: 6, i: "items-analytics" },
+    { x: 0, y: 0, w: 3, h: 4, i: "total-item-codes" },
+    { x: 3, y: 0, w: 3, h: 4, i: "total-line-items" },
+    { x: 6, y: 0, w: 3, h: 4, i: "in-production" },
+    { x: 9, y: 0, w: 3, h: 4, i: "avg-progress" },
+    { x: 0, y: 4, w: 12, h: 12, i: "items-table" },
+    { x: 0, y: 16, w: 3, h: 6, i: "welcome-items" },
+    { x: 3, y: 16, w: 9, h: 6, i: "items-analytics" },
   ],
   blocks: {
-    "total-items": {
-      id: "total-items",
+    "total-item-codes": {
+      id: "total-item-codes",
       type: "metric.chart",
-      title: "Total Items",
+      title: "Item Codes",
       props: {
-        value: "1,247",
-        trend: "+12% vs last month",
-        trendDirection: "up",
-        description: "Growing inventory base"
+        value: totalItemCodes.toString(),
+        trend: `${inProductionCount} in production`,
+        trendDirection: "neutral",
+        description: "Unique item variants"
       },
     },
-    "categories": {
-      id: "categories",
+    "total-line-items": {
+      id: "total-line-items",
       type: "metric.chart",
-      title: "Categories",
+      title: "Total Line Items",
       props: {
-        value: "89",
-        trend: "+3 new",
+        value: totalLineItems.toLocaleString(),
+        trend: `${totalItemCodes} variants`,
         trendDirection: "up",
-        description: "Expanding product range"
+        description: "Individual units tracked"
       },
     },
-    "low-stock": {
-      id: "low-stock",
+    "in-production": {
+      id: "in-production",
       type: "metric.chart",
-      title: "Low Stock",
+      title: "In Production",
       props: {
-        value: "23",
-        trend: "-5 items",
-        trendDirection: "down",
-        description: "Improving stock levels"
+        value: inProductionCount.toString(),
+        trend: `${completedCount} completed`,
+        trendDirection: "up",
+        description: "Active item codes"
       },
     },
-    "total-value": {
-      id: "total-value",
+    "avg-progress": {
+      id: "avg-progress",
       type: "metric.chart",
-      title: "Total Value",
+      title: "Avg Progress",
       props: {
-        value: "$45.2K",
-        trend: "+8.5%",
+        value: `${avgProgress}%`,
+        trend: "+5% this week",
         trendDirection: "up",
-        description: "Strong value growth"
+        description: "Overall completion"
       },
     },
 
     "items-table": {
       id: "items-table",
-      type: "table.malleable",
-      title: "Inventory Items",
-      props: {
-        columns: [
-          { id: "name", name: "Item Name", type: "text", width: 200 },
-          { id: "sku", name: "SKU", type: "text", width: 120 },
-          { id: "category", name: "Category", type: "select", width: 120, options: ["Clothing", "Accessories", "Footwear", "Electronics", "Home & Garden"] },
-          { id: "stock", name: "Stock Level", type: "number", width: 100 },
-          { id: "price", name: "Price", type: "number", width: 100 },
-          { id: "status", name: "Status", type: "status", width: 100 },
-          { id: "lastUpdated", name: "Last Updated", type: "date", width: 120 }
-        ],
-        data: [
-          { id: "1", name: "Denim Jeans", sku: "DJ-001", category: "Clothing", stock: 156, price: 89.99, status: "active", lastUpdated: "2024-12-19" },
-          { id: "2", name: "Cotton T-Shirt", sku: "CT-002", category: "Clothing", stock: 89, price: 24.99, status: "active", lastUpdated: "2024-12-18" },
-          { id: "3", name: "Leather Belt", sku: "LB-003", category: "Accessories", stock: 12, price: 45.00, status: "pending", lastUpdated: "2024-12-17" },
-          { id: "4", name: "Sneakers", sku: "SN-004", category: "Footwear", stock: 67, price: 129.99, status: "active", lastUpdated: "2024-12-16" },
-          { id: "5", name: "Hoodie", sku: "HD-005", category: "Clothing", stock: 34, price: 59.99, status: "active", lastUpdated: "2024-12-15" },
-          { id: "6", name: "Wireless Headphones", sku: "WH-006", category: "Electronics", stock: 8, price: 199.99, status: "pending", lastUpdated: "2024-12-14" },
-          { id: "7", name: "Coffee Mug", sku: "CM-007", category: "Home & Garden", stock: 45, price: 12.99, status: "active", lastUpdated: "2024-12-13" },
-          { id: "8", name: "Running Shoes", sku: "RS-008", category: "Footwear", stock: 23, price: 89.99, status: "active", lastUpdated: "2024-12-12" }
-        ]
-      }
+      type: "table.itemcodes",
+      title: "Item Codes • Click to view line items",
+      props: {},
     },
     "welcome-items": {
       id: "welcome-items",
       type: "note",
-      title: "🎯 Welcome to Items Management",
+      title: "📋 Items Overview",
       props: {
-        body: `# Welcome to Your Items Dashboard! 📦
+        body: `# Item Management System
 
-**Groovy Items** is your intelligent inventory management system where you can track, organize, and optimize your product catalog.
+Track your production from **Item Codes** down to individual **Line Items**.
 
-## ✨ What You Can Do:
+## How It Works:
 
-**📋 Manage Inventory** - Use the table below to add, edit, and organize your items
-**📊 Track Metrics** - Monitor stock levels, categories, and inventory value
-**📈 View Analytics** - See trends and patterns in your inventory data
-**🎨 Customize Views** - Resize, move, and customize any component
+**Item Codes** = Variants (e.g., "Jacket - Medium")
+**Line Items** = Individual units with QR codes
+**Components** = Parts that make up complex items
 
-## 🎮 Getting Started:
+## Quick Actions:
 
-**📝 Add New Items:**
-• Click "Add Row" in the table to add new items
-• Use the settings icon in column headers to customize columns
-• Click any cell to edit item details directly
+👁️ **View** - See all line items for this item code
+✉️ **Message** - Send notifications about items
+✏️ **Edit** - Modify item attributes
+🔔 **Alerts** - Set up notifications
 
-**📊 Monitor Stock:**
-• Watch the metrics cards for real-time inventory overview
-• Use the analytics chart to spot trends
-• Set up alerts for low stock items
-
-**🔍 Organize Efficiently:**
-• Filter by category, status, or stock level
-• Sort by any column to find items quickly
-• Use the search to locate specific items
-
-## 💡 Pro Tips:
-• **Double-click** any title to edit it instantly
-• **Drag and drop** components to rearrange your workspace
-• **Resize** components to see more or less detail
-• **Use AI** to create new components and insights
-
-*This is YOUR inventory workspace - make it perfect for your business!* ✨`
+Click any row to drill into line items!`
       }
     },
     "items-analytics": {
@@ -944,6 +919,13 @@ export default function ItemsPage() {
             data={block.props?.data || []}
             className="h-full"
             showFilters={true}
+          />
+        )
+      case "table.itemcodes":
+        return (
+          <ItemCodesTable
+            itemCodes={MOCK_ITEM_CODES}
+            className="h-full"
           />
         )
       case "calendar":

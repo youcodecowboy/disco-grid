@@ -1,4 +1,3 @@
-import React from "react"
 import type { BlockConfig } from "@/lib/grid-v2/types"
 import type { Block as LegacyBlock } from "@/lib/useGridSystem"
 import TableOrders from "@/components/blocks/TableOrders"
@@ -49,6 +48,13 @@ import FormTextarea from "@/components/blocks/FormTextarea"
 import FormCheckbox from "@/components/blocks/FormCheckbox"
 import FormUpload from "@/components/blocks/FormUpload"
 import FormSection from "@/components/blocks/FormSection"
+// Teams & People blocks
+import TeamPerformanceLeaderboard from "@/components/blocks/TeamPerformanceLeaderboard"
+import TopPerformersList from "@/components/blocks/TopPerformersList"
+import DeviceFleetStatus from "@/components/blocks/DeviceFleetStatus"
+import TeamsActivityFeed from "@/components/blocks/TeamsActivityFeed"
+import TeamsTable from "@/components/blocks/TeamsTable"
+import PeopleTable from "@/components/blocks/PeopleTable"
 // Construction/Worksite components
 import SiteMapBlock from "@/components/blocks/SiteMapBlock"
 import DeliveryCalendar from "@/components/blocks/DeliveryCalendar"
@@ -64,6 +70,7 @@ import DeliveryTimelineCard from "@/components/blocks/construction/DeliveryTimel
 import SiteMapGrid from "@/components/blocks/construction/SiteMapGrid"
 // Items-specific components
 import ComprehensiveItemsTable from "@/components/blocks/items/ComprehensiveItemsTable"
+import { ItemCodesTableV2 } from "@/components/blocks/items/ItemCodesTableV2"
 import WorkflowOverview from "@/components/blocks/items/WorkflowOverview"
 import ItemActivityTimeline from "@/components/blocks/items/ItemActivityTimeline"
 
@@ -175,6 +182,55 @@ export default function BlockRenderer({ block, showFilters = false, isEditing = 
         <TableItems
           items={(block.props as any)?.items}
           showColumnCustomization={(block.props as any)?.showColumnCustomization ?? true}
+        />
+      )
+    
+    case "table.teams":
+      return (
+        <TeamsTable
+          teams={(block.props as any)?.teams || []}
+          people={(block.props as any)?.people || []}
+          showActions={(block.props as any)?.showActions ?? true}
+        />
+      )
+    
+    case "table.people":
+      return (
+        <PeopleTable
+          people={(block.props as any)?.people || []}
+          showActions={(block.props as any)?.showActions ?? true}
+        />
+      )
+    
+    case "teams.leaderboard":
+      return (
+        <TeamPerformanceLeaderboard
+          teams={(block.props as any)?.teams || []}
+          limit={(block.props as any)?.limit ?? 5}
+        />
+      )
+    
+    case "teams.top-performers":
+      return (
+        <TopPerformersList
+          people={(block.props as any)?.people || []}
+          limit={(block.props as any)?.limit ?? 8}
+        />
+      )
+    
+    case "teams.devices":
+      return (
+        <DeviceFleetStatus
+          devices={(block.props as any)?.devices || []}
+        />
+      )
+    
+    case "teams.activity":
+      return (
+        <TeamsActivityFeed
+          people={(block.props as any)?.people || []}
+          devices={(block.props as any)?.devices || []}
+          limit={(block.props as any)?.limit ?? 12}
         />
       )
     case "layout.container": {
@@ -364,6 +420,8 @@ export default function BlockRenderer({ block, showFilters = false, isEditing = 
     // Items-specific components
     case "items.table.comprehensive":
       return <ComprehensiveItemsTable title={block.title} {...block.props} />
+    case "items.itemcodes.table":
+      return <ItemCodesTableV2 block={block} />
     case "items.workflow.overview":
       return <WorkflowOverview title={block.title} {...block.props} />
     case "items.activity.timeline":

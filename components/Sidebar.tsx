@@ -3,21 +3,22 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { 
-  BarChart3, 
-  Workflow, 
-  Package, 
-  Layers, 
-  Users, 
-  Heart, 
-  ShoppingCart, 
-  FileText, 
-  MessageSquare, 
-  CreditCard,
-  Layout,
-  Plus,
-  PlusCircle,
-  CalendarClock,
+import {
+    BarChart3,
+    Workflow,
+    Package,
+    Layers,
+    Users,
+    Heart,
+    ShoppingCart,
+    FileText,
+    MessageSquare,
+    CreditCard,
+    Layout,
+    Plus,
+    CalendarClock,
+    CheckSquare,
+    BookUser
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -47,7 +48,7 @@ export default function Sidebar({
     const pageId = newPageName.toLowerCase().replace(/\s+/g, '-');
     
     // Reserved routes that shouldn't be overridden
-    const reservedRoutes = ['v2', 'disco', 'billing', 'customers', 'items', 'items-v2', 'materials', 'messages', 'orders', 'planner', 'reports', 'teams', 'workflows'];
+    const reservedRoutes = ['v2', 'disco', 'billing', 'customers', 'items', 'items-v2', 'materials', 'messages', 'orders', 'planner', 'tasks', 'reports', 'teams', 'workflows', 'workflows-v2', 'workflows-test', 'workflows-wizard-test', 'workflows-grid-test', 'workflows-library', 'rolodex'];
     
     if (reservedRoutes.includes(pageId)) {
       alert(`"${newPageName}" is a reserved name. Please choose a different name.`);
@@ -68,8 +69,6 @@ export default function Sidebar({
     router.push(newPage.href);
   };
 
-  const newOrderActive = pathname === "/orders/new" || pathname.startsWith("/orders/new/");
-
   const coreItems = [
     { 
       icon: Layout, 
@@ -78,16 +77,46 @@ export default function Sidebar({
       active: pathname === "/v2"
     },
     { 
+      icon: Workflow, 
+      label: "Workflow Builder", 
+      href: "/workflows-grid-test",
+      active: pathname === "/workflows-grid-test"
+    },
+    { 
       icon: Package, 
       label: "Items V2", 
       href: "/items-v2",
       active: pathname === "/items-v2"
     },
     { 
+      icon: ShoppingCart, 
+      label: "Orders", 
+      href: "/orders",
+      active: pathname === "/orders" || pathname.startsWith("/orders/")
+    },
+    { 
+      icon: BookUser, 
+      label: "Rolodex", 
+      href: "/rolodex",
+      active: pathname === "/rolodex" || pathname.startsWith("/rolodex/")
+    },
+    { 
       icon: CalendarClock, 
       label: "Planner", 
       href: "/planner",
       active: pathname === "/planner"
+    },
+    { 
+      icon: CheckSquare, 
+      label: "Tasks", 
+      href: "/tasks",
+      active: pathname === "/tasks"
+    },
+    { 
+      icon: Users, 
+      label: "Teams", 
+      href: "/teams",
+      active: pathname === "/teams"
     },
     { 
       icon: MessageSquare, 
@@ -123,22 +152,10 @@ export default function Sidebar({
       active: pathname === "/materials"
     },
     { 
-      icon: Users, 
-      label: "Teams", 
-      href: "/teams",
-      active: pathname === "/teams"
-    },
-    { 
       icon: Heart, 
       label: "Customers", 
       href: "/customers",
       active: pathname === "/customers"
-    },
-    { 
-      icon: ShoppingCart, 
-      label: "Orders", 
-      href: "/orders",
-      active: pathname === "/orders"
     },
     { 
       icon: FileText, 
@@ -161,22 +178,8 @@ export default function Sidebar({
       onMouseLeave={onMouseLeave}
     >
       <div className="p-3 h-full overflow-y-auto flex flex-col">
-        <div className="mb-5">
-          <Link
-            href="/orders/new"
-            className={`group flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-              newOrderActive
-                ? 'bg-blue-600 text-white'
-                : 'bg-blue-500 text-white hover:bg-blue-600'
-            }`}
-          >
-            <PlusCircle className="h-4 w-4" />
-            {sidebarExpanded && <span>New order</span>}
-          </Link>
-        </div>
-
         {/* CORE Section */}
-        <div className="mb-6">
+        <div className="mb-6 mt-3">
           {sidebarExpanded && (
             <div className="px-2 py-2 mb-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">

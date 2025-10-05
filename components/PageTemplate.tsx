@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Input } from "@/components/ui/input"
 import { cn, generateId } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -646,7 +645,7 @@ export default function PageTemplate({
         />
 
         <main className="flex-1 p-4">
-          <div className="mb-4 pb-2 border-b-2">
+          <div className="mb-2 pb-2 border-b-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-lg">
                 <BarChart3Icon />
@@ -957,7 +956,8 @@ export default function PageTemplate({
                           block.type?.startsWith("table") && "p-0",
                           block.type?.startsWith("construction.") && "p-0",
                           block.type?.startsWith("worksite.") && "p-0",
-                          block.type?.startsWith("analytics.") && "p-0"
+                          block.type?.startsWith("analytics.") && "p-0",
+                          block.type?.startsWith("items.") && "p-0"
                         )}
                       >
                         {(() => {
@@ -967,13 +967,14 @@ export default function PageTemplate({
                           const isConstruction = type.startsWith("construction.")
                           const isWorksite = type.startsWith("worksite.")
                           const isAnalytics = type.startsWith("analytics.")
+                          const isItems = type.startsWith("items.")
                           const isMessages = type.startsWith("messages")
-                          const allowScroll = isTable || isMessages
+                          const allowScroll = isTable || isMessages || isItems
 
                           return (
                             <div
                               className={`${
-                                isMetric || isTable || isConstruction || isWorksite || isAnalytics ? "p-0" : "p-4"
+                                isMetric || isTable || isConstruction || isWorksite || isAnalytics || isItems ? "p-0" : "p-4"
                               } flex-1 min-h-0 flex flex-col ${allowScroll ? "overflow-auto" : "overflow-hidden"}`}
                             >
                               <BlockRenderer block={block} showFilters={showFilters} />

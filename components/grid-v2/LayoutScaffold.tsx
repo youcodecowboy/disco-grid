@@ -3,7 +3,6 @@
 import { useState, type PropsWithChildren, type ReactNode } from "react"
 import Sidebar from "@/components/Sidebar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { gridContainerClass } from "@/lib/grid/container"
 
 const SearchIcon = ({ className }: { className?: string }) => (
@@ -57,21 +56,10 @@ export function LayoutScaffold({
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative hidden sm:flex items-center">
-              <Input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-1.5 text-sm border-2 rounded-md w-48 md:w-64"
-              />
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none z-10 h-4 w-4" />
-            </div>
             {headerActions}
             <Button variant="ghost" size="icon" title="Notifications">
               <BellIcon />
             </Button>
-            <Avatar>
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
           </div>
         </div>
       </header>
