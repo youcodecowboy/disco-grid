@@ -597,6 +597,125 @@ const onboardingPreset: GridState = {
   },
 }
 
+const playgroundPreset: GridState = {
+  mode: "edit",
+  layout: [
+    { i: "revenue-kpi", x: 0, y: 0, w: 3, h: 4 },
+    { i: "orders-kpi", x: 3, y: 0, w: 3, h: 4 },
+    { i: "items-kpi", x: 6, y: 0, w: 3, h: 4 },
+    { i: "completion-kpi", x: 9, y: 0, w: 3, h: 4 },
+    { i: "sales-chart", x: 0, y: 4, w: 8, h: 8 },
+    { i: "activity-timeline", x: 8, y: 4, w: 4, h: 8 },
+    { i: "orders-table", x: 0, y: 12, w: 6, h: 8 },
+    { i: "ai-builder", x: 6, y: 12, w: 6, h: 8 },
+  ],
+  blocks: {
+    "revenue-kpi": {
+      id: "revenue-kpi",
+      type: "construction.metric.large",
+      title: "Revenue",
+      props: {
+        value: "248.5",
+        unit: "K",
+        delta: "+18.2%",
+        subtitle: "Monthly total",
+        trend: [180, 195, 210, 220, 230, 240, 248],
+        color: "blue",
+      },
+    },
+    "orders-kpi": {
+      id: "orders-kpi",
+      type: "construction.metric.large",
+      title: "Active Orders",
+      props: {
+        value: "127",
+        delta: "+12",
+        subtitle: "In production",
+        trend: [95, 102, 108, 115, 118, 122, 127],
+        color: "green",
+      },
+    },
+    "items-kpi": {
+      id: "items-kpi",
+      type: "construction.metric.large",
+      title: "Items in Production",
+      props: {
+        value: "1,842",
+        delta: "+156",
+        subtitle: "This week",
+        trend: [1450, 1520, 1600, 1680, 1750, 1800, 1842],
+        color: "purple",
+      },
+    },
+    "completion-kpi": {
+      id: "completion-kpi",
+      type: "construction.metric.large",
+      title: "Completion Rate",
+      props: {
+        value: "94.2",
+        unit: "%",
+        delta: "+2.1%",
+        subtitle: "Quality target",
+        trend: [88, 90, 91, 92, 93, 93.5, 94.2],
+        color: "green",
+      },
+    },
+    "sales-chart": {
+      id: "sales-chart",
+      type: "v3.chart.area",
+      title: "Revenue Trend",
+      props: {
+        data: [
+          { name: "Jan", value: 180000 },
+          { name: "Feb", value: 195000 },
+          { name: "Mar", value: 210000 },
+          { name: "Apr", value: 220000 },
+          { name: "May", value: 230000 },
+          { name: "Jun", value: 240000 },
+          { name: "Jul", value: 248500 },
+        ],
+      },
+    },
+    "activity-timeline": {
+      id: "activity-timeline",
+      type: "v3.activity.timeline",
+      title: "Recent Activity",
+      props: {
+        activities: [
+          { time: "5m", user: "J. Smith", action: "Completed Order #4521", status: "success" },
+          { time: "12m", user: "M. Chen", action: "Updated item status", status: "info" },
+          { time: "28m", user: "A. Johnson", action: "Created new order", status: "info" },
+          { time: "1h", user: "S. Kumar", action: "Flagged quality issue", status: "warning" },
+          { time: "2h", user: "R. Martinez", action: "Shipped order #4518", status: "success" },
+        ],
+      },
+    },
+    "orders-table": {
+      id: "orders-table",
+      type: "v3.table",
+      title: "Recent Orders",
+      props: {
+        columns: ["Order #", "Customer", "Status", "Value"],
+        rows: [
+          ["#4521", "Acme Corp", "Completed", "$12,400"],
+          ["#4520", "TechStart Inc", "In Production", "$8,900"],
+          ["#4519", "Global Mfg", "Cutting", "$15,200"],
+          ["#4518", "Northwind", "Shipped", "$6,750"],
+          ["#4517", "Horizon Ltd", "QA", "$9,840"],
+        ],
+      },
+    },
+    "ai-builder": {
+      id: "ai-builder",
+      type: "ai.input",
+      title: "AI Component Builder",
+      props: {
+        placeholder: "Describe a component to add to your dashboard...",
+      },
+    },
+  },
+}
+
 function cloneState(state: GridState): GridState {
   if (typeof structuredClone === "function") {
     return structuredClone(state)
@@ -608,6 +727,7 @@ const presetMap: Record<string, GridState> = {
   dashboard: dashboardPreset,
   v2: dashboardPreset,
   onboarding: onboardingPreset,
+  playground: playgroundPreset,
 }
 
 export function getDashboardPreset(): GridState {
@@ -618,6 +738,10 @@ export function getOnboardingPreset(): GridState {
   return cloneState(onboardingPreset)
 }
 
+export function getPlaygroundPreset(): GridState {
+  return cloneState(playgroundPreset)
+}
+
 export function getPreset(name: string): GridState | null {
   const preset = presetMap[name.toLowerCase()]
   return preset ? cloneState(preset) : null
@@ -625,14 +749,17 @@ export function getPreset(name: string): GridState | null {
 
 export function createBlankPreset(title: string): GridState {
   const safeTitle = title || "New Page"
-  const instructions = `# ${safeTitle}\n\nStart dragging blocks from the palette or use the quick actions to populate this canvas. Edit mode lets you move and resize components on the grid.`
+  const instructions = `# Welcome to ${safeTitle}\n\nThis is your custom dashboard powered by AI. Get started by:\n\n• **Using the AI Builder** below to describe components\n• **Adding blocks** with the + button at the bottom\n• **Dragging & resizing** components on the grid\n• **Editing** any component with the toolbar\n\nYou have access to 50+ component types including charts, tables, metrics, forms, and more!`
 
   return {
     mode: "edit",
     layout: [
-      { i: "welcome", x: 0, y: 0, w: 12, h: 4 },
-      { i: "sample-metric", x: 0, y: 4, w: 4, h: 6 },
-      { i: "sample-chart", x: 4, y: 4, w: 8, h: 6 },
+      { i: "welcome", x: 0, y: 0, w: 8, h: 8 },
+      { i: "ai-builder", x: 8, y: 0, w: 4, h: 8 },
+      { i: "sample-metric-1", x: 0, y: 8, w: 3, h: 4 },
+      { i: "sample-metric-2", x: 3, y: 8, w: 3, h: 4 },
+      { i: "sample-metric-3", x: 6, y: 8, w: 3, h: 4 },
+      { i: "sample-metric-4", x: 9, y: 8, w: 3, h: 4 },
     ],
     blocks: {
       welcome: {
@@ -643,29 +770,62 @@ export function createBlankPreset(title: string): GridState {
           body: instructions,
         },
       },
-      "sample-metric": {
-        id: "sample-metric",
-        type: "metric.kpi",
-        title: "Sample Metric",
+      "ai-builder": {
+        id: "ai-builder",
+        type: "ai.input",
+        title: "AI Component Builder",
+        props: {
+          placeholder: "Describe a component to add to your dashboard...",
+        },
+      },
+      "sample-metric-1": {
+        id: "sample-metric-1",
+        type: "construction.metric.large",
+        title: "Total Items",
         props: {
           value: "0",
           delta: "Ready",
+          subtitle: "Get started",
           trend: [0, 0, 0, 0, 0, 0, 0],
-          description: "Use quick edit to bind this card to a data source.",
+          color: "blue",
         },
       },
-      "sample-chart": {
-        id: "sample-chart",
-        type: "chart.line",
-        title: "Sample Chart",
+      "sample-metric-2": {
+        id: "sample-metric-2",
+        type: "construction.metric.large",
+        title: "Active Orders",
         props: {
-          data: [
-            { name: "Mon", value: 10 },
-            { name: "Tue", value: 16 },
-            { name: "Wed", value: 12 },
-            { name: "Thu", value: 18 },
-            { name: "Fri", value: 15 },
-          ],
+          value: "0",
+          delta: "Ready",
+          subtitle: "Get started",
+          trend: [0, 0, 0, 0, 0, 0, 0],
+          color: "green",
+        },
+      },
+      "sample-metric-3": {
+        id: "sample-metric-3",
+        type: "construction.metric.large",
+        title: "Completion Rate",
+        props: {
+          value: "0",
+          unit: "%",
+          delta: "Ready",
+          subtitle: "Get started",
+          trend: [0, 0, 0, 0, 0, 0, 0],
+          color: "purple",
+        },
+      },
+      "sample-metric-4": {
+        id: "sample-metric-4",
+        type: "construction.metric.large",
+        title: "Revenue",
+        props: {
+          value: "0",
+          unit: "K",
+          delta: "Ready",
+          subtitle: "Get started",
+          trend: [0, 0, 0, 0, 0, 0, 0],
+          color: "orange",
         },
       },
     },

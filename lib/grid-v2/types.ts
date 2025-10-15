@@ -79,6 +79,24 @@ export type BlockType =
   | "items.table.comprehensive"
   | "items.workflow.overview"
   | "items.activity.timeline"
+  // AI Playground components
+  | "ai.input"
+  // V3 Components
+  | "v3.chart.area"
+  | "v3.chart.bar"
+  | "v3.chart.donut"
+  | "v3.activity.timeline"
+  | "v3.table"
+  | "v3.kpi"
+  | "v3.status.grid"
+  | "v3.progress.tracker"
+  // Site Map components
+  | "site.machine"
+  | "site.storage"
+  | "site.zone"
+  | "site.production-line"
+  | "site.station"
+  | "site.equipment"
 
 export type BlockConfig = {
   id: string

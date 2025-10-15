@@ -1,13 +1,16 @@
 # Analytics & Reporting System Blueprint — 10/05/25
+**Updated: 10/09/25 - Enhanced with AI Recommendations & Advanced Distribution**
 
 ## Mission
-Build a domain-agnostic analytics and reporting hub that transforms raw operational data into actionable insights, customizable reports, and automated distribution systems. The core focus is on **report building**—empowering users to compose, schedule, and share beautifully formatted reports without technical expertise.
+Build a domain-agnostic analytics and reporting hub that transforms raw operational data into actionable insights, customizable reports, and automated distribution systems. The core focus is on **intelligent report building**—empowering users to compose, schedule, and share beautifully formatted reports without technical expertise, enhanced with AI-powered recommendations and sophisticated cadence management.
 
 ## Experience Principles
 - **Report-First Architecture**: While analytics visualizations are powerful, the system's primary job is enabling users to build, customize, and distribute reports.
 - **Grid-as-Canvas**: The report builder uses the existing grid system where users drag analytics components onto a page that becomes the actual report.
+- **AI-Guided Assembly**: As users select data sources, the system intelligently recommends report types, formats, and visualizations based on common patterns and best practices.
 - **Component-Based Assembly**: Analytics blocks (charts, tables, KPIs) are building blocks that snap together to form comprehensive reports.
 - **Schedule Once, Run Forever**: Configure reports to generate and send automatically at any cadence—daily, weekly, monthly, or custom intervals.
+- **Intelligent Contact Management**: Sophisticated recipient systems that understand relationships, roles, and data access permissions.
 - **Domain Agnostic**: Works for fashion production reports, construction progress updates, armory inventory summaries, or any operational domain.
 - **Progressive Complexity**: Start with simple drag-and-drop report building, evolve toward natural language report generation.
 
@@ -413,6 +416,477 @@ type DistributionStatus = {
   error?: string
 }
 ```
+
+---
+
+## AI-Powered Report Recommendations
+
+### Intelligence Layer
+
+**Vision:** Transform report creation from manual assembly to AI-assisted composition where the system learns from data patterns, user behavior, and industry best practices to suggest optimal report structures.
+
+### How AI Recommendations Work
+
+**Step 1: Data Source Selection**
+When user selects one or more data sources, the AI analyzes:
+- Data types and structure (time series, categorical, hierarchical)
+- Volume and granularity
+- Relationships between selected sources
+- Historical usage patterns for these data types
+
+**Step 2: Pattern Recognition**
+The system identifies:
+- Common report types for this data combination
+- Industry-standard visualizations
+- Reports other users created with similar data
+- Seasonal or temporal patterns in the data
+
+**Step 3: Intelligent Suggestions**
+Present user with:
+- 3-5 recommended report templates
+- Suggested visualization types for each data field
+- Optimal grouping and aggregation strategies
+- Recommended cadence based on data freshness
+- Suggested recipients based on data ownership and access patterns
+
+### Recommendation Engine Architecture
+
+```typescript
+type AIRecommendation = {
+  id: string
+  confidence: number                    // 0-100, how confident is this suggestion
+  reportType: string                    // "Production Summary", "Quality Analysis", etc.
+  reasoning: string                     // "Based on 45 similar reports created by operations teams"
+  
+  suggestedBlocks: SuggestedBlock[]     // Recommended components
+  suggestedSchedule: ScheduleConfig     // Recommended cadence
+  suggestedRecipients: string[]         // Recommended distribution list
+  
+  similarReports: string[]              // IDs of similar existing reports
+  usageCount: number                    // How many times this pattern has been used
+  averageRating: number                 // User feedback on this recommendation
+}
+
+type SuggestedBlock = {
+  type: AnalyticsBlockType              // Chart, table, KPI, etc.
+  dataSource: string
+  config: Partial<BlockConfig>          // Pre-configured settings
+  position: GridCoordinates             // Suggested placement
+  reasoning: string                     // "Line charts work best for time series data"
+  alternatives: AnalyticsBlockType[]    // Other valid options
+}
+```
+
+### Smart Data Analysis
+
+**When User Selects "Orders" Data Source:**
+
+**AI Analysis:**
+- Detects: Time-stamped data with status field
+- Identifies: Order volume, completion rates, client distribution
+- Recognizes: Production workflow pattern
+
+**Recommendations Generated:**
+
+1. **"Weekly Production Summary" (95% confidence)**
+   - Suggested blocks:
+     - KPI Grid: Total orders, completion rate, average time, on-time %
+     - Trend Line: Orders completed over time
+     - Bar Chart: Orders by client
+     - Status Table: Current orders in production
+   - Suggested schedule: Weekly, Friday 5pm
+   - Reasoning: "This is the most common report type for order data, created by 78% of operations managers"
+
+2. **"Client Performance Report" (88% confidence)**
+   - Suggested blocks:
+     - Client leaderboard: By order volume
+     - Comparison table: This month vs last month per client
+     - Heatmap: Order frequency by client and week
+   - Suggested schedule: Monthly, last business day
+   - Reasoning: "Great for tracking client relationships and identifying top customers"
+
+3. **"Production Velocity Dashboard" (82% confidence)**
+   - Suggested blocks:
+     - Gauge: Current completion rate vs target
+     - Waterfall chart: Orders moving through stages
+     - Timeline: Upcoming delivery deadlines
+   - Suggested schedule: Daily, 8am
+   - Reasoning: "Real-time production tracking for fast-paced environments"
+
+**When User Selects "Orders + Items + Teams" (Multiple Sources):**
+
+**AI Analysis:**
+- Detects: Production operation with team assignments
+- Identifies: Relationships between orders, line items, and team performance
+- Recognizes: Opportunity for cross-referential analysis
+
+**Recommendations Generated:**
+
+1. **"Comprehensive Production Report" (92% confidence)**
+   - Suggested blocks:
+     - KPI Grid: Orders, items, team count, efficiency
+     - Team leaderboard: By items completed
+     - Orders table: With assigned teams and item counts
+     - Scatter plot: Team efficiency vs order complexity
+   - Suggested schedule: Weekly
+   - Reasoning: "Combining these data sources enables full production oversight"
+
+2. **"Team Performance Deep Dive" (87% confidence)**
+   - Focus: Team-centric view
+   - Suggested blocks:
+     - Team comparison table
+     - Items per team trend
+     - Quality metrics by team
+     - Workload distribution chart
+   - Suggested schedule: Bi-weekly
+   - Reasoning: "Perfect for team management and capacity planning"
+
+### Smart Visualization Selection
+
+**AI Logic for Visualization Recommendations:**
+
+```typescript
+function recommendVisualizationType(dataProfile: DataProfile): VisualizationRecommendation[] {
+  const recommendations: VisualizationRecommendation[] = []
+  
+  // Time series data → Line or area chart
+  if (dataProfile.hasTimestamp && dataProfile.isSequential) {
+    recommendations.push({
+      type: "chart.line",
+      confidence: 95,
+      reasoning: "Time series data displays trends most clearly with line charts",
+      alternatives: ["chart.area", "chart.bar"]
+    })
+  }
+  
+  // Categorical with values → Bar chart
+  if (dataProfile.hasCategorical && dataProfile.hasNumericValues) {
+    recommendations.push({
+      type: "chart.bar",
+      confidence: 90,
+      reasoning: "Bar charts excel at comparing values across categories",
+      alternatives: ["chart.pie", "table.summary"]
+    })
+  }
+  
+  // Proportions/percentages → Pie or donut
+  if (dataProfile.isProportional && dataProfile.categoryCount <= 8) {
+    recommendations.push({
+      type: "chart.donut",
+      confidence: 85,
+      reasoning: "Donut charts show part-to-whole relationships clearly",
+      alternatives: ["chart.pie", "metric.grid"]
+    })
+  }
+  
+  // Large number of records → Table with pagination
+  if (dataProfile.recordCount > 100) {
+    recommendations.push({
+      type: "table.data",
+      confidence: 88,
+      reasoning: "Tables handle large datasets better than visual charts",
+      alternatives: ["chart.heatmap"]
+    })
+  }
+  
+  // Single metric → KPI card
+  if (dataProfile.isSingleValue) {
+    recommendations.push({
+      type: "metric.kpi",
+      confidence: 92,
+      reasoning: "Single values deserve prominent KPI display",
+      alternatives: ["metric.trend", "chart.gauge"]
+    })
+  }
+  
+  // Comparison of two periods → Comparison chart/table
+  if (dataProfile.hasTwoTimeRanges) {
+    recommendations.push({
+      type: "metric.comparison",
+      confidence: 90,
+      reasoning: "Period-over-period comparisons are most meaningful side-by-side",
+      alternatives: ["table.comparison", "chart.bar"]
+    })
+  }
+  
+  // Hierarchical data → Tree or sunburst
+  if (dataProfile.isHierarchical) {
+    recommendations.push({
+      type: "chart.sunburst",
+      confidence: 78,
+      reasoning: "Hierarchical data benefits from nested visualizations",
+      alternatives: ["table.data", "chart.treemap"]
+    })
+  }
+  
+  // Geographic data → Map
+  if (dataProfile.hasGeolocation) {
+    recommendations.push({
+      type: "map.geographic",
+      confidence: 94,
+      reasoning: "Location data is best displayed on maps",
+      alternatives: ["table.data"]
+    })
+  }
+  
+  return recommendations.sort((a, b) => b.confidence - a.confidence)
+}
+```
+
+### Learning from Usage Patterns
+
+**System Learns:**
+1. **User Preferences:** Tracks which recommendations users accept/reject
+2. **Report Success:** Monitors which reports get viewed, shared, and generate positive feedback
+3. **Industry Patterns:** Identifies domain-specific reporting norms
+4. **Seasonal Trends:** Recognizes time-based reporting needs (quarterly reviews, year-end summaries)
+
+**Feedback Loop:**
+```typescript
+type RecommendationFeedback = {
+  recommendationId: string
+  accepted: boolean                     // Did user use this recommendation?
+  modified: boolean                     // Did user tweak it?
+  modifications?: string[]              // What changes did they make?
+  userRating?: number                   // 1-5 stars
+  reportPerformance?: {
+    viewCount: number
+    shareCount: number
+    recipientEngagement: number         // Average open/click rate
+  }
+}
+
+// AI adjusts future recommendations based on feedback
+function adjustRecommendationWeights(feedback: RecommendationFeedback[]) {
+  // Patterns that get accepted more → higher confidence
+  // Modifications get incorporated into future suggestions
+  // Low-performing reports → lower confidence for similar patterns
+}
+```
+
+### Contextual Intelligence
+
+**Domain Detection:**
+System recognizes operational context and tailors recommendations:
+
+**Fashion/Apparel Production:**
+- Recommends production reports, quality tracking, client updates
+- Suggests grouping by: collection, season, client, item type
+- Typical cadence: Weekly production, monthly client reviews
+
+**Construction:**
+- Recommends project progress, safety reports, resource allocation
+- Suggests grouping by: project, contractor, phase, location
+- Typical cadence: Daily progress, weekly stakeholder updates
+
+**Manufacturing:**
+- Recommends throughput, quality control, inventory reports
+- Suggests grouping by: product line, shift, machine, defect type
+- Typical cadence: Shift reports, daily summaries, monthly KPIs
+
+**Service Operations:**
+- Recommends SLA compliance, ticket resolution, customer satisfaction
+- Suggests grouping by: client, team, ticket type, severity
+- Typical cadence: Real-time dashboards, weekly summaries
+
+### Smart Schedule Recommendations
+
+**AI Analyzes Data Freshness to Suggest Cadence:**
+
+```typescript
+function recommendSchedule(dataSource: DataSourceConfig): ScheduleRecommendation {
+  const updateFrequency = analyzeDataUpdateFrequency(dataSource)
+  const businessContext = detectBusinessContext(dataSource)
+  
+  if (updateFrequency === "real-time") {
+    return {
+      frequency: "daily",
+      time: "08:00",
+      reasoning: "Data updates continuously; daily morning reports keep teams informed",
+      alternatives: ["hourly", "twice-daily"]
+    }
+  }
+  
+  if (updateFrequency === "daily") {
+    return {
+      frequency: "weekly",
+      daysOfWeek: ["Friday"],
+      time: "17:00",
+      reasoning: "Weekly summaries capture trends without overwhelming recipients",
+      alternatives: ["daily", "bi-weekly"]
+    }
+  }
+  
+  if (updateFrequency === "weekly") {
+    return {
+      frequency: "monthly",
+      dayOfMonth: "last",
+      time: "16:00",
+      reasoning: "Monthly reports align with business cycles and strategic planning",
+      alternatives: ["weekly", "quarterly"]
+    }
+  }
+  
+  if (businessContext === "executive") {
+    return {
+      frequency: "monthly",
+      dayOfMonth: "last",
+      reasoning: "Executives prefer high-level monthly summaries",
+      alternatives: ["quarterly"]
+    }
+  }
+  
+  if (businessContext === "operational") {
+    return {
+      frequency: "daily",
+      time: "08:00",
+      reasoning: "Operations teams need daily visibility",
+      alternatives: ["twice-daily", "weekly"]
+    }
+  }
+  
+  if (businessContext === "client-facing") {
+    return {
+      frequency: "weekly",
+      daysOfWeek: ["Monday", "Thursday"],
+      reasoning: "Clients appreciate regular updates without daily noise",
+      alternatives: ["weekly", "bi-weekly"]
+    }
+  }
+  
+  return {
+    frequency: "weekly",
+    daysOfWeek: ["Friday"],
+    time: "17:00",
+    reasoning: "Weekly Friday reports are the most common pattern",
+    alternatives: ["daily", "monthly"]
+  }
+}
+```
+
+### Smart Recipient Recommendations
+
+**AI Suggests Recipients Based On:**
+
+1. **Data Ownership:** Who owns/manages the data in the report?
+2. **Role Matching:** Operations reports → operations managers
+3. **Historical Patterns:** Who typically receives similar reports?
+4. **Org Structure:** Manager gets report, team gets summary
+5. **Access Permissions:** Only suggest recipients who can view this data
+
+```typescript
+function recommendRecipients(report: Report): RecipientRecommendation[] {
+  const recommendations: RecipientRecommendation[] = []
+  
+  // Analyze report content
+  const dataOwners = identifyDataOwners(report.dataSources)
+  const relevantRoles = mapDataToRoles(report.dataSources)
+  const similarReportRecipients = findSimilarReportRecipients(report)
+  
+  // Data owners always recommended (high confidence)
+  recommendations.push(...dataOwners.map(owner => ({
+    recipient: owner,
+    confidence: 95,
+    reasoning: "Manages the data included in this report",
+    role: "Primary Owner"
+  })))
+  
+  // Role-based recommendations
+  if (report.category === "Production") {
+    recommendations.push(...findUsersByRole("Operations Manager").map(user => ({
+      recipient: user,
+      confidence: 88,
+      reasoning: "Production reports typically go to operations managers",
+      role: "Stakeholder"
+    })))
+  }
+  
+  if (report.category === "Executive") {
+    recommendations.push(...findUsersByRole("Executive").map(user => ({
+      recipient: user,
+      confidence: 92,
+      reasoning: "Executive-level summary",
+      role: "Leadership"
+    })))
+  }
+  
+  // Pattern-based recommendations
+  const frequentRecipients = findFrequentRecipients(similarReportRecipients)
+  recommendations.push(...frequentRecipients.map(recip => ({
+    recipient: recip.user,
+    confidence: recip.frequency * 100,
+    reasoning: `Receives ${recip.count} similar reports`,
+    role: "Regular Recipient"
+  })))
+  
+  // External stakeholders (if data includes client info)
+  if (containsClientData(report)) {
+    const clientContacts = findClientContacts(report)
+    recommendations.push(...clientContacts.map(contact => ({
+      recipient: contact,
+      confidence: 85,
+      reasoning: "Client stakeholder for orders in this report",
+      role: "External Client"
+    })))
+  }
+  
+  return recommendations.sort((a, b) => b.confidence - a.confidence)
+}
+```
+
+### Interactive Recommendation UI
+
+**In Report Builder:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Report Builder: New Report                                   │
+│                                                              │
+│ Step 1: Select Data Sources                                 │
+│ ☑ Orders                                                     │
+│ ☑ Items                                                      │
+│ ☐ Teams                                                      │
+│ ☐ Tasks                                                      │
+│                                                              │
+│ 🤖 AI Recommendations (based on your selection):            │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ ⭐ Weekly Production Summary (95% match)                 ││
+│ │                                                          ││
+│ │ Based on 78 similar reports created by ops managers     ││
+│ │                                                          ││
+│ │ Includes:                                                ││
+│ │ • KPI Grid: Orders completed, in production, overdue    ││
+│ │ • Trend Chart: Daily completion volume                  ││
+│ │ • Table: Orders by client with item counts              ││
+│ │ • Timeline: Upcoming deadlines                           ││
+│ │                                                          ││
+│ │ Suggested Schedule: Weekly, Friday 5pm                  ││
+│ │ Suggested Recipients: Operations team (8 people)        ││
+│ │                                                          ││
+│ │ [Use This Template] [Customize] [Show Others]           ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                              │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ Client Performance Report (88% match)                    ││
+│ │ [View Details]                                           ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                              │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ Production Velocity Dashboard (82% match)                ││
+│ │ [View Details]                                           ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                              │
+│ [Start from Scratch] [See All Templates]                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Continuous Recommendations:**
+
+Even after initial setup, AI continues to suggest improvements:
+- "Add a comparison chart to see month-over-month change"
+- "78% of similar reports include a team leaderboard"
+- "Consider scheduling this report bi-weekly instead of weekly based on data update frequency"
+- "Recipients who receive similar reports: Sarah Johnson, Mike Chen"
 
 ---
 
@@ -892,6 +1366,942 @@ const data = await queryDataSource({
 - Report appears in user's "Reports" section
 - No email sent
 - Notification badge
+
+---
+
+## Advanced Cadence & Notification Management
+
+### Intelligent Scheduling System
+
+**Beyond Basic Scheduling:** The reporting system provides sophisticated cadence management that goes far beyond "send every Friday at 5pm."
+
+### Multi-Level Cadence Architecture
+
+```typescript
+type AdvancedScheduleConfig = {
+  // Base schedule (existing)
+  baseSchedule: ScheduleConfig
+  
+  // Conditional scheduling
+  conditions?: ScheduleCondition[]
+  
+  // Adaptive scheduling
+  adaptive?: AdaptiveScheduleConfig
+  
+  // Event-triggered schedules
+  triggers?: EventTrigger[]
+  
+  // Pause/resume rules
+  pauseRules?: PauseRule[]
+  
+  // Notification preferences
+  notifications: NotificationConfig
+}
+
+type ScheduleCondition = {
+  id: string
+  type: "data_threshold" | "business_rule" | "calendar_event"
+  
+  // Only send report if condition is met
+  condition: string                     // "order_count > 10", "has_overdue_items"
+  action: "send" | "skip" | "modify"
+  
+  // Modify report if condition true
+  modification?: {
+    addWarning?: boolean
+    highlightSection?: string
+    changeRecipients?: string[]
+  }
+}
+
+type AdaptiveScheduleConfig = {
+  enabled: boolean
+  
+  // Adjust frequency based on data activity
+  adaptToDataVolume: boolean            // More data → more frequent reports
+  
+  // Learn optimal send times
+  optimizeForEngagement: boolean        // Send when recipients most likely to open
+  
+  // Reduce noise during quiet periods
+  skipIfNoChanges: boolean              // Don't send if data unchanged
+  skipIfBelowThreshold: boolean         // Don't send if metrics below threshold
+  
+  // Holiday/weekend intelligence
+  respectBusinessHours: boolean
+  shiftAroundHolidays: boolean          // Move Friday report to Thursday before holiday
+}
+
+type EventTrigger = {
+  id: string
+  type: "data_event" | "system_event" | "external_event"
+  
+  // Trigger report when event occurs
+  event: string                         // "order_completed", "milestone_reached", "deadline_approaching"
+  
+  // Optional: Additional conditions
+  conditions?: string[]
+  
+  // Throttling (don't spam)
+  minTimeBetweenTriggers: number        // Hours
+  maxTriggersPerDay: number
+  
+  // Custom recipients for this trigger
+  recipientsOverride?: string[]
+}
+
+type PauseRule = {
+  id: string
+  reason: string
+  
+  // Date range pause
+  startDate?: string
+  endDate?: string
+  
+  // Conditional pause
+  condition?: string                    // "during_year_end_close", "when_audit_active"
+  
+  // Resume automatically
+  autoResume: boolean
+}
+```
+
+### Conditional Report Sending
+
+**Smart Rules that Decide Whether to Send:**
+
+**Example 1: Volume-Based Sending**
+```typescript
+{
+  condition: "order_count >= 5",
+  action: "send",
+  reasoning: "Only send report if there are at least 5 orders to review"
+}
+// If < 5 orders, skip this run
+```
+
+**Example 2: Threshold Alerts**
+```typescript
+{
+  condition: "overdue_percentage > 20",
+  action: "modify",
+  modification: {
+    addWarning: true,
+    highlightSection: "overdue_orders",
+    changeRecipients: ["operations_manager", "ceo"]  // Escalate
+  }
+}
+// If >20% overdue, add warning banner and notify leadership
+```
+
+**Example 3: Change Detection**
+```typescript
+{
+  condition: "data_changed_since_last_run",
+  action: "send",
+  reasoning: "No need to send if data hasn't changed"
+}
+// Skip sending identical reports
+```
+
+### Event-Triggered Reporting
+
+**Automatic Reports Based on Business Events:**
+
+**Production Milestone Triggers:**
+```typescript
+{
+  type: "data_event",
+  event: "order_completed",
+  conditions: [
+    "order.value > 50000",           // Only for large orders
+    "order.client === 'VIP'"          // Or VIP clients
+  ],
+  minTimeBetweenTriggers: 1,         // Max 1 per hour
+  recipients: ["client_contact", "account_manager"]
+}
+// Sends completion report automatically when big order finishes
+```
+
+**Deadline Warnings:**
+```typescript
+{
+  type: "system_event",
+  event: "deadline_approaching",
+  conditions: [
+    "days_until_deadline <= 3",
+    "completion_percentage < 80"
+  ],
+  recipients: ["production_manager", "team_lead"]
+}
+// Alert if order at risk of missing deadline
+```
+
+**Quality Issues:**
+```typescript
+{
+  type: "data_event",
+  event: "defect_rate_spike",
+  conditions: [
+    "current_defect_rate > (average_defect_rate * 1.5)"
+  ],
+  maxTriggersPerDay: 2,
+  recipients: ["quality_manager", "production_lead"]
+}
+// Immediate alert when quality drops
+```
+
+### Adaptive Scheduling Intelligence
+
+**System Learns Optimal Send Times:**
+
+1. **Engagement Analysis:**
+   - Track when recipients open reports
+   - Identify patterns (e.g., "Sarah opens reports Monday morning")
+   - Adjust send times to maximize engagement
+
+2. **Data Activity Patterns:**
+   - If production ramps up, increase report frequency
+   - During slow periods, reduce frequency
+   - Seasonal adjustments (busy season vs. slow season)
+
+3. **Noise Reduction:**
+   - Skip reports when data unchanged
+   - Combine multiple minor updates into single report
+   - Reduce frequency if open rates decline
+
+**Example: Adaptive Daily Report**
+```typescript
+{
+  baseSchedule: {
+    frequency: "daily",
+    time: "09:00"
+  },
+  adaptive: {
+    enabled: true,
+    optimizeForEngagement: true,      // Learns best send time
+    skipIfNoChanges: true,             // Don't send if data unchanged
+    adaptToDataVolume: true            // More activity = keep daily, less = reduce to weekly
+  }
+}
+
+// System behavior:
+// - Week 1: Sends daily at 9am (baseline)
+// - Week 2: Notices recipient opens at 7am, shifts to 7am
+// - Week 3: Data unchanged 3 days, skips those days
+// - Week 4: Low activity detected, suggests weekly instead
+```
+
+### Advanced Notification System
+
+```typescript
+type NotificationConfig = {
+  // Pre-send notifications
+  preSendNotification?: {
+    enabled: boolean
+    minutesBefore: number              // "Report generating in 10 minutes"
+    recipients: string[]               // Who gets the heads-up
+  }
+  
+  // Post-send confirmations
+  postSendConfirmation: {
+    enabled: boolean
+    includeMetrics: boolean            // Show data summary in notification
+    notifyOnlyOwner: boolean           // Or all recipients
+  }
+  
+  // Failure alerts
+  failureAlerts: {
+    enabled: boolean
+    recipients: string[]               // Who to notify on failure
+    retryAttempts: number
+    escalateAfter: number              // Minutes before escalating
+    escalateTo: string[]               // Escalation contacts
+  }
+  
+  // Engagement tracking
+  engagementTracking: {
+    enabled: boolean
+    notifyOnLowEngagement: boolean     // Alert if nobody opens report
+    threshold: number                  // Hours to wait before alert
+  }
+  
+  // Digest mode
+  digest: {
+    enabled: boolean
+    combineMultipleReports: boolean    // Bundle multiple reports into single email
+    frequency: "daily" | "weekly"
+  }
+  
+  // Quiet hours
+  quietHours: {
+    enabled: boolean
+    startTime: string                  // "22:00"
+    endTime: string                    // "07:00"
+    timezone: string
+    action: "delay" | "skip"           // Delay until morning or skip entirely
+  }
+  
+  // Preference overrides
+  recipientPreferences: {
+    allowUnsubscribe: boolean
+    allowFrequencyChange: boolean      // Let recipients choose their cadence
+    allowChannelSelection: boolean     // Let recipients choose email vs Slack vs SMS
+  }
+}
+```
+
+### Notification Scenarios
+
+**Scenario 1: Critical Production Report**
+```typescript
+{
+  preSendNotification: {
+    enabled: true,
+    minutesBefore: 15,
+    recipients: ["production_manager"],
+    message: "Production report generating in 15 minutes"
+  },
+  failureAlerts: {
+    enabled: true,
+    recipients: ["system_admin", "production_manager"],
+    retryAttempts: 3,
+    escalateAfter: 30,
+    escalateTo: ["cto"]
+  },
+  quietHours: {
+    enabled: true,
+    action: "delay"                    // Don't send middle of night
+  }
+}
+```
+
+**Scenario 2: Low-Priority Weekly Summary**
+```typescript
+{
+  postSendConfirmation: {
+    enabled: true,
+    includeMetrics: true,              // "Report sent with 23 orders, 89% completion"
+    notifyOnlyOwner: true
+  },
+  digest: {
+    enabled: true,
+    combineMultipleReports: true       // Combine with other weekly reports
+  },
+  engagementTracking: {
+    enabled: true,
+    notifyOnLowEngagement: true,
+    threshold: 48                      // Alert if nobody opens in 2 days
+  }
+}
+```
+
+### Recipient Notification Preferences
+
+**User-Controlled Notification Settings:**
+
+Each recipient can customize how they receive reports:
+
+```typescript
+type RecipientPreferences = {
+  userId: string
+  
+  // Channel preferences
+  preferredChannel: "email" | "slack" | "sms" | "in-app"
+  fallbackChannel?: "email" | "sms"
+  
+  // Frequency preferences
+  frequencyOverride?: {
+    reportId: string
+    preferredFrequency: "real-time" | "daily" | "weekly" | "monthly" | "never"
+  }[]
+  
+  // Digest preferences
+  enableDigest: boolean
+  digestFrequency: "daily" | "weekly"
+  digestTime: string
+  
+  // Quiet hours
+  doNotDisturb: {
+    enabled: boolean
+    startTime: string
+    endTime: string
+    exceptUrgent: boolean              // Allow urgent reports through
+  }
+  
+  // Report filtering
+  onlyIfRelevant: boolean              // Only send if user's data included
+  minimumThreshold?: number            // Only send if > N items
+  
+  // Format preferences
+  preferredFormat: "pdf" | "html" | "excel"
+  embedInEmail: boolean                // Inline vs attachment
+  
+  // Unsubscribe
+  unsubscribed: string[]               // Report IDs user unsubscribed from
+}
+```
+
+**User Interface for Preferences:**
+
+```
+┌─────────────────────────────────────────┐
+│ Report Notification Preferences         │
+├─────────────────────────────────────────┤
+│ Weekly Production Summary                │
+│                                          │
+│ Delivery Method:                         │
+│ ● Email     ○ Slack     ○ SMS           │
+│                                          │
+│ Frequency:                               │
+│ ○ Every time (default)                  │
+│ ● Weekly digest                         │
+│ ○ Monthly summary only                  │
+│ ○ Unsubscribe                           │
+│                                          │
+│ Format:                                  │
+│ ● PDF attachment                        │
+│ ○ Excel spreadsheet                     │
+│ ○ Inline in email                       │
+│                                          │
+│ Filters:                                 │
+│ ☑ Only send if > 10 orders              │
+│ ☑ Only send if my team mentioned        │
+│ ☐ Only send if overdue items present    │
+│                                          │
+│ Quiet Hours:                             │
+│ ☑ Don't send between 10pm - 7am         │
+│ ☑ Allow urgent alerts                   │
+│                                          │
+│ [Save Preferences]                       │
+└─────────────────────────────────────────┘
+```
+
+### Multi-Cadence Support
+
+**Single Report, Multiple Cadences:**
+
+A report can have different schedules for different recipient groups:
+
+```typescript
+type MultiCadenceReport = {
+  reportId: string
+  
+  schedules: {
+    // Internal team: Daily
+    internal: {
+      recipients: ["operations_team"],
+      schedule: { frequency: "daily", time: "08:00" }
+    },
+    
+    // Management: Weekly
+    management: {
+      recipients: ["executives"],
+      schedule: { frequency: "weekly", daysOfWeek: ["Friday"], time: "16:00" }
+    },
+    
+    // Clients: Bi-weekly
+    clients: {
+      recipients: ["client_contacts"],
+      schedule: { frequency: "custom", interval: 14, unit: "days" }
+    },
+    
+    // Board: Monthly
+    board: {
+      recipients: ["board_members"],
+      schedule: { frequency: "monthly", dayOfMonth: "last", time: "12:00" }
+    }
+  }
+}
+```
+
+### Integration with Task/Planner System
+
+**Automatic Reporting Layer:**
+
+The reporting system integrates with the Task Master and Planner to provide automatic report generation based on project/task activity.
+
+**Task Completion Reports:**
+- Automatically generate report when task marked complete
+- Include: task details, completion time, team members, blockers resolved
+- Send to: task assignee, manager, stakeholders
+
+**Project Milestone Reports:**
+- Trigger when project reaches milestone
+- Include: milestone details, timeline analysis, next steps
+- Send to: project team, sponsors, clients
+
+**Capacity Planning Reports:**
+- Daily/weekly team capacity reports
+- Include: tasks assigned, tasks completed, upcoming workload
+- Send to: team leads, resource managers
+
+**Overdue Alerts:**
+- Automatic daily report of overdue tasks
+- Include: overdue items, responsible parties, escalation recommendations
+- Send to: managers, optionally team members
+
+```typescript
+type TaskPlannerReportIntegration = {
+  // Automatic report triggers
+  triggers: {
+    taskCompleted: {
+      enabled: boolean
+      reportTemplate: string           // Which report to generate
+      recipients: "assignee" | "manager" | "stakeholders" | "custom"
+    },
+    
+    milestoneReached: {
+      enabled: boolean
+      reportTemplate: string
+      recipients: string[]
+    },
+    
+    deadlineApproaching: {
+      enabled: boolean
+      daysBeforeDeadline: number
+      reportTemplate: string
+      escalationThreshold: number      // Escalate if > N items at risk
+    },
+    
+    overdueItems: {
+      enabled: boolean
+      schedule: ScheduleConfig
+      reportTemplate: string
+      includeDetails: boolean
+    }
+  },
+  
+  // Data flow
+  dataMapping: {
+    tasksSource: string
+    projectsSource: string
+    capacitySource: string
+  }
+}
+```
+
+**Example: Task Completion Auto-Report**
+
+When task "Design Spring Collection" completed:
+
+1. System detects completion event
+2. Generates report automatically:
+   - Task name and details
+   - Completion time vs deadline
+   - Time spent vs estimated
+   - Team members involved
+   - Deliverables attached
+   - Next dependent tasks
+3. Sends to:
+   - Task assignee (confirmation)
+   - Manager (visibility)
+   - Client (if external-facing)
+   - Next task assignee (heads up)
+
+---
+
+## Enhanced Contact Management System
+
+### Intelligent Recipient Management
+
+**Beyond Simple Email Lists:** The reporting system includes a sophisticated contact management system that understands organizational structure, relationships, data access permissions, and communication preferences.
+
+### Contact Repository
+
+```typescript
+type Contact = {
+  id: string
+  type: "internal_user" | "external_client" | "team" | "distribution_list"
+  
+  // Basic info
+  name: string
+  email: string
+  phone?: string
+  
+  // Organization
+  organization?: string
+  department?: string
+  role?: string
+  title?: string
+  
+  // Relationship mapping
+  reportsTo?: string                   // Manager ID
+  manages?: string[]                   // Direct reports
+  teams?: string[]                     // Team memberships
+  
+  // Data access
+  accessLevel: "full" | "limited" | "custom"
+  dataFilters?: FilterConfig[]         // What data can they see?
+  
+  // Communication preferences (defined above)
+  preferences: RecipientPreferences
+  
+  // Report subscriptions
+  subscribedReports: string[]          // Reports they're on
+  ownedReports: string[]               // Reports they created
+  
+  // Engagement metrics
+  engagementStats: {
+    averageOpenRate: number
+    averageResponseTime: number        // Minutes to open report
+    lastOpenedReport: string           // Timestamp
+    preferredFormat: "pdf" | "html" | "excel"
+    mostEngagedReportType: string
+  }
+  
+  // Relationship to data
+  dataOwnership: {
+    ownsOrders?: string[]              // Order IDs they own
+    ownsClients?: string[]             // Client IDs they manage
+    ownsTeams?: string[]               // Teams they lead
+  }
+  
+  // Contact status
+  status: "active" | "inactive" | "out_of_office"
+  outOfOffice?: {
+    startDate: string
+    endDate: string
+    delegate?: string                  // Who receives reports while away
+  }
+  
+  // Metadata
+  createdAt: string
+  lastContacted: string
+}
+```
+
+### Smart Contact Selection
+
+**When Adding Recipients to Report:**
+
+System provides intelligent suggestions and filtering:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Add Recipients to Report                                     │
+├─────────────────────────────────────────────────────────────┤
+│ Search: [____________________________] 🔍                    │
+│                                                              │
+│ 🤖 Suggested Recipients:                                     │
+│ ┌──────────────────────────────────────────────────────────┐│
+│ │ ✓ Sarah Johnson - Operations Manager                    ││
+│ │   💼 Manages production data                             ││
+│ │   📊 Receives 8 similar reports                          ││
+│ │   ⭐ 95% open rate                                       ││
+│ │   [Add]                                                  ││
+│ └──────────────────────────────────────────────────────────┘│
+│                                                              │
+│ ┌──────────────────────────────────────────────────────────┐│
+│ │ ✓ Mike Chen - Team Lead (Sewing Line A)                 ││
+│ │   👥 Leads team with data in this report                 ││
+│ │   📊 Receives 3 similar reports                          ││
+│ │   ⭐ 87% open rate                                       ││
+│ │   [Add]                                                  ││
+│ └──────────────────────────────────────────────────────────┘│
+│                                                              │
+│ Filter By:                                                   │
+│ ☑ Internal Users    ☐ External Clients    ☐ Teams          │
+│ ☑ Has data access   ☐ Currently subscribed                 │
+│                                                              │
+│ Browse By:                                                   │
+│ • By Department: [Operations ▼]                             │
+│ • By Role: [Manager ▼]                                      │
+│ • By Team: [Sewing Line A ▼]                                │
+│ • By Client: [Horizon Apparel ▼]                            │
+│                                                              │
+│ Selected Recipients (12):                                    │
+│ • Sarah Johnson (Operations Manager) - Email, Weekly        │
+│ • Mike Chen (Team Lead) - Slack, Daily                      │
+│ • Production Team (8 members) - Email, Weekly Digest        │
+│ • client@horizonapparel.com - Email, Bi-weekly, Filtered    │
+│                                                              │
+│ [Add All Suggested] [Clear] [Save]                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Distribution Lists
+
+**Pre-Defined Recipient Groups:**
+
+```typescript
+type DistributionList = {
+  id: string
+  name: string
+  description: string
+  
+  // Members
+  members: string[]                    // Contact IDs
+  
+  // Dynamic membership
+  dynamicRules?: {
+    includeRoles?: string[]            // All "Manager" roles
+    includeDepartments?: string[]      // All "Operations" department
+    includeTeams?: string[]            // All "Sewing Line A" team
+    excludeUsers?: string[]            // Except these specific users
+  }
+  
+  // List settings
+  allowSelfSubscribe: boolean          // Users can join themselves
+  allowSelfUnsubscribe: boolean        // Users can leave themselves
+  requireApproval: boolean             // Owner must approve additions
+  owner: string                        // List administrator
+  
+  // List-level preferences (overridable per member)
+  defaultPreferences: RecipientPreferences
+  
+  createdAt: string
+  updatedAt: string
+}
+```
+
+**Pre-Built Lists:**
+- "All Managers"
+- "Operations Team"
+- "Executive Leadership"
+- "Client Contacts"
+- "Quality Assurance Team"
+- "Production Floor" (all production workers)
+
+**Dynamic List Example:**
+```typescript
+{
+  name: "Production Leadership",
+  dynamicRules: {
+    includeRoles: ["Operations Manager", "Production Supervisor", "Team Lead"],
+    includeDepartments: ["Production", "Operations"],
+    excludeUsers: ["user_123"]  // On leave
+  }
+}
+// Auto-updates as org changes
+```
+
+### Personalized Data Filtering
+
+**Each Recipient Sees Only Relevant Data:**
+
+```typescript
+type PersonalizedReportView = {
+  recipientId: string
+  baseReportId: string
+  
+  // Applied filters
+  filters: {
+    // Show only orders they own
+    ownershipFilter?: {
+      field: "owner" | "client" | "team"
+      value: string                    // Their user ID, client ID, or team ID
+    },
+    
+    // Show only their department's data
+    departmentFilter?: {
+      department: string
+    },
+    
+    // Custom filters per recipient
+    customFilters?: FilterConfig[]
+  },
+  
+  // Redactions (hide sensitive data)
+  redactions?: {
+    hideFinancialData?: boolean
+    hidePersonalInfo?: boolean
+    hideConfidentialClients?: string[]
+  },
+  
+  // Custom branding (for external recipients)
+  branding?: {
+    logo: string
+    colors: ColorPalette
+    companyName: string
+  }
+}
+```
+
+**Example: Client Receives Filtered Report**
+
+Base Report: "All Production Orders"
+- Contains: 50 orders from 10 clients
+
+Client "Horizon Apparel" receives:
+- Filtered view: Only their 5 orders
+- Redacted: No other clients visible, no cost data
+- Branded: Horizon Apparel logo in header
+- Format: PDF, bi-weekly, Friday afternoon
+
+### Contact Relationship Intelligence
+
+**System Understands Org Structure:**
+
+```typescript
+type ContactRelationships = {
+  contactId: string
+  
+  // Hierarchical relationships
+  manager?: string                     // Direct manager
+  managerChain?: string[]              // Up to CEO
+  directReports?: string[]
+  allReports?: string[]                // Including indirect
+  
+  // Peer relationships
+  peers?: string[]                     // Same level, same department
+  crossFunctionalPeers?: string[]      // Same level, different department
+  
+  // Team relationships
+  primaryTeam?: string
+  additionalTeams?: string[]
+  teamRole?: "lead" | "member" | "support"
+  
+  // Client relationships
+  managedClients?: string[]            // External clients they manage
+  clientContacts?: string[]            // External contacts they work with
+  
+  // Project relationships
+  activeProjects?: string[]
+  projectRole?: Record<string, "owner" | "contributor" | "stakeholder">
+}
+```
+
+**Use Cases:**
+
+**Escalation Chains:**
+If report shows critical issue, auto-escalate up management chain:
+1. Send to team member (informational)
+2. If not acknowledged in 30 min, send to manager
+3. If still not acknowledged, send to director
+4. Emergency: send to executive
+
+**Team Roll-Ups:**
+Team Lead receives detailed report, their manager receives summary:
+- Team Lead: All individual task details
+- Manager: High-level metrics + exceptions only
+- Executive: Just the KPIs
+
+**Client Account Structure:**
+Account Manager receives full report, client receives filtered version:
+- Account Manager: All order data, costs, internal notes
+- Client Contact: Only their orders, no costs, no internal notes
+- Client Executive: High-level summary only
+
+### Out-of-Office Delegation
+
+**Automatic Report Forwarding:**
+
+When recipient sets out-of-office:
+
+```typescript
+{
+  contact: "sarah_johnson",
+  status: "out_of_office",
+  outOfOffice: {
+    startDate: "2025-10-15",
+    endDate: "2025-10-22",
+    delegate: "mike_chen",              // Reports go to Mike while Sarah away
+    notification: true,                 // Mike notified he's covering
+    copyToDelegate: true,               // Mike added to recipient list
+    pauseForRecipient: false            // Sarah still gets reports (will see when back)
+  }
+}
+```
+
+When report scheduled during this period:
+- Sarah's preferences: Deliver to delegate (Mike)
+- Mike receives: "Report: Weekly Production (covering for Sarah Johnson)"
+- Sarah receives: Paused, will receive digest when returns
+
+### Contact Engagement Analytics
+
+**Track and Optimize Recipient List:**
+
+```typescript
+type ContactEngagementReport = {
+  reportId: string
+  period: string
+  
+  recipients: {
+    contactId: string
+    name: string
+    
+    // Engagement metrics
+    reportsSent: number
+    reportsOpened: number
+    openRate: number                   // Percentage
+    averageOpenDelay: number           // Minutes until open
+    clickThroughRate: number           // Clicked links in report
+    
+    // Actions
+    downloaded: number
+    shared: number
+    providedFeedback: number
+    
+    // Alerts
+    lowEngagement: boolean             // Open rate < 20%
+    neverOpened: boolean               // Zero opens
+    bounced: boolean                   // Email bounced
+    unsubscribed: boolean
+    
+    // Recommendations
+    suggestedAction: "keep" | "reduce_frequency" | "change_format" | "remove"
+  }[]
+  
+  // Report-level insights
+  insights: {
+    averageOpenRate: number
+    bestSendTime: string               // When most recipients open
+    mostEngagedRecipients: string[]    // Top 5
+    leastEngagedRecipients: string[]   // Bottom 5
+    suggestedOptimizations: string[]   // AI suggestions
+  }
+}
+```
+
+**UI for Engagement Review:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Report Engagement: Weekly Production Summary                 │
+│ Last 30 Days                                                 │
+├─────────────────────────────────────────────────────────────┤
+│ Overall Metrics:                                             │
+│ • 12 recipients                                              │
+│ • 72% average open rate                                      │
+│ • Best send time: Friday 4pm                                 │
+│                                                              │
+│ Recipient Performance:                                       │
+│ ┌──────────────────────────────────────────────────────────┐│
+│ │ ✅ Sarah Johnson - 95% open rate (opens within 10 min)  ││
+│ │ ✅ Mike Chen - 87% open rate                             ││
+│ │ ⚠️  Jane Doe - 45% open rate (suggest weekly → monthly) ││
+│ │ ❌ John Smith - 0% opens (remove from list?)            ││
+│ │ 📧 client@example.com - Email bounced (update contact)  ││
+│ └──────────────────────────────────────────────────────────┘│
+│                                                              │
+│ 🤖 AI Recommendations:                                       │
+│ • Remove 2 recipients with zero engagement                   │
+│ • Move 3 recipients to monthly digest                        │
+│ • Best send time: Friday 4pm (vs current 5pm)                │
+│ • Add "Production Team" distribution list                    │
+│                                                              │
+│ [Apply Recommendations] [View Details] [Export]              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Contact Data Enrichment
+
+**System Continuously Enriches Contact Data:**
+
+1. **Engagement Patterns:** Learn when each contact engages
+2. **Preferred Formats:** Track which formats they use (PDF vs Excel)
+3. **Interest Areas:** Identify which sections they view most
+4. **Response Times:** How quickly they act on report data
+5. **Collaboration Patterns:** Who they share reports with
+6. **Device Preferences:** Mobile vs desktop viewing
+
+This data feeds back into:
+- Optimal send time recommendations
+- Format suggestions
+- Content personalization
+- Recipient list optimization
 
 ---
 

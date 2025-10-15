@@ -380,17 +380,17 @@ export default function PageTemplate({
   const addBlock = () => {
     const newBlock: Block = {
       id: generateId("b"),
-      type: "metric.kpi",
-      title: "New Metric",
-      props: { value: "0", delta: "+0%", trend: [1, 2, 3, 4, 5, 6, 7] }
+      type: "ai.input",
+      title: "AI Component Builder",
+      props: { placeholder: "Describe what you'd like to build..." }
     }
 
     const newPos: GridPos = {
       i: newBlock.id,
       x: 0,
       y: maxY + 1,
-      w: 3,
-      h: 2
+      w: 6,
+      h: 8
     }
 
     setState(prev => ({
@@ -489,9 +489,12 @@ export default function PageTemplate({
     const newX = Math.max(0, Math.min(11, Math.floor(mouseX / gridUnitWidth)))
     const newY = Math.max(0, Math.floor(mouseY / rowHeight))
 
-    // Update preview position smoothly
+    // Update preview position smoothly - only if position actually changed
     setDragPreview((prev) => {
       if (!prev) return null
+      
+      // Don't update if position hasn't changed (prevents infinite re-renders)
+      if (prev.x === newX && prev.y === newY) return prev
       
       const layoutItem = state.layout.find((item) => item.i === draggedBlock)
       if (!layoutItem) return prev
@@ -557,24 +560,31 @@ export default function PageTemplate({
     const deltaW = Math.round(deltaX / 100)
     const deltaH = Math.round(deltaY / 40)
 
-    setState((prev) => ({
-      ...prev,
-      layout: prev.layout.map((item) => {
-        if (item.i !== resizing.blockId) return item
+    // Calculate new dimensions
+    let newW = resizing.startW
+    let newH = resizing.startH
 
-        let newW = item.w
-        let newH = item.h
+    if (resizing.direction === "se" || resizing.direction === "e") {
+      const currentItem = state.layout.find(item => item.i === resizing.blockId)
+      if (currentItem) {
+        newW = Math.max(2, Math.min(12 - currentItem.x, resizing.startW + deltaW))
+      }
+    }
+    if (resizing.direction === "se" || resizing.direction === "s") {
+      newH = Math.max(2, Math.min(20, resizing.startH + deltaH))
+    }
 
-        if (resizing.direction === "se" || resizing.direction === "e") {
-          newW = Math.max(2, Math.min(12 - item.x, resizing.startW + deltaW))
-        }
-        if (resizing.direction === "se" || resizing.direction === "s") {
-          newH = Math.max(2, Math.min(20, resizing.startH + deltaH))
-        }
-
-        return { ...item, w: newW, h: newH }
-      }),
-    }))
+    // Only update state if dimensions actually changed
+    const currentItem = state.layout.find(item => item.i === resizing.blockId)
+    if (currentItem && (currentItem.w !== newW || currentItem.h !== newH)) {
+      setState((prev) => ({
+        ...prev,
+        layout: prev.layout.map((item) => {
+          if (item.i !== resizing.blockId) return item
+          return { ...item, w: newW, h: newH }
+        }),
+      }))
+    }
   }
 
   const handleResizeEnd = () => {
@@ -713,7 +723,7 @@ export default function PageTemplate({
                 return (
                   <div
                     key={item.i}
-                    className={`absolute transition-all duration-200 ease-out ${state.mode === "edit" ? "cursor-move" : ""} ${draggedBlock === item.i ? "z-30" : "z-10"}`}
+                    className={`absolute transition-all duration-200 ease-out ${state.mode === "edit" ? "cursor-move" : ""} ${draggedBlock === item.i ? "z-30" : activeControlPanel === item.i ? "z-40" : "z-10"}`}
                     style={{
                       left: `calc(${(item.x / 12) * 100}% + ${item.x > 0 ? "8px" : "0px"})`,
                       top: `${item.y * 40 + (item.y > 0 ? 8 : 0)}px`,
@@ -733,7 +743,10 @@ export default function PageTemplate({
                         block.type?.startsWith("table") && "border-none bg-white shadow-none",
                         block.type?.startsWith("construction.") && "border-none bg-transparent shadow-none rounded-none p-0",
                         block.type?.startsWith("worksite.") && "border-none bg-transparent shadow-none rounded-none p-0",
-                        block.type?.startsWith("analytics.") && "border-none bg-transparent shadow-none rounded-none p-0"
+                        block.type?.startsWith("analytics.") && "border-none bg-transparent shadow-none rounded-none p-0",
+                        block.type?.startsWith("ai.") && "border-none bg-transparent shadow-none rounded-none p-0",
+                        block.type?.startsWith("chart.") && "border-none bg-white shadow-none",
+                        block.type?.startsWith("v3.") && "border-none bg-transparent shadow-none rounded-none p-0"
                       )}
                       onMouseEnter={() => setActiveControlPanel(item.i)}
                     >
@@ -773,15 +786,15 @@ export default function PageTemplate({
                         </>
                       )}
 
-                      {!(state.mode === "save" && (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics."))) && (
+                      {!(state.mode === "save" && (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics.") || block.type?.startsWith("ai.") || block.type?.startsWith("chart.") || block.type?.startsWith("v3."))) && (
                         <CardHeader
                           className={cn(
                             "flex flex-row items-center justify-between space-y-0 border-b-2 px-4 h-8",
-                            (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics.")) && "absolute -top-10 left-0 right-0 z-30 border border-slate-300 bg-white/95 backdrop-blur-sm rounded-t-lg shadow-lg h-auto px-2 py-1 transition-opacity duration-200 pointer-events-none",
-                            (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics.")) && activeControlPanel === item.i ? "opacity-100" : "opacity-0"
+                            (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics.") || block.type?.startsWith("ai.") || block.type?.startsWith("chart.") || block.type?.startsWith("v3.")) && "absolute -top-10 left-0 right-0 z-50 border border-slate-300 bg-white/95 backdrop-blur-sm rounded-t-lg shadow-lg h-auto px-2 py-1 transition-opacity duration-200 pointer-events-none",
+                            (block.type?.startsWith("metric") || block.type?.startsWith("table") || block.type?.startsWith("construction.") || block.type?.startsWith("worksite.") || block.type?.startsWith("analytics.") || block.type?.startsWith("ai.") || block.type?.startsWith("chart.") || block.type?.startsWith("v3.")) && activeControlPanel === item.i ? "opacity-100" : "opacity-0"
                           )}
                         >
-                          {!block.type?.startsWith("construction.") && !block.type?.startsWith("worksite.") && !block.type?.startsWith("analytics.") && !block.type?.startsWith("metric") && (
+                          {!block.type?.startsWith("construction.") && !block.type?.startsWith("worksite.") && !block.type?.startsWith("analytics.") && !block.type?.startsWith("metric") && !block.type?.startsWith("ai.") && !block.type?.startsWith("chart.") && !block.type?.startsWith("v3.") && (
                             editingTitleId === item.i ? (
                               <input
                                 value={titleInput}
@@ -957,7 +970,10 @@ export default function PageTemplate({
                           block.type?.startsWith("construction.") && "p-0",
                           block.type?.startsWith("worksite.") && "p-0",
                           block.type?.startsWith("analytics.") && "p-0",
-                          block.type?.startsWith("items.") && "p-0"
+                          block.type?.startsWith("items.") && "p-0",
+                          block.type?.startsWith("ai.") && "p-0",
+                          block.type?.startsWith("chart.") && "p-0",
+                          block.type?.startsWith("v3.") && "p-0"
                         )}
                       >
                         {(() => {
@@ -971,13 +987,195 @@ export default function PageTemplate({
                           const isMessages = type.startsWith("messages")
                           const allowScroll = isTable || isMessages || isItems
 
+                          // Enhance AI input blocks with generation callback
+                          const enhancedBlock = block.type === "ai.input" ? {
+                            ...block,
+                            props: {
+                              ...block.props,
+                              onGenerate: async (result: any) => {
+                                // Use the suggested title from the match result, or fall back to contextual generation
+                                const title = result.suggestedTitle || result.prompt
+                                
+                                // Generate smart mock data based on data source
+                                let mockProps: any = {}
+                                
+                                // Import mock data generators
+                                const { generateChartData, generateTableData, generateMetricData } = 
+                                  require('@/app/playground/lib/mockDataGenerator')
+                                
+                                const dataSource = result.dataSource
+                                
+                                // Generate data based on component type
+                                if (result.componentType === 'v3.chart.area' || 
+                                    result.componentType === 'v3.chart.bar') {
+                                  const chartData = generateChartData(result.prompt, dataSource)
+                                  mockProps = { data: chartData }
+                                } else if (result.componentType === 'v3.chart.donut') {
+                                  // For donut charts, transform the data for category distribution
+                                  const chartData = generateChartData(result.prompt, dataSource)
+                                  mockProps = {
+                                    data: chartData.map((item: any) => ({
+                                      name: item.date,
+                                      value: item.value
+                                    }))
+                                  }
+                                } else if (result.componentType === 'v3.table') {
+                                  const tableData = generateTableData(result.prompt, dataSource)
+                                  // Transform to v3 table format (columns: string[], rows: string[][])
+                                  mockProps = {
+                                    columns: tableData.columns.map((col: any) => col.name),
+                                    rows: tableData.data.map((row: any) => 
+                                      tableData.columns.map((col: any) => {
+                                        const value = row[col.id]
+                                        if (value === null || value === undefined) return ''
+                                        if (typeof value === 'number') return value.toLocaleString()
+                                        return String(value)
+                                      })
+                                    )
+                                  }
+                                } else if (result.componentType === 'v3.activity.timeline') {
+                                  mockProps = {
+                                    activities: [
+                                      { time: "2m", user: "John Doe", action: `Updated ${dataSource?.label || 'item'}`, status: "info" },
+                                      { time: "5m", user: "Jane Smith", action: `Created new ${dataSource?.label || 'item'}`, status: "success" },
+                                      { time: "10m", user: "Bob Johnson", action: `Modified ${dataSource?.label || 'item'}`, status: "warning" },
+                                    ]
+                                  }
+                                } else if (result.componentType === 'v3.kpi') {
+                                  const metricData = generateMetricData(result.prompt, dataSource)
+                                  mockProps = {
+                                    title: dataSource?.label || "Metric",
+                                    value: metricData.value,
+                                    change: metricData.delta,
+                                    trend: "up",
+                                    subtitle: "vs last month"
+                                  }
+                                } else if (result.componentType === 'v3.status.grid') {
+                                  mockProps = {
+                                    items: [
+                                      { name: `${dataSource?.label || 'System'} A`, status: "online", value: "100%" },
+                                      { name: `${dataSource?.label || 'System'} B`, status: "online", value: "98%" },
+                                      { name: `${dataSource?.label || 'System'} C`, status: "warning", value: "75%" },
+                                      { name: `${dataSource?.label || 'System'} D`, status: "online", value: "100%" },
+                                    ]
+                                  }
+                                } else if (result.componentType === 'v3.progress.tracker') {
+                                  mockProps = {
+                                    tasks: [
+                                      { name: `${dataSource?.label || 'Task'} - Phase 1`, completed: true, dueDate: "Mar 1" },
+                                      { name: `${dataSource?.label || 'Task'} - Phase 2`, completed: true, dueDate: "Mar 15" },
+                                      { name: `${dataSource?.label || 'Task'} - Phase 3`, completed: false, dueDate: "Mar 20" },
+                                      { name: `${dataSource?.label || 'Task'} - Phase 4`, completed: false, dueDate: "Mar 25" },
+                                    ]
+                                  }
+                                } else if (result.componentType === 'construction.metric.large') {
+                                  const metricData = generateMetricData(result.prompt, dataSource)
+                                  mockProps = {
+                                    value: metricData.value,
+                                    delta: metricData.delta,
+                                    subtitle: "This month",
+                                    trend: metricData.trend,
+                                    color: "blue"
+                                  }
+                                } else if (result.componentType === 'v3.map.site') {
+                                  // Generate default zones for site map
+                                  mockProps = {
+                                    zones: [
+                                      { id: '1', name: `${dataSource?.label || 'Zone'} A`, x: 20, y: 25, status: 'active', value: '85%', count: 12 },
+                                      { id: '2', name: `${dataSource?.label || 'Zone'} B`, x: 45, y: 30, status: 'success', value: '100%', count: 8 },
+                                      { id: '3', name: `${dataSource?.label || 'Zone'} C`, x: 70, y: 35, status: 'warning', value: '65%', count: 15 },
+                                      { id: '4', name: `${dataSource?.label || 'Zone'} D`, x: 35, y: 55, status: 'active', value: '78%', count: 10 },
+                                      { id: '5', name: `${dataSource?.label || 'Zone'} E`, x: 60, y: 60, status: 'inactive', value: '0%', count: 0 },
+                                      { id: '6', name: `${dataSource?.label || 'Zone'} F`, x: 80, y: 70, status: 'success', value: '95%', count: 6 },
+                                    ]
+                                  }
+                                } else if (result.componentType === 'v3.heatmap') {
+                                  // Detect type based on data source or keywords
+                                  const isManufacturing = result.prompt.toLowerCase().includes('manufacturing') || 
+                                                        result.prompt.toLowerCase().includes('production') ||
+                                                        result.prompt.toLowerCase().includes('assembly') ||
+                                                        dataSource?.type === 'products'
+                                  const isConstruction = result.prompt.toLowerCase().includes('construction') || 
+                                                       result.prompt.toLowerCase().includes('material') ||
+                                                       result.prompt.toLowerCase().includes('building')
+                                  
+                                  mockProps = {
+                                    type: isConstruction ? 'construction' : (isManufacturing ? 'manufacturing' : 'generic')
+                                  }
+                                } else if (result.componentType === 'v3.grid.pulse') {
+                                  // Pulse grid uses auto-generated data
+                                  mockProps = {
+                                    rows: 8,
+                                    cols: 12,
+                                    animationSpeed: 2500
+                                  }
+                                } else if (result.componentType === 'v3.kanban') {
+                                  // Kanban auto-generates default columns
+                                  mockProps = {}
+                                } else if (result.componentType === 'v3.calendar.heatmap') {
+                                  // Calendar heatmap auto-generates activity data
+                                  mockProps = {
+                                    months: 6
+                                  }
+                                } else if (result.componentType === 'v3.counter.animated') {
+                                  // Animated counter with data source-aware values
+                                  const metricData = generateMetricData(result.prompt, dataSource)
+                                  const numericValue = parseInt(metricData.value.replace(/[^0-9]/g, '')) || 1234
+                                  const deltaValue = parseInt(metricData.delta.replace(/[^0-9]/g, '')) || 50
+                                  
+                                  mockProps = {
+                                    value: numericValue,
+                                    previousValue: numericValue - deltaValue,
+                                    prefix: dataSource?.type === 'revenue' || dataSource?.type === 'sales' ? '$' : '',
+                                    suffix: dataSource?.type === 'revenue' || dataSource?.type === 'sales' ? 'K' : '',
+                                    subtitle: `${dataSource?.label || 'Total'} this month`,
+                                    trend: 'up' as const,
+                                    sparklineData: metricData.trend
+                                  }
+                                } else if (result.componentType === 'v3.chart.sankey') {
+                                  // Sankey diagram auto-generates flow data
+                                  mockProps = {}
+                                } else if (result.componentType === 'v3.chart.radar') {
+                                  // Radar chart auto-generates comparison data
+                                  mockProps = {}
+                                } else if (result.componentType === 'v3.graph.network') {
+                                  // Network graph auto-generates relationship data
+                                  mockProps = {}
+                                } else if (result.componentType === 'v3.cards.3d') {
+                                  // 3D card stack auto-generates card data
+                                  mockProps = {}
+                                } else if (result.componentType === 'v3.chart.sparkline') {
+                                  // Sparkline auto-generates trend data
+                                  mockProps = {}
+                                } else if (result.componentType === 'v3.chart.wave') {
+                                  // Wave chart auto-generates real-time data
+                                  mockProps = {}
+                                }
+
+                                // Update the state directly
+                                setState(prev => ({
+                                  ...prev,
+                                  blocks: {
+                                    ...prev.blocks,
+                                    [item.i]: {
+                                      id: item.i,
+                                      type: result.componentType,
+                                      title,
+                                      props: mockProps
+                                    }
+                                  }
+                                }))
+                              }
+                            }
+                          } : block
+
                           return (
                             <div
                               className={`${
                                 isMetric || isTable || isConstruction || isWorksite || isAnalytics || isItems ? "p-0" : "p-4"
                               } flex-1 min-h-0 flex flex-col ${allowScroll ? "overflow-auto" : "overflow-hidden"}`}
                             >
-                              <BlockRenderer block={block} showFilters={showFilters} />
+                              <BlockRenderer block={enhancedBlock} showFilters={showFilters} />
                             </div>
                           )
                         })()}

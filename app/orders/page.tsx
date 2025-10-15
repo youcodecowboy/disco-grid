@@ -151,9 +151,9 @@ export default function OrdersPage() {
           onMouseLeave={() => setSidebarExpanded(false)}
         />
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 overflow-hidden">
           {/* Page Header */}
-          <div className="mb-6">
+          <div className="mb-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <ShoppingCartIcon />
@@ -179,7 +179,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="bg-white rounded-lg border p-4">
                 <div className="text-sm text-gray-600 mb-1">Total Orders</div>
                 <div className="text-2xl font-bold text-gray-900">{stats.totalOrders}</div>
@@ -200,8 +200,8 @@ export default function OrdersPage() {
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-gray-200 mb-4">
-            <nav className="flex gap-8">
+          <div className="border-b border-gray-200 mb-4 overflow-x-auto">
+            <nav className="flex gap-8 min-w-max">
               {TABS.map((tab) => {
                 const count = tab.id === "all" 
                   ? MOCK_ORDERS.length 
@@ -234,7 +234,7 @@ export default function OrdersPage() {
           </div>
 
           {/* Orders Table */}
-          <div className="bg-white rounded-lg border shadow-sm" style={{ height: "calc(100vh - 420px)" }}>
+          <div className="bg-white rounded-lg border shadow-sm overflow-hidden" style={{ height: "calc(100vh - 380px)" }}>
             {filteredOrders.length > 0 ? (
               <OrdersTable orders={filteredOrders} />
             ) : (

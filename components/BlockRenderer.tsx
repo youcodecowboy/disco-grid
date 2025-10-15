@@ -73,6 +73,15 @@ import ComprehensiveItemsTable from "@/components/blocks/items/ComprehensiveItem
 import { ItemCodesTableV2 } from "@/components/blocks/items/ItemCodesTableV2"
 import WorkflowOverview from "@/components/blocks/items/WorkflowOverview"
 import ItemActivityTimeline from "@/components/blocks/items/ItemActivityTimeline"
+// AI Playground components
+import { AIInputBlock } from "@/components/blocks/AIInputBlock"
+// Site Map components
+import { MachineBlock } from "@/components/blocks/site/MachineBlock"
+import { StorageBlock } from "@/components/blocks/site/StorageBlock"
+import { ZoneBlock } from "@/components/blocks/site/ZoneBlock"
+import { ProductionLineBlock } from "@/components/blocks/site/ProductionLineBlock"
+import { StationBlock } from "@/components/blocks/site/StationBlock"
+import { EquipmentBlock } from "@/components/blocks/site/EquipmentBlock"
 
 interface BlockRendererProps {
   block: BlockConfig
@@ -426,6 +435,92 @@ export default function BlockRenderer({ block, showFilters = false, isEditing = 
       return <WorkflowOverview title={block.title} {...block.props} />
     case "items.activity.timeline":
       return <ItemActivityTimeline title={block.title} {...block.props} />
+    // AI Playground components
+    case "ai.input":
+      return (
+        <AIInputBlock 
+          onGenerate={block.props?.onGenerate}
+          onPromptChange={block.props?.onPromptChange}
+        />
+      )
+    // V3 Components
+    case "v3.chart.area":
+      const ChartAreaV3 = require("@/components/blocks/v3/ChartArea").default
+      return <ChartAreaV3 title={block.title} data={block.props?.data} />
+    case "v3.chart.bar":
+      const ChartBarV3 = require("@/components/blocks/v3/ChartBar").default
+      return <ChartBarV3 title={block.title} data={block.props?.data} />
+    case "v3.chart.donut":
+      const ChartDonutV3 = require("@/components/blocks/v3/ChartDonut").default
+      return <ChartDonutV3 title={block.title} data={block.props?.data} />
+    case "v3.activity.timeline":
+      const ActivityTimelineV3 = require("@/components/blocks/v3/ActivityTimeline").default
+      return <ActivityTimelineV3 title={block.title} activities={block.props?.activities} />
+    case "v3.table":
+      const DataTableV3 = require("@/components/blocks/v3/DataTable").default
+      return <DataTableV3 title={block.title} columns={block.props?.columns} rows={block.props?.rows} />
+    case "v3.kpi":
+      const KPICardV3 = require("@/components/blocks/v3/KPICard").default
+      return <KPICardV3 title={block.props?.title} value={block.props?.value} change={block.props?.change} trend={block.props?.trend} subtitle={block.props?.subtitle} />
+    case "v3.status.grid":
+      const StatusGridV3 = require("@/components/blocks/v3/StatusGrid").default
+      return <StatusGridV3 title={block.title} items={block.props?.items} />
+    case "v3.progress.tracker":
+      const ProgressTrackerV3 = require("@/components/blocks/v3/ProgressTracker").default
+      return <ProgressTrackerV3 title={block.title} tasks={block.props?.tasks} />
+    case "v3.map.site":
+      const MapSiteV3 = require("@/components/blocks/v3/MapSite").default
+      return <MapSiteV3 title={block.title} zones={block.props?.zones} backgroundImage={block.props?.backgroundImage} />
+    case "v3.heatmap":
+      const HeatmapV3 = require("@/components/blocks/v3/Heatmap").default
+      return <HeatmapV3 title={block.title} data={block.props?.data} rows={block.props?.rows} cols={block.props?.cols} />
+    case "v3.grid.pulse":
+      const GridPulseV3 = require("@/components/blocks/v3/GridPulse").default
+      return <GridPulseV3 title={block.title} rows={block.props?.rows} cols={block.props?.cols} data={block.props?.data} />
+    case "v3.kanban":
+      const KanbanV3 = require("@/components/blocks/v3/Kanban").default
+      return <KanbanV3 title={block.title} columns={block.props?.columns} />
+    case "v3.calendar.heatmap":
+      const CalendarHeatmapV3 = require("@/components/blocks/v3/CalendarHeatmap").default
+      return <CalendarHeatmapV3 title={block.title} data={block.props?.data} months={block.props?.months} />
+    case "v3.counter.animated":
+      const CounterAnimatedV3 = require("@/components/blocks/v3/CounterAnimated").default
+      return <CounterAnimatedV3 title={block.title} value={block.props?.value} previousValue={block.props?.previousValue} 
+              prefix={block.props?.prefix} suffix={block.props?.suffix} subtitle={block.props?.subtitle} 
+              trend={block.props?.trend} sparklineData={block.props?.sparklineData} />
+    case "v3.chart.sankey":
+      const ChartSankeyV3 = require("@/components/blocks/v3/ChartSankey").default
+      return <ChartSankeyV3 title={block.title} nodes={block.props?.nodes} links={block.props?.links} />
+    case "v3.chart.radar":
+      const ChartRadarV3 = require("@/components/blocks/v3/ChartRadar").default
+      return <ChartRadarV3 title={block.title} datasets={block.props?.datasets} maxValue={block.props?.maxValue} />
+    case "v3.graph.network":
+      const GraphNetworkV3 = require("@/components/blocks/v3/GraphNetwork").default
+      return <GraphNetworkV3 title={block.title} nodes={block.props?.nodes} edges={block.props?.edges} />
+    case "v3.cards.3d":
+      const Cards3DV3 = require("@/components/blocks/v3/Cards3D").default
+      return <Cards3DV3 title={block.title} cards={block.props?.cards} />
+    case "v3.chart.sparkline":
+      const ChartSparklineV3 = require("@/components/blocks/v3/ChartSparkline").default
+      return <ChartSparklineV3 title={block.title} data={block.props?.data} color={block.props?.color} 
+              showValue={block.props?.showValue} showTrend={block.props?.showTrend} height={block.props?.height} />
+    case "v3.chart.wave":
+      const ChartWaveV3 = require("@/components/blocks/v3/ChartWave").default
+      return <ChartWaveV3 title={block.title} data={block.props?.data} color={block.props?.color} 
+              maxPoints={block.props?.maxPoints} updateInterval={block.props?.updateInterval} />
+    // Site Map components
+    case "site.machine":
+      return <MachineBlock block={block} />
+    case "site.storage":
+      return <StorageBlock block={block} />
+    case "site.zone":
+      return <ZoneBlock block={block} />
+    case "site.production-line":
+      return <ProductionLineBlock block={block} />
+    case "site.station":
+      return <StationBlock block={block} />
+    case "site.equipment":
+      return <EquipmentBlock block={block} />
     default:
       return (
         <div className="flex items-center justify-center h-full text-muted-foreground">
