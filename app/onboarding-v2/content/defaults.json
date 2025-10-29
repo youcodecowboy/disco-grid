@@ -1,0 +1,205 @@
+{
+  "manufacturing": {
+    "kpis": [
+      {
+        "id": "otd",
+        "name": "On-Time Delivery",
+        "default": true,
+        "description": "Percentage of orders delivered on or before the promised date"
+      },
+      {
+        "id": "fpy",
+        "name": "First-Pass Yield",
+        "default": true,
+        "description": "Percentage of items that pass quality inspection on first attempt"
+      },
+      {
+        "id": "wip",
+        "name": "WIP Age",
+        "default": true,
+        "description": "Average age of work-in-progress items"
+      },
+      {
+        "id": "throughput",
+        "name": "Throughput",
+        "default": true,
+        "description": "Number of items completed per time period"
+      },
+      {
+        "id": "capacity",
+        "name": "Capacity Utilization",
+        "default": false,
+        "description": "Percentage of available capacity being used"
+      },
+      {
+        "id": "defect_rate",
+        "name": "Defect Rate",
+        "default": false,
+        "description": "Percentage of items with quality issues"
+      },
+      {
+        "id": "lead_time",
+        "name": "Lead Time",
+        "default": false,
+        "description": "Average time from order to delivery"
+      }
+    ],
+    "workflows": {
+      "apparel": [
+        { "name": "Receive Materials", "durationHours": 2 },
+        { "name": "Cut Patterns", "durationHours": 4 },
+        { "name": "Sew Garments", "durationHours": 8 },
+        { "name": "Wash & Finish", "durationHours": 12 },
+        { "name": "QA Inspection", "durationHours": 2 },
+        { "name": "Pack", "durationHours": 1 },
+        { "name": "Ship", "durationHours": 1 }
+      ],
+      "assembly": [
+        { "name": "Receive Parts", "durationHours": 1 },
+        { "name": "Sub-Assembly", "durationHours": 4 },
+        { "name": "Final Assembly", "durationHours": 6 },
+        { "name": "Test", "durationHours": 2 },
+        { "name": "Pack", "durationHours": 1 },
+        { "name": "Ship", "durationHours": 1 }
+      ],
+      "generic": [
+        { "name": "Receive", "durationHours": 2 },
+        { "name": "Process", "durationHours": 8 },
+        { "name": "Quality Check", "durationHours": 2 },
+        { "name": "Package", "durationHours": 1 },
+        { "name": "Ship", "durationHours": 1 }
+      ]
+    },
+    "chartDefaults": {
+      "exec": ["otd_trend", "throughput_gauge", "fpy_metric"],
+      "ops": ["wip_table", "bottleneck_chart", "capacity_gauge"],
+      "floor": ["daily_output", "quality_alerts", "current_stage"]
+    }
+  },
+  "construction": {
+    "kpis": [
+      {
+        "id": "schedule_variance",
+        "name": "Schedule Variance",
+        "default": true,
+        "description": "Difference between planned and actual completion dates"
+      },
+      {
+        "id": "safety_incidents",
+        "name": "Safety Incidents",
+        "default": true,
+        "description": "Number of safety-related incidents per time period"
+      },
+      {
+        "id": "equipment_util",
+        "name": "Equipment Utilization",
+        "default": true,
+        "description": "Percentage of time equipment is actively used"
+      },
+      {
+        "id": "budget_variance",
+        "name": "Budget Variance",
+        "default": false,
+        "description": "Difference between budgeted and actual costs"
+      },
+      {
+        "id": "rework_rate",
+        "name": "Rework Rate",
+        "default": false,
+        "description": "Percentage of work requiring rework"
+      }
+    ],
+    "workflows": {
+      "standard": [
+        { "name": "Site Prep", "durationHours": 16 },
+        { "name": "Foundation", "durationHours": 40 },
+        { "name": "Framing", "durationHours": 80 },
+        { "name": "Systems Install", "durationHours": 60 },
+        { "name": "Finishing", "durationHours": 100 },
+        { "name": "Inspection", "durationHours": 8 },
+        { "name": "Handover", "durationHours": 4 }
+      ]
+    },
+    "chartDefaults": {
+      "exec": ["schedule_trend", "budget_gauge"],
+      "ops": ["equipment_table", "safety_alerts"],
+      "floor": ["daily_progress", "active_tasks"]
+    }
+  },
+  "logistics": {
+    "kpis": [
+      {
+        "id": "delivery_time",
+        "name": "Average Delivery Time",
+        "default": true,
+        "description": "Average time from order to delivery"
+      },
+      {
+        "id": "fill_rate",
+        "name": "Order Fill Rate",
+        "default": true,
+        "description": "Percentage of orders fulfilled completely"
+      },
+      {
+        "id": "inventory_turns",
+        "name": "Inventory Turnover",
+        "default": true,
+        "description": "Number of times inventory is sold and replaced"
+      },
+      {
+        "id": "carrier_performance",
+        "name": "Carrier Performance",
+        "default": false,
+        "description": "On-time delivery rate by carrier"
+      },
+      {
+        "id": "damage_rate",
+        "name": "Damage Rate",
+        "default": false,
+        "description": "Percentage of shipments with damage"
+      }
+    ],
+    "workflows": {
+      "standard": [
+        { "name": "Receive Order", "durationHours": 1 },
+        { "name": "Pick", "durationHours": 2 },
+        { "name": "Pack", "durationHours": 1 },
+        { "name": "Stage", "durationHours": 2 },
+        { "name": "Load", "durationHours": 1 },
+        { "name": "Transit", "durationHours": 48 },
+        { "name": "Deliver", "durationHours": 2 }
+      ]
+    },
+    "chartDefaults": {
+      "exec": ["delivery_trend", "fill_rate_gauge"],
+      "ops": ["shipment_table", "carrier_comparison"],
+      "floor": ["pick_queue", "staging_status"]
+    }
+  },
+  "playbooks": {
+    "manufacturing": [
+      { "task": "Create fabric purchase order", "dept": "Purchasing" },
+      { "task": "Create trims purchase order", "dept": "Purchasing" },
+      { "task": "Check thread stock levels", "dept": "Warehouse" },
+      { "task": "Schedule shrinkage test", "dept": "Quality" },
+      { "task": "Schedule color matching", "dept": "Quality" },
+      { "task": "First article inspection", "dept": "Quality" },
+      { "task": "Final QC", "dept": "Quality" },
+      { "task": "Prepare packaging materials", "dept": "Warehouse" }
+    ],
+    "construction": [
+      { "task": "Request building permits", "dept": "Admin" },
+      { "task": "Schedule site inspection", "dept": "Operations" },
+      { "task": "Order materials", "dept": "Procurement" },
+      { "task": "Safety briefing", "dept": "Safety" },
+      { "task": "Equipment rental reservation", "dept": "Operations" }
+    ],
+    "logistics": [
+      { "task": "Generate pick list", "dept": "Warehouse" },
+      { "task": "Schedule carrier pickup", "dept": "Shipping" },
+      { "task": "Print shipping labels", "dept": "Shipping" },
+      { "task": "Quality check shipment", "dept": "Quality" }
+    ]
+  }
+}
+

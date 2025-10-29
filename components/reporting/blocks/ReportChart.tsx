@@ -164,3 +164,9 @@ export default function ReportChart({ type, data, config, title }: ReportChartPr
   return null;
 }
 
+
+
+
+
+
+

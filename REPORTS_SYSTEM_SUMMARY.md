@@ -210,3 +210,9 @@ The system is designed to be extensible:
 - No backend integration yet (future work)
 - Follows existing design patterns from the codebase
 
+
+
+
+
+
+

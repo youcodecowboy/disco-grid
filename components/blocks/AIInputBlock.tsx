@@ -2,15 +2,29 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Send } from 'lucide-react'
+import { Sparkles, Send, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { matchPromptToComponent, getComponentDisplayName } from '@/app/playground/lib/keywordMatcher'
+import { getComponentDisplayName } from '@/app/playground/lib/keywordMatcher'
 import { AIGenerationProgress } from './AIGenerationProgress'
-import type { MatchResult } from '@/app/playground/lib/keywordMatcher'
+import type { BlockType } from '@/lib/grid-v2/types'
+
+interface LLMGenerationResult {
+  success: boolean
+  componentType: BlockType
+  confidence: number
+  reasoning: string
+  config: Record<string, any>
+  title: string
+  size: { w: number; h: number }
+  provenance: 'llm' | 'keyword-fallback'
+  model: string
+  tokensUsed: number
+  error?: string
+}
 
 interface AIInputBlockProps {
-  onGenerate?: (result: MatchResult & { prompt: string }) => void
-  onPromptChange?: (prompt: string, match: MatchResult | null) => void
+  onGenerate?: (result: LLMGenerationResult & { prompt: string }) => void
+  onPromptChange?: (prompt: string) => void
 }
 
 const EXAMPLE_PROMPTS = [
@@ -26,10 +40,11 @@ const EXAMPLE_PROMPTS = [
 
 export function AIInputBlock({ onGenerate, onPromptChange }: AIInputBlockProps) {
   const [prompt, setPrompt] = useState('')
-  const [detectedComponent, setDetectedComponent] = useState<MatchResult | null>(null)
   const [currentExample, setCurrentExample] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [pendingResult, setPendingResult] = useState<(MatchResult & { prompt: string }) | null>(null)
+  const [isCalling, setIsCalling] = useState(false)
+  const [pendingResult, setPendingResult] = useState<(LLMGenerationResult & { prompt: string }) | null>(null)
+  const [error, setError] = useState<string | null>(null)
   
   // Rotate example prompts
   useEffect(() => {
@@ -40,42 +55,97 @@ export function AIInputBlock({ onGenerate, onPromptChange }: AIInputBlockProps) 
     return () => clearInterval(interval)
   }, [])
   
-  // Detect component as user types
-  useEffect(() => {
-    if (prompt.trim().length > 3) {
-      const match = matchPromptToComponent(prompt)
-      setDetectedComponent(match)
-      onPromptChange?.(prompt, match)
-    } else {
-      setDetectedComponent(null)
-      onPromptChange?.(prompt, null)
-    }
-  }, [prompt, onPromptChange])
-  
-  const handleGenerate = () => {
-    if (!prompt.trim() || !detectedComponent) return
-    
-    const result = {
-      ...detectedComponent,
-      prompt: prompt.trim()
+  const handleGenerate = async () => {
+    if (!prompt.trim() || isCalling) {
+      console.log('⚠️ [AI Input] Cannot generate:', { hasPrompt: !!prompt.trim(), isCalling })
+      return
     }
     
-    // Store the result and start the progress animation
-    setPendingResult(result)
-    setIsGenerating(true)
+    console.log('🚀 [AI Input] Starting generation:', prompt.trim())
+    setError(null)
+    setIsCalling(true)
+    
+    try {
+      console.log('📡 [AI Input] Calling API...')
+      
+      // Add 30 second timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        console.error('⏱️ [AI Input] Request timeout!')
+        controller.abort()
+      }, 30000)
+      
+      const response = await fetch('/api/playground/generate-component', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          prompt: prompt.trim()
+        }),
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      console.log('✅ [AI Input] API response received:', response.status)
+      
+      const data = await response.json()
+      console.log('📦 [AI Input] Response data:', data)
+      
+      if (data.success) {
+        const result = {
+          ...data,
+          prompt: prompt.trim()
+        }
+        
+        console.log('✨ [AI Input] Success! Starting animation with result:', result)
+        // Store the result and start the progress animation
+        setPendingResult(result)
+        setIsGenerating(true)
+        
+        // SAFETY: Force complete after 5 seconds if animation doesn't finish
+        setTimeout(() => {
+          console.warn('⚠️ [AI Input] Animation timeout - forcing completion')
+          if (result) {
+            onGenerate?.(result)
+            setIsGenerating(false)
+            setPendingResult(null)
+            setPrompt('')
+          }
+        }, 5000)
+      } else {
+        console.error('❌ [AI Input] Generation failed:', data.error)
+        setError(data.error || 'Failed to generate component')
+      }
+    } catch (err) {
+      console.error('❌ [AI Input] Exception:', err)
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timed out. Please try again.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Network error. Please try again.')
+      }
+    } finally {
+      console.log('🏁 [AI Input] Generation complete, resetting isCalling')
+      setIsCalling(false)
+    }
   }
   
   const handleGenerationComplete = () => {
+    console.log('🎬 [AI Input] Animation complete, calling onGenerate')
+    console.log('   Pending result:', pendingResult)
+    
     // Call the actual onGenerate callback after the animation completes
     if (pendingResult) {
+      console.log('✅ [AI Input] Calling onGenerate callback with result')
       onGenerate?.(pendingResult)
+    } else {
+      console.warn('⚠️ [AI Input] No pending result to pass to onGenerate')
     }
     
     // Reset state
+    console.log('🧹 [AI Input] Resetting state')
     setIsGenerating(false)
     setPendingResult(null)
     setPrompt('')
-    setDetectedComponent(null)
+    setError(null)
   }
   
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -142,7 +212,10 @@ export function AIInputBlock({ onGenerate, onPromptChange }: AIInputBlockProps) 
         <div className="relative">
           <textarea
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => {
+              setPrompt(e.target.value)
+              onPromptChange?.(e.target.value)
+            }}
             onKeyPress={handleKeyPress}
             placeholder={EXAMPLE_PROMPTS[currentExample]}
             className="w-full min-h-[120px] p-4 pr-12 bg-white border-2 border-gray-200 rounded-lg 
@@ -152,9 +225,9 @@ export function AIInputBlock({ onGenerate, onPromptChange }: AIInputBlockProps) 
             autoFocus
           />
           
-          {/* Detected Component Badge */}
+          {/* Loading indicator while calling LLM */}
           <AnimatePresence>
-            {detectedComponent && (
+            {isCalling && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: -10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -163,7 +236,7 @@ export function AIInputBlock({ onGenerate, onPromptChange }: AIInputBlockProps) 
                          text-xs font-medium rounded-full flex items-center gap-1"
               >
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                {getComponentDisplayName(detectedComponent.componentType)}
+                Analyzing...
               </motion.div>
             )}
           </AnimatePresence>
@@ -177,27 +250,84 @@ export function AIInputBlock({ onGenerate, onPromptChange }: AIInputBlockProps) 
           
           <Button
             onClick={handleGenerate}
-            disabled={!prompt.trim() || !detectedComponent}
+            disabled={!prompt.trim() || isCalling}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 
-                     hover:to-purple-700 text-white font-medium px-6"
+                     hover:to-purple-700 text-white font-medium px-6 disabled:opacity-50"
           >
-            Generate
+            {isCalling ? 'Analyzing...' : 'Generate'}
             <Send className="w-4 h-4 ml-2" />
           </Button>
         </div>
         
+        {/* LLM Reasoning Display */}
+        <AnimatePresence>
+          {pendingResult && !isGenerating && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200"
+            >
+              <div className="flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-blue-900">
+                    Selected: {getComponentDisplayName(pendingResult.componentType)}
+                  </p>
+                  <p className="text-xs text-blue-700 mt-1">
+                    {pendingResult.reasoning}
+                  </p>
+                  {pendingResult.provenance === 'keyword-fallback' && (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Keyword fallback (LLM unavailable)
+                    </p>
+                  )}
+                  {pendingResult.provenance === 'llm' && (
+                    <p className="text-xs text-green-600 mt-1">
+                      ✨ AI-powered selection (confidence: {Math.round(pendingResult.confidence * 100)}%)
+                    </p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Error Display */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200"
+            >
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-900">Error</p>
+                  <p className="text-xs text-red-700 mt-1">{error}</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
         {/* Examples hint */}
-        <motion.div
-          key={currentExample}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="mt-4 text-center"
-        >
-          <p className="text-sm text-gray-500">
-            <span className="font-medium">Tip:</span> {EXAMPLE_PROMPTS[currentExample]}
-          </p>
-        </motion.div>
+        {!pendingResult && !error && (
+          <motion.div
+            key={currentExample}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="mt-4 text-center"
+          >
+            <p className="text-sm text-gray-500">
+              <span className="font-medium">Tip:</span> {EXAMPLE_PROMPTS[currentExample]}
+            </p>
+          </motion.div>
+        )}
       </div>
     </div>
   )

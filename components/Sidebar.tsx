@@ -63,6 +63,31 @@ export default function Sidebar({
     }
   }, [dynamicPages, isLoaded]);
 
+  const handleCreateDashboard = async () => {
+    // Import dashboard storage utilities
+    const { createBlankDashboard } = await import('@/lib/dashboard-generation/storage')
+    
+    const name = prompt('Enter dashboard name:')
+    if (!name || !name.trim()) return
+    
+    try {
+      const dashboard = createBlankDashboard(name.trim())
+      
+      // Update the list
+      setCustomDashboards(prev => [...prev, {
+        id: dashboard.id,
+        label: dashboard.name,
+        href: `/${dashboard.id}`
+      }])
+      
+      // Navigate to the new dashboard
+      router.push(`/${dashboard.id}`)
+    } catch (error) {
+      console.error('Error creating dashboard:', error)
+      alert('Failed to create dashboard. Please try again.')
+    }
+  }
+
   const handleCreatePage = () => {
     if (!newPageName.trim()) return;
     
@@ -117,14 +142,64 @@ export default function Sidebar({
     }
   };
 
+  // Load dashboards from new storage system
+  const [customDashboards, setCustomDashboards] = useState<Array<{ id: string; label: string; href: string }>>([])
+  
+  useEffect(() => {
+    // Import dashboard storage utilities
+    import('@/lib/dashboard-generation/storage').then(({ getAllDashboards }) => {
+      const dashboards = getAllDashboards()
+      const dashboardItems = dashboards.map(d => ({
+        id: d.id,
+        label: d.name,
+        href: `/${d.id}`
+      }))
+      setCustomDashboards(dashboardItems)
+    })
+  }, [isLoaded])
+
+  const handleDeleteDashboard = async (dashboardId: string, dashboardName: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (confirm(`Are you sure you want to delete "${dashboardName}"? This cannot be undone.`)) {
+      // Import delete function
+      const { deleteDashboard } = await import('@/lib/dashboard-generation/storage')
+      deleteDashboard(dashboardId)
+      
+      // Update the list
+      setCustomDashboards(prev => prev.filter(d => d.id !== dashboardId))
+      
+      // If currently on this dashboard, navigate to playground
+      if (pathname === `/${dashboardId}`) {
+        router.push('/playground')
+      }
+    }
+  }
+
   // Organized navigation sections
-  const dashboardItems = [
+  const dashboardItems: Array<{
+    icon: any
+    label: string
+    href: string
+    active: boolean
+    isDeletable?: boolean
+    dashboardId?: string
+  }> = [
     { 
       icon: Layout, 
       label: "Dashboard", 
       href: "/playground",
       active: pathname === "/playground"
     },
+    ...customDashboards.map(dash => ({
+      icon: Layout,
+      label: dash.label,
+      href: dash.href,
+      active: pathname === dash.href,
+      isDeletable: true,
+      dashboardId: dash.id
+    }))
   ];
 
   const operationsItems = [
@@ -137,8 +212,8 @@ export default function Sidebar({
     { 
       icon: Workflow, 
       label: "Workflows", 
-      href: "/workflows-grid-test",
-      active: pathname === "/workflows-grid-test"
+      href: "/workflows-v3",
+      active: pathname === "/workflows-v3" || pathname.startsWith("/workflows-v3/")
     },
     { 
       icon: CalendarClock, 
@@ -266,7 +341,73 @@ export default function Sidebar({
       <div className="p-3 h-full overflow-y-auto flex flex-col">
         {/* Dashboards Section */}
         <div className="mt-3">
-          {renderSection(dashboardItems, "Dashboards")}
+          {sidebarExpanded ? (
+            <div className="mb-4">
+              <div className="px-2 py-2 mb-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
+                  <span>Dashboards</span>
+                  <button
+                    onClick={handleCreateDashboard}
+                    className="p-1 hover:bg-sidebar-accent rounded text-sidebar-foreground"
+                    title="New Dashboard"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                {dashboardItems.map((item) => (
+                  <div
+                    key={item.label}
+                    className={`group relative flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-sidebar-accent transition-colors ${
+                      item.active ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground'
+                    }`}
+                  >
+                    <Link
+                      href={item.href}
+                      className="flex items-center gap-3 flex-1 cursor-pointer"
+                    >
+                      <item.icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
+                    </Link>
+                    {item.isDeletable && (
+                      <button
+                        onClick={(e) => handleDeleteDashboard(item.dashboardId!, item.label, e)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded text-red-600"
+                        title="Delete Dashboard"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-1">
+              <button
+                onClick={handleCreateDashboard}
+                className="w-full flex items-center justify-center px-3 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent mb-1"
+                title="New Dashboard"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              <div className="space-y-1">
+                {dashboardItems.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-sidebar-accent cursor-pointer transition-colors ${
+                      item.active ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground'
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Separator */}
@@ -310,101 +451,6 @@ export default function Sidebar({
 
         {/* Separator */}
         {sidebarExpanded ? <div className="border-t border-sidebar-border my-4" /> : <div className="h-2" />}
-
-        {/* Custom Pages Section */}
-        {(dynamicPages.length > 0 || showNewPageInput || sidebarExpanded) && (
-          <div className={sidebarExpanded ? "mb-4" : "mb-1"}>
-            {sidebarExpanded && (
-              <div className="px-2 py-2 mb-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
-                  <span>Custom Dashboards</span>
-                  <button
-                    onClick={() => setShowNewPageInput(true)}
-                    className="p-1 hover:bg-sidebar-accent rounded text-sidebar-foreground"
-                    title="New Page"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {!sidebarExpanded && (
-              <button
-                onClick={() => setShowNewPageInput(true)}
-                className="w-full flex items-center justify-center px-3 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent mb-1"
-                title="New Page"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* New Page Input */}
-            {showNewPageInput && sidebarExpanded && (
-              <div className="px-2 pb-2 mb-2">
-                <div className="flex gap-1">
-                  <input
-                    type="text"
-                    value={newPageName}
-                    onChange={(e) => setNewPageName(e.target.value)}
-                    placeholder="Dashboard name"
-                    className="flex-1 px-2 py-1 text-xs border border-border rounded bg-background text-foreground"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleCreatePage();
-                      if (e.key === 'Escape') {
-                        setShowNewPageInput(false);
-                        setNewPageName('');
-                      }
-                    }}
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleCreatePage}
-                    disabled={!newPageName.trim()}
-                    className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded disabled:opacity-50"
-                  >
-                    ✓
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Dynamic Pages List */}
-            {dynamicPages.length > 0 && (
-              <div className="space-y-1">
-                {dynamicPages.map((page) => (
-                  <div
-                    key={page.href}
-                    className={`group relative flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-sidebar-accent transition-colors ${
-                      pathname === page.href || pathname.startsWith(page.href + '/')
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground'
-                    }`}
-                  >
-                    <Link
-                      href={page.href}
-                      className="flex items-center gap-3 flex-1 cursor-pointer"
-                    >
-                      <Layout className="h-4 w-4 flex-shrink-0" />
-                      {sidebarExpanded && (
-                        <span className="text-sm font-medium whitespace-nowrap flex-1">{page.label}</span>
-                      )}
-                    </Link>
-                    {sidebarExpanded && (
-                      <button
-                        onClick={(e) => handleDeletePage(page.id, e)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded text-red-600"
-                        title="Delete Page"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </aside>
   );

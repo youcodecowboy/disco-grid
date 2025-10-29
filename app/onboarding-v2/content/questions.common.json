@@ -1,0 +1,100 @@
+{
+  "industry_select": {
+    "id": "industry_select",
+    "type": "multiple_choice",
+    "section": "welcome",
+    "prompt": "What industry are you in?",
+    "subtitle": "This helps us customize your experience",
+    "helper": "Choose the category that best describes your business. We'll ask specific questions based on your selection.",
+    "required": true,
+    "mapsTo": "company.industry",
+    "options": [
+      {
+        "value": "manufacturing",
+        "label": "Manufacturing",
+        "description": "Produce physical products or goods",
+        "icon": "⚙️"
+      },
+      {
+        "value": "construction",
+        "label": "Construction",
+        "description": "Build structures, manage projects",
+        "icon": "🏗️"
+      },
+      {
+        "value": "defense",
+        "label": "Defense",
+        "description": "Government contracts, compliance",
+        "icon": "🛡️"
+      }
+    ]
+  },
+  "company_name": {
+    "id": "company_name",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "What's your company name?",
+    "helper": "This will appear throughout your workspace.",
+    "placeholder": "Acme Manufacturing Co.",
+    "required": true,
+    "mapsTo": "company.name"
+  },
+  "company_logo": {
+    "id": "company_logo",
+    "type": "file_upload",
+    "section": "company",
+    "prompt": "Upload your company logo (optional)",
+    "helper": "Your logo will appear in the header and reports.",
+    "required": false,
+    "mapsTo": "company.logoUrl",
+    "accept": "image/*"
+  },
+  "company_size": {
+    "id": "company_size",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "How many people work at your company?",
+    "helper": "Select the range that best fits your team size.",
+    "required": true,
+    "mapsTo": "company.size",
+    "options": [
+      { "value": "<10", "label": "Fewer than 10", "description": "Small team" },
+      { "value": "10-50", "label": "10-50 people", "description": "Growing business" },
+      { "value": "50-200", "label": "50-200 people", "description": "Mid-size operation" },
+      { "value": "200+", "label": "More than 200", "description": "Large enterprise" }
+    ]
+  },
+  "company_facilities": {
+    "id": "company_facilities",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "Do you operate from a single site or multiple locations?",
+    "required": true,
+    "mapsTo": "company.facilities",
+    "options": [
+      { "value": "single", "label": "Single site", "description": "All operations in one location" },
+      { "value": "multi", "label": "Multiple sites", "description": "Operations across multiple locations" }
+    ]
+  },
+  "review": {
+    "id": "review",
+    "type": "review_summary",
+    "section": "review",
+    "prompt": "Review your configuration",
+    "helper": "Check everything looks correct. You can go back to edit any section.",
+    "required": true,
+    "mapsTo": null
+  },
+  "review_confirm": {
+    "id": "review_confirm",
+    "type": "final_confirmation",
+    "section": "review",
+    "prompt": "Ready to generate your application?",
+    "subtitle": "This will take about 20 seconds",
+    "helper": "You can always customize further after generation.",
+    "required": true,
+    "mapsTo": null,
+    "cta": "Build My Application"
+  }
+}
+

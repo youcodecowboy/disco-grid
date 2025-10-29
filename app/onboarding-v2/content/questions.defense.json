@@ -1,0 +1,237 @@
+{
+  "defense_intro_nlp": {
+    "id": "defense_intro_nlp",
+    "type": "enriched_text",
+    "section": "company",
+    "industries": ["defense"],
+    "promptContext": "company_profile",
+    "prompt": "Tell us about your defense operations",
+    "subtitle": "What do you deliver? What types of contracts? What's your capability?",
+    "helper": "Describe your business in a few sentences. We'll help you expand this with relevant details.",
+    "placeholder": "We provide R&D services for DoD programs...",
+    "required": true,
+    "mapsTo": "company.*",
+    "minLength": 20,
+    "maxLength": 500,
+    "clarificationOptions": {
+      "question": "What's your primary focus?",
+      "options": [
+        { "value": "rnd", "label": "R&D Services" },
+        { "value": "manufacturing", "label": "Manufacturing/Production" },
+        { "value": "it_services", "label": "IT/Software Services" },
+        { "value": "maintenance", "label": "Maintenance & Support" }
+      ]
+    }
+  },
+  "defense_contract_types": {
+    "id": "defense_contract_types",
+    "type": "multiple_choice",
+    "section": "operations",
+    "industries": ["defense"],
+    "prompt": "What types of contracts do you work on?",
+    "helper": "Select all that apply.",
+    "required": true,
+    "mapsTo": "defenseExt.contractTypes",
+    "multiSelect": true,
+    "options": [
+      { "value": "R&D", "label": "R&D", "description": "Research and development" },
+      { "value": "Manufacturing", "label": "Manufacturing", "description": "Production and assembly" },
+      { "value": "Services", "label": "Services", "description": "Professional services" },
+      { "value": "Maintenance", "label": "Maintenance", "description": "O&M, sustainment" },
+      { "value": "IT/Software", "label": "IT/Software", "description": "Software development, IT services" }
+    ]
+  },
+  "defense_security_clearances": {
+    "id": "defense_security_clearances",
+    "type": "yes_no",
+    "section": "operations",
+    "industries": ["defense"],
+    "prompt": "Do you work with classified information?",
+    "helper": "This determines if we need security clearance tracking.",
+    "required": true,
+    "mapsTo": "defenseExt.securityClearances.required"
+  },
+  "defense_clearance_levels": {
+    "id": "defense_clearance_levels",
+    "type": "multiple_choice",
+    "section": "operations",
+    "industries": ["defense"],
+    "prompt": "What clearance levels do you support?",
+    "helper": "Select all that apply.",
+    "required": true,
+    "mapsTo": "defenseExt.securityClearances.levels",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "defense_security_clearances",
+      "showIf": true
+    },
+    "options": [
+      { "value": "Confidential", "label": "Confidential" },
+      { "value": "Secret", "label": "Secret" },
+      { "value": "Top Secret", "label": "Top Secret" },
+      { "value": "TS/SCI", "label": "TS/SCI" }
+    ]
+  },
+  "defense_deliverable_types": {
+    "id": "defense_deliverable_types",
+    "type": "dynamic_list",
+    "section": "items",
+    "industries": ["defense"],
+    "prompt": "What types of deliverables do you produce?",
+    "helper": "List the main categories of items you deliver to the government.",
+    "placeholder": "e.g., Technical Reports, Hardware Systems, Software Modules",
+    "required": true,
+    "mapsTo": "defenseExt.deliverables.types",
+    "maxItems": 20
+  },
+  "defense_cdrls": {
+    "id": "defense_cdrls",
+    "type": "yes_no",
+    "section": "items",
+    "industries": ["defense"],
+    "prompt": "Do you need to track CDRLs?",
+    "helper": "Contract Data Requirements Lists - formal deliverable documentation.",
+    "required": true,
+    "mapsTo": "defenseExt.deliverables.cdrls"
+  },
+  "defense_specifications": {
+    "id": "defense_specifications",
+    "type": "dynamic_list",
+    "section": "operations",
+    "industries": ["defense"],
+    "prompt": "What standards and specifications do you follow?",
+    "helper": "List the military specs, standards, or certifications you must comply with.",
+    "placeholder": "e.g., MIL-STD-810, ISO-9001, AS9100",
+    "required": true,
+    "mapsTo": "defenseExt.specifications.standards",
+    "maxItems": 15
+  },
+  "defense_chain_of_custody": {
+    "id": "defense_chain_of_custody",
+    "type": "yes_no",
+    "section": "items",
+    "industries": ["defense"],
+    "prompt": "Do you need full chain of custody tracking?",
+    "helper": "Track every movement and modification of items throughout their lifecycle.",
+    "required": true,
+    "mapsTo": "defenseExt.chainOfCustody.required"
+  },
+  "defense_serialization": {
+    "id": "defense_serialization",
+    "type": "yes_no",
+    "section": "items",
+    "industries": ["defense"],
+    "prompt": "Do items require unique serial numbers?",
+    "helper": "Track individual items with unique identifiers.",
+    "required": true,
+    "mapsTo": "defenseExt.chainOfCustody.serialization"
+  },
+  "defense_testing": {
+    "id": "defense_testing",
+    "type": "yes_no",
+    "section": "operations",
+    "industries": ["defense"],
+    "prompt": "Do you perform testing and validation?",
+    "helper": "Formal test procedures, witness points, acceptance testing.",
+    "required": true,
+    "mapsTo": "defenseExt.testing.required"
+  },
+  "defense_testing_stages": {
+    "id": "defense_testing_stages",
+    "type": "dynamic_list",
+    "section": "operations",
+    "industries": ["defense"],
+    "prompt": "What testing stages do you perform?",
+    "helper": "List your test and validation phases.",
+    "placeholder": "e.g., Unit Test, Integration Test, System Test, Acceptance",
+    "required": true,
+    "mapsTo": "defenseExt.testing.stages",
+    "maxItems": 10,
+    "conditional": {
+      "dependsOn": "defense_testing",
+      "showIf": true
+    }
+  },
+  "defense_quality_system": {
+    "id": "defense_quality_system",
+    "type": "multiple_choice",
+    "section": "operations",
+    "industries": ["defense"],
+    "prompt": "What quality management system do you use?",
+    "helper": "Your QMS certification or framework.",
+    "required": true,
+    "mapsTo": "defenseExt.quality.system",
+    "options": [
+      { "value": "ISO-9001", "label": "ISO-9001", "description": "International quality standard" },
+      { "value": "AS9100", "label": "AS9100", "description": "Aerospace quality standard" },
+      { "value": "CMMI", "label": "CMMI", "description": "Capability maturity model" },
+      { "value": "custom", "label": "Custom", "description": "Custom quality system" }
+    ]
+  },
+  "defense_teams_nlp": {
+    "id": "defense_teams_nlp",
+    "type": "enriched_text",
+    "section": "teams",
+    "industries": ["defense"],
+    "promptContext": "teams_departments",
+    "prompt": "Describe your team structure",
+    "helper": "Tell us about your engineering teams, program managers, quality assurance, etc.",
+    "placeholder": "We have engineering teams for design and development, program managers for contracts...",
+    "required": true,
+    "mapsTo": "teams.departments",
+    "minLength": 20,
+    "maxLength": 300,
+    "clarificationOptions": {
+      "question": "How is your team organized?",
+      "options": [
+        { "value": "by_program", "label": "By Program/Contract" },
+        { "value": "by_function", "label": "By Function/Discipline" },
+        { "value": "matrix", "label": "Matrix Organization" }
+      ]
+    }
+  },
+  "defense_analytics_audience": {
+    "id": "defense_analytics_audience",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "industries": ["defense"],
+    "prompt": "Who will use dashboards?",
+    "helper": "Select all that apply.",
+    "required": true,
+    "mapsTo": "analytics.audience",
+    "multiSelect": true,
+    "options": [
+      { "value": "exec", "label": "Executives", "description": "Contract portfolio, financials" },
+      { "value": "ops", "label": "Program Managers", "description": "Program tracking, milestones" },
+      { "value": "floor", "label": "Engineers/Teams", "description": "Technical progress, deliverables" }
+    ]
+  },
+  "defense_metrics": {
+    "id": "defense_metrics",
+    "type": "dynamic_list",
+    "section": "analytics",
+    "industries": ["defense"],
+    "prompt": "What metrics matter most to you?",
+    "helper": "List the KPIs you track or want to track.",
+    "placeholder": "e.g., Schedule performance, Cost performance, Deliverables on-time",
+    "required": true,
+    "mapsTo": "analytics.keyMetrics",
+    "maxItems": 15
+  },
+  "defense_chart_preference": {
+    "id": "defense_chart_preference",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "industries": ["defense"],
+    "prompt": "What type of charts do you prefer?",
+    "helper": "We'll design your dashboards accordingly.",
+    "required": true,
+    "mapsTo": "analytics.chartPreference",
+    "options": [
+      { "value": "trends", "label": "Trend charts", "description": "Track metrics over time" },
+      { "value": "comparison", "label": "Comparison charts", "description": "Compare programs or contracts" },
+      { "value": "metrics", "label": "Metrics & gauges", "description": "Key program indicators" }
+    ]
+  }
+}
+

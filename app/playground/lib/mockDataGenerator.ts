@@ -1,67 +1,88 @@
 /**
  * Mock Data Generator for AI Playground
- * Generates realistic data based on component type and prompt context
- * Uses intelligent data source mapping for contextual mock data
+ * Uses consistent mock database for realistic filtering/sorting/limiting
  */
 
 import type { BlockType } from "@/lib/grid-v2/types"
 import { detectDataSource, type DataSource } from './dataSourceMapper'
+import { queryMockData, type QueryOptions } from './mockDatabase'
 
 /**
  * Generate mock data for a chart component
+ * Now uses the mock database for consistent data
  */
-export function generateChartData(prompt: string, dataSource?: DataSource) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  const source = dataSource || detectDataSource(prompt)
-  
-  // Detect if it's related to sales, revenue, or growth
-  const isGrowth = /growth|increase|rising/.test(prompt.toLowerCase())
-  const isDecline = /decline|decrease|falling/.test(prompt.toLowerCase())
-  
-  // Determine base value based on data source
-  let baseValue = 100
-  
-  switch (source.type) {
-    case 'revenue':
-    case 'sales':
-      baseValue = 50000
-      break
-    case 'orders':
-      baseValue = 250
-      break
-    case 'customers':
-    case 'users':
-      baseValue = 150
-      break
-    case 'products':
-      baseValue = 45
-      break
-    case 'transactions':
-      baseValue = 320
-      break
-    default:
-      baseValue = 100
-  }
-  
-  // Generate trend data
-  const data = months.slice(0, 6).map((month, index) => {
-    let value = baseValue
+export function generateChartData(prompt: string, dataSource?: DataSource, limit?: number) {
+  try {
+    const source = dataSource || detectDataSource(prompt)
     
-    if (isGrowth) {
-      value += (index * baseValue * 0.15) + (Math.random() * baseValue * 0.1)
-    } else if (isDecline) {
-      value -= (index * baseValue * 0.1) + (Math.random() * baseValue * 0.05)
-    } else {
-      value += ((Math.random() - 0.5) * baseValue * 0.2)
+    // Map data source type to mock database
+    let dbSource: 'sales' | 'revenue' | 'orders' | 'customers' = 'sales'
+    switch (source.type) {
+      case 'revenue':
+        dbSource = 'revenue'
+        break
+      case 'sales':
+        dbSource = 'sales'
+        break
+      case 'orders':
+        dbSource = 'orders'
+        break
+      case 'customers':
+      case 'users':
+        dbSource = 'customers'
+        break
+      default:
+        dbSource = 'sales'
     }
     
-    return {
+    // Query the mock database
+    const queryOptions: QueryOptions = {
+      limit: limit || 6,
+      sortBy: 'date',
+      sortOrder: 'asc'
+    }
+    
+    console.log(`📊 Querying ${dbSource} with options:`, queryOptions)
+    const records = queryMockData(dbSource, queryOptions)
+    
+    if (!records || records.length === 0) {
+      console.warn(`⚠️  No records found for ${dbSource}, using fallback`)
+      throw new Error('No records found')
+    }
+    
+    // Transform to chart format and validate
+    const data = records.map(record => ({
+      date: record.month || 'Unknown',
+      value: record.value || 0
+    }))
+    
+    // Validate that we have valid data
+    const hasInvalidData = data.some(item => item.value === undefined || item.date === undefined)
+    if (hasInvalidData) {
+      console.error('❌ Invalid data detected:', data)
+      throw new Error('Generated data contains undefined values')
+    }
+    
+    console.log(`✅ Generated ${data.length} chart data points from ${dbSource}`)
+    console.log('   Sample data:', data.slice(0, 3))
+    
+    return data
+  } catch (error) {
+    console.error('❌ Error generating chart data:', error)
+    console.log('🔄 Falling back to simple mock data')
+    
+    // Fallback: Generate simple mock data
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const count = Math.min(limit || 6, months.length)
+    const fallbackData = months.slice(0, count).map((month, i) => ({
       date: month,
-      value: Math.round(value)
-    }
-  })
-  
-  return data
+      value: Math.round(45000 + (i * 2000) + (Math.random() * 5000))
+    }))
+    
+    console.log('✅ Fallback data generated:', fallbackData.length, 'points')
+    console.log('   Sample:', fallbackData.slice(0, 2))
+    return fallbackData
+  }
 }
 
 /**

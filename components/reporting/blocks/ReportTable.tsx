@@ -52,3 +52,9 @@ export default function ReportTable({ data, columns, title }: ReportTableProps) 
   );
 }
 
+
+
+
+
+
+

@@ -1,0 +1,267 @@
+{
+  "manufacturing_subindustry": {
+    "id": "manufacturing_subindustry",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "What type of manufacturing?",
+    "helper": "This helps us understand your specific needs.",
+    "required": true,
+    "mapsTo": "company.subIndustry",
+    "industries": ["manufacturing"],
+    "options": [
+      { "value": "fashion", "label": "Fashion & Apparel", "description": "Clothing, textiles, garments" },
+      { "value": "general", "label": "Other Manufacturing", "description": "Consumer goods, furniture, electronics, etc." }
+    ]
+  },
+  "manufacturing_intro_nlp": {
+    "id": "manufacturing_intro_nlp",
+    "type": "enriched_text",
+    "section": "company",
+    "industries": ["manufacturing"],
+    "promptContext": "company_profile",
+    "prompt": "Tell us about your manufacturing business",
+    "subtitle": "What do you make? Where are you located? What's your capacity?",
+    "helper": "Describe your business in a few sentences. We'll help you expand this with relevant details.",
+    "placeholder": "We manufacture denim garments in Istanbul...",
+    "required": true,
+    "mapsTo": "company.*",
+    "minLength": 20,
+    "maxLength": 500,
+    "clarificationOptions": {
+      "question": "What do you primarily manufacture?",
+      "options": [
+        { "value": "apparel_garments", "label": "Finished Garments" },
+        { "value": "apparel_fabric", "label": "Fabric/Textiles" },
+        { "value": "consumer_goods", "label": "Consumer Products" },
+        { "value": "industrial_parts", "label": "Industrial Components" }
+      ]
+    }
+  },
+  "manufacturing_products": {
+    "id": "manufacturing_products",
+    "type": "dynamic_list",
+    "section": "items",
+    "industries": ["manufacturing"],
+    "prompt": "What product categories do you manufacture?",
+    "helper": "List the main types of products you make. You can add more later.",
+    "placeholder": "e.g., Jeans, Jackets, T-Shirts",
+    "required": true,
+    "mapsTo": "items.categories",
+    "maxItems": 15,
+    "skipIfCommitted": true
+  },
+  "manufacturing_production_model": {
+    "id": "manufacturing_production_model",
+    "type": "multiple_choice",
+    "section": "operations",
+    "industries": ["manufacturing"],
+    "prompt": "What's your production model?",
+    "helper": "How do you handle orders and inventory?",
+    "required": true,
+    "mapsTo": "operations.model",
+    "skipIfCommitted": true,
+    "options": [
+      { "value": "MTO", "label": "Make-to-Order", "description": "Start production after receiving orders" },
+      { "value": "MTS", "label": "Make-to-Stock", "description": "Build inventory for anticipated demand" },
+      { "value": "hybrid", "label": "Hybrid", "description": "Mix of both approaches" }
+    ]
+  },
+  "manufacturing_capacity": {
+    "id": "manufacturing_capacity",
+    "type": "text_input",
+    "section": "operations",
+    "industries": ["manufacturing"],
+    "prompt": "What's your monthly production capacity?",
+    "helper": "Approximate number of units you can produce per month.",
+    "placeholder": "10000",
+    "required": true,
+    "mapsTo": "operations.monthlyCapacity",
+    "skipIfCommitted": true
+  },
+  "manufacturing_shifts": {
+    "id": "manufacturing_shifts",
+    "type": "multiple_choice",
+    "section": "operations",
+    "industries": ["manufacturing"],
+    "prompt": "How many shifts do you run per day?",
+    "required": true,
+    "mapsTo": "operations.shiftsPerDay",
+    "skipIfCommitted": true,
+    "options": [
+      { "value": 1, "label": "1 shift", "description": "8 hours per day" },
+      { "value": 2, "label": "2 shifts", "description": "16 hours per day" },
+      { "value": 3, "label": "3 shifts", "description": "24 hours per day" }
+    ]
+  },
+  "manufacturing_seasonality": {
+    "id": "manufacturing_seasonality",
+    "type": "yes_no",
+    "section": "operations",
+    "industries": ["manufacturing"],
+    "prompt": "Do you have seasonal demand patterns?",
+    "helper": "Some businesses experience higher demand during certain months.",
+    "required": true,
+    "mapsTo": "operations.seasonality"
+  },
+  "fashion_garment_types": {
+    "id": "fashion_garment_types",
+    "type": "dynamic_list",
+    "section": "items",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "prompt": "What types of garments do you produce?",
+    "helper": "List the specific garment categories you manufacture.",
+    "placeholder": "e.g., Jeans, Jackets, Dresses",
+    "required": true,
+    "mapsTo": "manufacturingExt.fashion.garmentTypes",
+    "maxItems": 20
+  },
+  "fashion_variants": {
+    "id": "fashion_variants",
+    "type": "yes_no",
+    "section": "items",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "prompt": "Do you produce multiple sizes and colors?",
+    "helper": "We'll help you set up size ranges and color variants.",
+    "required": true,
+    "mapsTo": "manufacturingExt.fashion.sizeRanges"
+  },
+  "fashion_seasonal": {
+    "id": "fashion_seasonal",
+    "type": "yes_no",
+    "section": "items",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "prompt": "Do you work with seasonal collections?",
+    "helper": "Spring/Summer, Fall/Winter collections",
+    "required": true,
+    "mapsTo": "manufacturingExt.fashion.seasonalCollections.enabled"
+  },
+  "manufacturing_items_complexity": {
+    "id": "manufacturing_items_complexity",
+    "type": "yes_no",
+    "section": "items",
+    "industries": ["manufacturing"],
+    "prompt": "Do your products have components or sub-parts?",
+    "helper": "For example, a garment might have fabric, zippers, buttons, and thread as components.",
+    "required": true,
+    "mapsTo": "items.components"
+  },
+  "manufacturing_tracking_level": {
+    "id": "manufacturing_tracking_level",
+    "type": "multiple_choice",
+    "section": "items",
+    "industries": ["manufacturing"],
+    "prompt": "How do you track items?",
+    "helper": "Choose the level of granularity for your tracking.",
+    "required": true,
+    "mapsTo": "items.trackingLevel",
+    "options": [
+      { "value": "unit", "label": "Per unit", "description": "Each item has a unique ID (serial number)" },
+      { "value": "batch", "label": "Per batch", "description": "Groups of items tracked together (lot numbers)" },
+      { "value": "order", "label": "Per order", "description": "Track by order only (no individual IDs)" }
+    ]
+  },
+  "manufacturing_teams_nlp": {
+    "id": "manufacturing_teams_nlp",
+    "type": "enriched_text",
+    "section": "teams",
+    "industries": ["manufacturing"],
+    "promptContext": "teams_departments",
+    "prompt": "Describe your team structure",
+    "helper": "Tell us about your departments, roles, and how your team is organized.",
+    "placeholder": "We have a production team, quality team, warehouse team, and admin...",
+    "required": true,
+    "mapsTo": "teams.departments",
+    "minLength": 20,
+    "maxLength": 300,
+    "clarificationOptions": {
+      "question": "What's your primary focus?",
+      "options": [
+        { "value": "production_focused", "label": "Production Operations" },
+        { "value": "quality_focused", "label": "Quality Assurance" },
+        { "value": "balanced", "label": "Balanced Teams" }
+      ]
+    }
+  },
+  "manufacturing_floor_app": {
+    "id": "manufacturing_floor_app",
+    "type": "yes_no",
+    "section": "teams",
+    "industries": ["manufacturing"],
+    "prompt": "Will floor workers scan items and update status?",
+    "helper": "Enable the mobile Floor App for workers to track items in real-time.",
+    "required": true,
+    "mapsTo": "teams.floorAppEnabled"
+  },
+  "manufacturing_sites_mapping": {
+    "id": "manufacturing_sites_mapping",
+    "type": "yes_no",
+    "section": "sites",
+    "industries": ["manufacturing"],
+    "prompt": "Do you want to map your facility layout?",
+    "helper": "Floor plans help visualize where work happens and track items by location.",
+    "required": true,
+    "mapsTo": "sites"
+  },
+  "manufacturing_sites_builder": {
+    "id": "manufacturing_sites_builder",
+    "type": "floor_plan_builder",
+    "section": "sites",
+    "industries": ["manufacturing"],
+    "prompt": "Paint your floor plan",
+    "helper": "Click zones to designate areas: Production, QA, Storage, Shipping, Office.",
+    "required": true,
+    "mapsTo": "sites.floors",
+    "conditional": {
+      "dependsOn": "manufacturing_sites_mapping",
+      "showIf": true
+    }
+  },
+  "manufacturing_analytics_audience": {
+    "id": "manufacturing_analytics_audience",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "industries": ["manufacturing"],
+    "prompt": "Who will use dashboards?",
+    "helper": "Select all that apply. We'll customize views for each audience.",
+    "required": true,
+    "mapsTo": "analytics.audience",
+    "multiSelect": true,
+    "options": [
+      { "value": "exec", "label": "Executives", "description": "High-level KPIs and trends" },
+      { "value": "ops", "label": "Operations", "description": "Detailed metrics and tables" },
+      { "value": "floor", "label": "Floor supervisors", "description": "Real-time status updates" }
+    ]
+  },
+  "manufacturing_metrics": {
+    "id": "manufacturing_metrics",
+    "type": "dynamic_list",
+    "section": "analytics",
+    "industries": ["manufacturing"],
+    "prompt": "What metrics matter most to you?",
+    "helper": "List the KPIs you track or want to track.",
+    "placeholder": "e.g., On-time delivery, Defect rate, Throughput",
+    "required": true,
+    "mapsTo": "analytics.keyMetrics",
+    "maxItems": 15,
+    "skipIfCommitted": true
+  },
+  "manufacturing_chart_preference": {
+    "id": "manufacturing_chart_preference",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "industries": ["manufacturing"],
+    "prompt": "What type of charts do you prefer?",
+    "helper": "We'll design your dashboards accordingly.",
+    "required": true,
+    "mapsTo": "analytics.chartPreference",
+    "options": [
+      { "value": "trends", "label": "Trend charts", "description": "Line and area charts for tracking over time" },
+      { "value": "comparison", "label": "Comparison charts", "description": "Bar and column charts for comparing values" },
+      { "value": "metrics", "label": "Metrics & gauges", "description": "Large numbers and progress indicators" }
+    ]
+  }
+}
+

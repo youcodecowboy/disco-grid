@@ -29,6 +29,8 @@ export function AIGenerationProgress({ isGenerating, onComplete }: AIGenerationP
       return
     }
     
+    console.log('🎬 [Progress] Animation started')
+    
     let stepTimer: NodeJS.Timeout
     let progressTimer: NodeJS.Timeout
     let currentStepIndex = 0
@@ -55,14 +57,17 @@ export function AIGenerationProgress({ isGenerating, onComplete }: AIGenerationP
           currentStepIndex++
           
           if (currentStepIndex >= GENERATION_STEPS.length) {
+            console.log('✅ [Progress] All steps complete, showing success')
             setProgress(100)
             setIsComplete(true)
             
             // Call onComplete after showing success state
             setTimeout(() => {
+              console.log('🎉 [Progress] Calling onComplete callback')
               onComplete?.()
             }, 500)
           } else {
+            console.log(`📍 [Progress] Step ${currentStepIndex} complete, moving to next`)
             runStep()
           }
         }, step.duration)

@@ -110,3 +110,9 @@ export default function ChartConfig({ onAdd }: ChartConfigProps) {
   );
 }
 
+
+
+
+
+
+

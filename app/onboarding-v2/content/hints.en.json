@@ -1,0 +1,78 @@
+{
+  "company_intro_nlp": {
+    "why": "This helps us understand your business and pre-configure relevant features.",
+    "examples": [
+      "We manufacture custom furniture in Portland. We complete about 50 pieces per month with a team of 12 craftspeople.",
+      "We're a construction company based in Dubai. We handle commercial projects up to $5M with 80 employees across 3 sites.",
+      "We run a logistics hub in Singapore, processing 5,000 shipments daily with automated sorting systems."
+    ],
+    "tips": "Include: what you make/do, where you're located, your volume/capacity, and team size."
+  },
+  "operations_model_nlp": {
+    "why": "Understanding your production model helps us configure order workflows and inventory tracking.",
+    "examples": [
+      "We work make-to-order. Each customer submits specifications and we start production after approval.",
+      "We maintain stock inventory and replenish based on forecasts. Production runs in batches of 500.",
+      "We do both: custom orders for large clients and stock items for quick fulfillment."
+    ],
+    "tips": "Mention whether you work from orders or maintain inventory, typical batch sizes, and lead times."
+  },
+  "items_types_nlp": {
+    "why": "This defines the categories and structure of items in your system.",
+    "examples": [
+      "Denim jeans, jackets, shirts. We also track raw denim fabric, zippers, buttons, thread.",
+      "Residential windows, commercial curtain walls, custom glass panels. Components include frames, glass panes, seals.",
+      "Electronics assemblies: PCBs, connectors, enclosures, cable harnesses."
+    ],
+    "tips": "List both finished products and materials/components you manage."
+  },
+  "items_sku_builder": {
+    "why": "Custom attributes let you track exactly what matters to your business.",
+    "examples": [
+      "For apparel: Fabric Type, Color, Size, Wash Type, Lot Number",
+      "For electronics: Part Number, Voltage Rating, Certification, Supplier, Lead Time",
+      "For construction: Material Grade, Dimensions, Fire Rating, Installation Date"
+    ],
+    "tips": "Think about what information you need when looking at an item. Start simple and add more as needed."
+  },
+  "workflow_process_nlp": {
+    "why": "Your workflow stages drive the production tracking and status updates.",
+    "examples": [
+      "Receive fabric → Cut patterns → Sew garments → Wash & finish → QA inspection → Pack → Ship",
+      "Site prep → Foundation pour → Framing → Systems install → Finish work → Final inspection",
+      "Receive parts → Kitting → Assembly → Testing → Packaging → Shipping"
+    ],
+    "tips": "List stages in order. Include quality checks if you have them. Use action words (verb + noun)."
+  },
+  "teams_structure_nlp": {
+    "why": "Team structure determines access permissions and task assignments.",
+    "examples": [
+      "Operations team runs production, Quality team does inspections, Warehouse handles materials and shipping, Admin does planning.",
+      "Project managers oversee jobs, Site supervisors run crews, Safety officer monitors compliance, Procurement handles vendors.",
+      "Warehouse staff picks and packs, Logistics coordinates carriers, Customer service tracks deliveries."
+    ],
+    "tips": "List departments/teams and briefly describe their responsibilities."
+  },
+  "analytics_metrics_nlp": {
+    "why": "We'll pre-configure dashboards with the metrics you care about most.",
+    "examples": [
+      "On-time delivery rate, first-pass quality yield, WIP age, daily throughput",
+      "Schedule variance, safety incidents, equipment utilization, budget vs actual",
+      "Average delivery time, order fill rate, inventory turnover, carrier performance"
+    ],
+    "tips": "List 4-8 key metrics. These will be your default dashboard."
+  },
+  "sites_floor_builder": {
+    "why": "Floor plans enable location-based tracking and visual workflows.",
+    "tips": "Click zones to paint areas. Use Production for work areas, QA for quality zones, Storage for inventory, Shipping for outbound, and Office for admin spaces."
+  },
+  "playbooks_task_selection": {
+    "why": "Automatic tasks ensure nothing falls through the cracks when orders are created.",
+    "tips": "Select tasks that happen for every order. You can customize the task list for specific order types later."
+  },
+  "review": {
+    "why": "Take a moment to verify everything. Changes are easy after generation too.",
+    "tips": "Click any section to jump back and edit. Low-confidence items (orange) may need review."
+  }
+}
+

@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button"
 import BlockEditModal from "@/components/BlockEditModal"
 import BlockRenderer from "@/components/BlockRenderer"
 import Sidebar from "@/components/Sidebar"
+import { ComponentRefinementInput } from "@/components/blocks/ComponentRefinementInput"
+import { AnimatePresence, motion } from "framer-motion"
+import { generateChartData, generateTableData, generateMetricData } from "@/app/playground/lib/mockDataGenerator"
 
 // Common icons used across pages
 const SearchIcon = ({ className }: { className?: string }) => (
@@ -55,6 +58,12 @@ const BotIcon = () => (
     <path d="M20 14h2" />
     <path d="M15 13v2" />
     <path d="M9 13v2" />
+  </svg>
+)
+
+const Wand2Icon = () => (
+  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
   </svg>
 )
 
@@ -173,6 +182,9 @@ export default function PageTemplate({
   // Inline title editing state
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null)
   const [titleInput, setTitleInput] = useState<string>("")
+  // Component refinement state
+  const [refiningBlock, setRefiningBlock] = useState<string | null>(null)
+  const [showRefinementBadge, setShowRefinementBadge] = useState<Record<string, boolean>>({})
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null)
   const [dragPreview, setDragPreview] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const [savedState, setSavedState] = useState<DashboardState | null>(null)
@@ -449,6 +461,134 @@ export default function PageTemplate({
         },
       },
     }))
+  }
+
+  const handleComponentRefinement = (blockId: string, refinement: any) => {
+    console.log('🔧 Applying refinement:', blockId, refinement)
+    
+    setState(prev => {
+      const currentBlock = prev.blocks[blockId]
+      if (!currentBlock) {
+        console.error('❌ Block not found:', blockId)
+        return prev
+      }
+
+      console.log('📦 Current block before refinement:', currentBlock)
+
+      // Merge config changes
+      let updatedConfig = {
+        ...currentBlock.props,
+        ...refinement.configChanges,
+        _aiRefinements: [
+          ...(currentBlock.props?._aiRefinements || []),
+          {
+            prompt: refinement.refinementPrompt,
+            modificationType: refinement.modificationType,
+            reasoning: refinement.reasoning,
+            timestamp: new Date().toISOString()
+          }
+        ],
+        _lastRefinement: Date.now() // Force React to detect change
+      }
+
+      // Regenerate mock data if the refinement changes filters or limits
+      const componentType = refinement.newComponentType || currentBlock.type
+      if (refinement.configChanges && Object.keys(refinement.configChanges).length > 0) {
+        // Determine limit from refinement or existing config
+        const limit = refinement.configChanges.limit || updatedConfig.limit
+        console.log('🔄 Regenerating mock data for refinement...')
+        console.log('   Config changes:', refinement.configChanges)
+        console.log('   Limit:', limit)
+        console.log('   Component type:', componentType)
+        
+        // Regenerate data based on new config
+        if (componentType === 'v3.chart.area' || componentType === 'v3.chart.bar') {
+          // Generate chart data with the specified limit
+          const chartData = generateChartData(refinement.refinementPrompt, updatedConfig.dataSource, limit)
+          updatedConfig = { ...updatedConfig, data: chartData }
+          console.log(`✨ Regenerated ${chartData.length} data points for ${componentType}`)
+        } else if (componentType === 'v3.chart.donut') {
+          // Generate chart data with the specified limit and transform for donut
+          console.log('🍩 [Refinement] Regenerating donut data with limit:', limit)
+          const chartData = generateChartData(refinement.refinementPrompt, updatedConfig.dataSource, limit)
+          console.log('🍩 [Refinement] Raw chart data:', chartData)
+          
+          // Transform and validate
+          const donutData = chartData.map((item: any) => ({
+            name: item.date || 'Unknown',
+            value: typeof item.value === 'number' ? item.value : 0
+          }))
+          
+          // Validate no undefined values
+          const hasInvalid = donutData.some(d => 
+            d.name === undefined || d.value === undefined || isNaN(d.value)
+          )
+          
+          if (hasInvalid) {
+            console.error('❌ [Refinement Donut] Invalid data:', donutData)
+          } else {
+            console.log(`✅ [Refinement] Generated ${donutData.length} valid donut data points`)
+            console.log('   Sample:', donutData.slice(0, 2))
+          }
+          
+          updatedConfig = {
+            ...updatedConfig,
+            data: donutData
+          }
+        } else if (componentType === 'v3.table') {
+          const tableData = generateTableData(refinement.refinementPrompt, updatedConfig.dataSource)
+          updatedConfig = {
+            ...updatedConfig,
+            columns: tableData.columns.map((col: any) => col.name),
+            rows: (limit ? tableData.data.slice(0, limit) : tableData.data).map((row: any) => 
+              tableData.columns.map((col: any) => {
+                const value = row[col.id]
+                if (value === null || value === undefined) return ''
+                if (typeof value === 'number') return value.toLocaleString()
+                return String(value)
+              })
+            )
+          }
+          console.log(`✨ Regenerated ${updatedConfig.rows.length} table rows`)
+        }
+      }
+
+      // Update block (use newComponentType/newTitle if provided, otherwise keep current)
+      const updatedBlock = {
+        ...currentBlock,
+        type: componentType,
+        title: refinement.newTitle !== null ? refinement.newTitle : currentBlock.title,
+        props: updatedConfig
+      }
+
+      console.log('✅ Updated block:', updatedBlock)
+      console.log('🔄 Title change:', currentBlock.title, '=>', updatedBlock.title)
+
+      const newState = {
+        ...prev,
+        blocks: {
+          ...prev.blocks,
+          [blockId]: updatedBlock
+        }
+      }
+
+      console.log('💾 New state will save to localStorage')
+      return newState
+    })
+
+    // Show refinement badge
+    setShowRefinementBadge(prev => ({ ...prev, [blockId]: true }))
+    
+    // Hide badge after 5 seconds
+    setTimeout(() => {
+      setShowRefinementBadge(prev => ({ ...prev, [blockId]: false }))
+    }, 5000)
+    
+    // Close refinement input after a brief delay to see the success message
+    setTimeout(() => {
+      setRefiningBlock(null)
+      console.log('🎉 Refinement complete!')
+    }, 100)
   }
 
   const handleDragStart = (e: React.DragEvent, blockId: string) => {
@@ -898,6 +1038,24 @@ export default function PageTemplate({
                                 </div>
                               )
                             })()}
+                            {/* Refine Button (for AI-generated components) */}
+                            {block.props?._aiGenerated && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={`h-7 w-7 pointer-events-auto ${
+                                  isFrozen ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-100'
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (!isFrozen) setRefiningBlock(item.i)
+                                }}
+                                title="Refine with AI"
+                                disabled={isFrozen}
+                              >
+                                <Wand2Icon />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -993,15 +1151,16 @@ export default function PageTemplate({
                             props: {
                               ...block.props,
                               onGenerate: async (result: any) => {
-                                // Use the suggested title from the match result, or fall back to contextual generation
-                                const title = result.suggestedTitle || result.prompt
+                                console.log('🎯 [PageTemplate] onGenerate called with result:', result)
                                 
-                                // Generate smart mock data based on data source
-                                let mockProps: any = {}
-                                
-                                // Import mock data generators
-                                const { generateChartData, generateTableData, generateMetricData } = 
-                                  require('@/app/playground/lib/mockDataGenerator')
+                                try {
+                                  // Use LLM-generated title (or fallback to suggested/prompt)
+                                  const title = result.title || result.suggestedTitle || result.prompt
+                                  console.log('📝 [PageTemplate] Component title:', title)
+                                  console.log('🔧 [PageTemplate] Component type:', result.componentType)
+                                  
+                                  // Generate smart mock data based on data source
+                                  let mockProps: any = {}
                                 
                                 const dataSource = result.dataSource
                                 
@@ -1012,13 +1171,28 @@ export default function PageTemplate({
                                   mockProps = { data: chartData }
                                 } else if (result.componentType === 'v3.chart.donut') {
                                   // For donut charts, transform the data for category distribution
+                                  console.log('🍩 [Donut] Generating chart data...')
                                   const chartData = generateChartData(result.prompt, dataSource)
-                                  mockProps = {
-                                    data: chartData.map((item: any) => ({
-                                      name: item.date,
-                                      value: item.value
-                                    }))
+                                  console.log('🍩 [Donut] Raw chart data:', chartData)
+                                  
+                                  // Transform and validate
+                                  const donutData = chartData.map((item: any) => ({
+                                    name: item.date || 'Unknown',
+                                    value: typeof item.value === 'number' ? item.value : 0
+                                  }))
+                                  
+                                  // Validate no undefined values
+                                  const hasInvalid = donutData.some(d => 
+                                    d.name === undefined || d.value === undefined || isNaN(d.value)
+                                  )
+                                  
+                                  if (hasInvalid) {
+                                    console.error('❌ [Donut] Invalid data detected:', donutData)
+                                    throw new Error('Donut data contains invalid values')
                                   }
+                                  
+                                  console.log('✅ [Donut] Validated data:', donutData)
+                                  mockProps = { data: donutData }
                                 } else if (result.componentType === 'v3.table') {
                                   const tableData = generateTableData(result.prompt, dataSource)
                                   // Transform to v3 table format (columns: string[], rows: string[][])
@@ -1152,7 +1326,8 @@ export default function PageTemplate({
                                   mockProps = {}
                                 }
 
-                                // Update the state directly
+                                // Update the state directly with LLM config and metadata
+                                console.log('💾 [PageTemplate] Creating block with props:', mockProps)
                                 setState(prev => ({
                                   ...prev,
                                   blocks: {
@@ -1161,10 +1336,26 @@ export default function PageTemplate({
                                       id: item.i,
                                       type: result.componentType,
                                       title,
-                                      props: mockProps
+                                      props: {
+                                        ...mockProps,
+                                        ...result.config, // Include LLM-generated config
+                                        _aiGenerated: true,
+                                        _aiReasoning: result.reasoning,
+                                        _aiProvenance: result.provenance,
+                                        _aiModel: result.model,
+                                        _aiPrompt: result.prompt
+                                      }
                                     }
                                   }
                                 }))
+                                console.log('✅ [PageTemplate] Block created successfully!')
+                                
+                                } catch (error) {
+                                  console.error('❌ [PageTemplate] Error in onGenerate:', error)
+                                  console.error('   Stack:', error instanceof Error ? error.stack : 'No stack')
+                                  console.error('   Result that caused error:', result)
+                                  alert(`Failed to generate component: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                                }
                               }
                             }
                           } : block
@@ -1173,9 +1364,52 @@ export default function PageTemplate({
                             <div
                               className={`${
                                 isMetric || isTable || isConstruction || isWorksite || isAnalytics || isItems ? "p-0" : "p-4"
-                              } flex-1 min-h-0 flex flex-col ${allowScroll ? "overflow-auto" : "overflow-hidden"}`}
+                              } flex-1 min-h-0 flex flex-col ${allowScroll ? "overflow-auto" : "overflow-hidden"} relative`}
                             >
                               <BlockRenderer block={enhancedBlock} showFilters={showFilters} />
+                              
+                              {/* Refinement Config Display (shows active filters/modifications) */}
+                              <AnimatePresence>
+                                {block.props?._aiRefinements && block.props._aiRefinements.length > 0 && showRefinementBadge[item.i] && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute bottom-2 left-2 right-2 p-2 bg-purple-50/95 backdrop-blur-sm border border-purple-200 rounded text-xs space-y-1 shadow-lg"
+                                  >
+                                    <div className="font-medium text-purple-900 flex items-center gap-1">
+                                      <Wand2Icon />
+                                      <span>AI Refinements Applied:</span>
+                                    </div>
+                                    {block.props._aiRefinements.slice(-2).map((ref: any, idx: number) => (
+                                      <div key={idx} className="text-purple-700 pl-5">
+                                        • {ref.prompt}
+                                      </div>
+                                    ))}
+                                    {block.props._aiRefinements.length > 2 && (
+                                      <div className="text-purple-600 pl-5 italic">
+                                        +{block.props._aiRefinements.length - 2} more
+                                      </div>
+                                    )}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                              
+                              {/* Refinement Input Overlay */}
+                              <AnimatePresence>
+                                {refiningBlock === item.i && (
+                                  <ComponentRefinementInput
+                                    blockId={item.i}
+                                    currentComponent={{
+                                      type: block.type,
+                                      title: block.title,
+                                      config: block.props || {}
+                                    }}
+                                    onRefine={(result) => handleComponentRefinement(item.i, result)}
+                                    onCancel={() => setRefiningBlock(null)}
+                                  />
+                                )}
+                              </AnimatePresence>
                             </div>
                           )
                         })()}

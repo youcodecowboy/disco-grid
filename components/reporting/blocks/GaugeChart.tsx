@@ -85,3 +85,9 @@ export default function GaugeChart({ value, max, title, label, colorZones }: Gau
   );
 }
 
+
+
+
+
+
+

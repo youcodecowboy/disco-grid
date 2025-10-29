@@ -340,3 +340,9 @@ const handleSaveTemplate = (templateData: TemplateData) => {
 - ✅ Sticky footer always accessible
 - ✅ Professional, polished UI
 
+
+
+
+
+
+

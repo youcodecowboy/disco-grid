@@ -1,6 +1,11 @@
 /**
  * Keyword Matcher for AI Playground
- * Phase 1: Simple keyword matching for 3 core components
+ * 
+ * NOTE: This is now a FALLBACK system. Primary component selection
+ * is done via LLM (see /api/playground/generate-component).
+ * This matcher is used when LLM fails or is unavailable.
+ * 
+ * Phase 1: Simple keyword matching for 22+ component types
  */
 
 import type { BlockType } from "@/lib/grid-v2/types"

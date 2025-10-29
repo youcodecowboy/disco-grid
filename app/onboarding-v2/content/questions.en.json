@@ -1,0 +1,431 @@
+{
+  "welcome": {
+    "id": "welcome",
+    "type": "welcome_screen",
+    "section": "welcome",
+    "prompt": "Welcome to Groovy!",
+    "subtitle": "Let's build your perfect operations platform",
+    "helper": "This will take about 30 minutes. We'll ask questions about your business to create a customized workspace.",
+    "required": false,
+    "mapsTo": null,
+    "cta": "Let's get started"
+  },
+  "company_intro_nlp": {
+    "id": "company_intro_nlp",
+    "type": "nlp_input",
+    "section": "company",
+    "promptContext": "company_profile",
+    "prompt": "Tell us about your operations",
+    "subtitle": "What do you make? Where are you located? What's your capacity?",
+    "helper": "Describe your business in a few sentences. We'll extract key information automatically.",
+    "placeholder": "We are a denim manufacturing facility in Istanbul. We produce 10,000 garments per month across 2 production lines with a team of 45 people...",
+    "required": true,
+    "mapsTo": "company.*",
+    "minLength": 50,
+    "maxLength": 500
+  },
+  "company_confirm_extracted": {
+    "id": "company_confirm_extracted",
+    "type": "confirm_entities",
+    "section": "company",
+    "prompt": "Does this look correct?",
+    "helper": "We extracted this information from your description. Click any card to edit.",
+    "required": true,
+    "mapsTo": "company.*"
+  },
+  "company_name": {
+    "id": "company_name",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "What's your company name?",
+    "helper": "This will appear throughout your workspace.",
+    "placeholder": "Acme Manufacturing Co.",
+    "required": true,
+    "mapsTo": "company.name"
+  },
+  "company_logo": {
+    "id": "company_logo",
+    "type": "file_upload",
+    "section": "company",
+    "prompt": "Upload your company logo (optional)",
+    "helper": "Your logo will appear in the header and reports.",
+    "required": false,
+    "mapsTo": "company.logoUrl",
+    "accept": "image/*"
+  },
+  "company_size": {
+    "id": "company_size",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "How many people work at your company?",
+    "helper": "Select the range that best fits your team size.",
+    "required": true,
+    "mapsTo": "company.size",
+    "options": [
+      { "value": "<10", "label": "Fewer than 10", "description": "Small team" },
+      { "value": "10-50", "label": "10-50 people", "description": "Growing business" },
+      { "value": "50-200", "label": "50-200 people", "description": "Mid-size operation" },
+      { "value": "200+", "label": "More than 200", "description": "Large enterprise" }
+    ]
+  },
+  "company_facilities": {
+    "id": "company_facilities",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "Do you operate from a single site or multiple locations?",
+    "required": true,
+    "mapsTo": "company.facilities",
+    "options": [
+      { "value": "single", "label": "Single site", "description": "All operations in one location" },
+      { "value": "multi", "label": "Multiple sites", "description": "Operations across multiple locations" }
+    ]
+  },
+  "operations_model_nlp": {
+    "id": "operations_model_nlp",
+    "type": "nlp_input",
+    "section": "operations",
+    "promptContext": "operations",
+    "prompt": "Describe your production process",
+    "subtitle": "How do you operate? Make-to-order, make-to-stock, or both?",
+    "helper": "Tell us about your production model and how you handle orders.",
+    "placeholder": "We work on custom orders. Each order is unique and we start production only after receiving customer specifications. Lead time is typically 2-3 weeks...",
+    "required": true,
+    "mapsTo": "operations.*",
+    "minLength": 30,
+    "maxLength": 300
+  },
+  "operations_shifts": {
+    "id": "operations_shifts",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "How many shifts do you run per day?",
+    "required": false,
+    "mapsTo": "operations.shiftsPerDay",
+    "options": [
+      { "value": 1, "label": "1 shift", "description": "8 hours per day" },
+      { "value": 2, "label": "2 shifts", "description": "16 hours per day" },
+      { "value": 3, "label": "3 shifts", "description": "24 hours per day" },
+      { "value": 24, "label": "24/7", "description": "Continuous operation" }
+    ]
+  },
+  "operations_seasonality": {
+    "id": "operations_seasonality",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Do you have seasonal demand spikes?",
+    "helper": "Some businesses experience higher demand during certain months.",
+    "required": true,
+    "mapsTo": "operations.seasonality"
+  },
+  "operations_peak_months": {
+    "id": "operations_peak_months",
+    "type": "month_selector",
+    "section": "operations",
+    "prompt": "Which months are your peak season?",
+    "helper": "Select all months when demand is typically higher.",
+    "required": true,
+    "mapsTo": "operations.seasonality.months",
+    "conditional": {
+      "dependsOn": "operations_seasonality",
+      "showIf": true
+    }
+  },
+  "items_types_nlp": {
+    "id": "items_types_nlp",
+    "type": "nlp_input",
+    "section": "items",
+    "promptContext": "items_products",
+    "prompt": "What types of items do you produce or manage?",
+    "helper": "List the categories of products, materials, or assets you work with.",
+    "placeholder": "We make jeans, jackets, t-shirts, and other denim apparel. We also manage raw fabric, zippers, buttons, and other components...",
+    "required": true,
+    "mapsTo": "items.categories",
+    "minLength": 20,
+    "maxLength": 300
+  },
+  "items_sku_builder": {
+    "id": "items_sku_builder",
+    "type": "lego_attribute_builder",
+    "section": "items",
+    "prompt": "Let's define what makes up your items",
+    "subtitle": "Build your item structure",
+    "helper": "Start with the basics (name, code, quantity) and add custom attributes that matter to you.",
+    "required": true,
+    "mapsTo": "items.attributes",
+    "defaultAttributes": [
+      { "key": "name", "type": "text", "required": true },
+      { "key": "code", "type": "text", "required": true },
+      { "key": "quantity", "type": "number", "required": true }
+    ]
+  },
+  "items_complexity": {
+    "id": "items_complexity",
+    "type": "yes_no",
+    "section": "items",
+    "prompt": "Do your items have components or sub-parts?",
+    "helper": "For example, a jacket might have fabric, zippers, buttons, and thread as components.",
+    "required": true,
+    "mapsTo": "items.components"
+  },
+  "items_components_builder": {
+    "id": "items_components_builder",
+    "type": "lego_component_builder",
+    "section": "items",
+    "prompt": "Define your components",
+    "helper": "For each component type, specify its attributes.",
+    "required": false,
+    "mapsTo": "items.components",
+    "conditional": {
+      "dependsOn": "items_complexity",
+      "showIf": true
+    }
+  },
+  "items_tracking_level": {
+    "id": "items_tracking_level",
+    "type": "multiple_choice",
+    "section": "items",
+    "prompt": "How do you track items?",
+    "helper": "Choose the level of granularity for your tracking.",
+    "required": true,
+    "mapsTo": "items.trackingLevel",
+    "options": [
+      { "value": "unit", "label": "Per unit", "description": "Each item has a unique ID (serial number)" },
+      { "value": "batch", "label": "Per batch", "description": "Groups of items tracked together (lot numbers)" },
+      { "value": "order", "label": "Per order", "description": "Track by order only (no individual IDs)" }
+    ]
+  },
+  "workflow_process_nlp": {
+    "id": "workflow_process_nlp",
+    "type": "nlp_input",
+    "section": "workflows",
+    "promptContext": "workflows",
+    "prompt": "Describe your production process from start to finish",
+    "helper": "List the stages items go through. We'll create a workflow for you.",
+    "placeholder": "We receive fabric, cut patterns, sew garments, wash and finish them, do QA inspection, then package and ship...",
+    "required": true,
+    "mapsTo": "workflows.stages",
+    "minLength": 30,
+    "maxLength": 400
+  },
+  "workflow_stages_confirm": {
+    "id": "workflow_stages_confirm",
+    "type": "editable_list",
+    "section": "workflows",
+    "prompt": "Review and edit your workflow stages",
+    "helper": "Drag to reorder, click to edit details, or add/remove stages.",
+    "required": true,
+    "mapsTo": "workflows.stages"
+  },
+  "workflow_quality_control": {
+    "id": "workflow_quality_control",
+    "type": "yes_no",
+    "section": "workflows",
+    "prompt": "Do you have quality control checkpoints?",
+    "helper": "Quality checkpoints ensure items meet standards at key stages.",
+    "required": true,
+    "mapsTo": "workflows.*.quality"
+  },
+  "sites_want_mapping": {
+    "id": "sites_want_mapping",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do you want to map your physical facility?",
+    "helper": "Floor plans help visualize where work happens and track items by location.",
+    "required": true,
+    "mapsTo": "sites"
+  },
+  "sites_floor_builder": {
+    "id": "sites_floor_builder",
+    "type": "floor_plan_builder",
+    "section": "sites",
+    "prompt": "Paint your floor plan",
+    "helper": "Click zones to designate areas: Production, QA, Storage, Shipping, Office.",
+    "required": true,
+    "mapsTo": "sites.floors",
+    "conditional": {
+      "dependsOn": "sites_want_mapping",
+      "showIf": true
+    }
+  },
+  "sites_multiple_floors": {
+    "id": "sites_multiple_floors",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do you have multiple floors or buildings?",
+    "helper": "You can map up to 5 separate floors.",
+    "required": false,
+    "mapsTo": "sites.floors.length",
+    "conditional": {
+      "dependsOn": "sites_want_mapping",
+      "showIf": true
+    }
+  },
+  "teams_structure_nlp": {
+    "id": "teams_structure_nlp",
+    "type": "nlp_input",
+    "section": "teams",
+    "promptContext": "teams_departments",
+    "prompt": "Describe your team structure",
+    "helper": "Tell us about your departments, roles, and how your team is organized.",
+    "placeholder": "We have an operations team that handles production, a quality team for inspections, warehouse team for receiving and shipping, and admin team for planning...",
+    "required": true,
+    "mapsTo": "teams.departments",
+    "minLength": 20,
+    "maxLength": 300
+  },
+  "teams_floor_app": {
+    "id": "teams_floor_app",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Will you have floor workers scanning QR codes?",
+    "helper": "Enable the mobile Floor App for workers to scan items and update status.",
+    "required": true,
+    "mapsTo": "teams.floorAppEnabled"
+  },
+  "integrations_existing_systems": {
+    "id": "integrations_existing_systems",
+    "type": "yes_no",
+    "section": "integrations",
+    "prompt": "Do you use an ERP, MRP, or other business system?",
+    "helper": "We can integrate with your existing tools.",
+    "required": true,
+    "mapsTo": "integrations"
+  },
+  "integrations_system_selection": {
+    "id": "integrations_system_selection",
+    "type": "integration_grid",
+    "section": "integrations",
+    "prompt": "Which systems do you use?",
+    "helper": "Select all that apply. We'll prioritize integrations based on your needs.",
+    "required": true,
+    "mapsTo": "integrations.systems",
+    "conditional": {
+      "dependsOn": "integrations_existing_systems",
+      "showIf": true
+    }
+  },
+  "integrations_api_access": {
+    "id": "integrations_api_access",
+    "type": "yes_no",
+    "section": "integrations",
+    "prompt": "Do you need API access or webhooks?",
+    "helper": "API access lets you build custom integrations.",
+    "required": false,
+    "mapsTo": "integrations.apiAccess",
+    "conditional": {
+      "dependsOn": "integrations_existing_systems",
+      "showIf": true
+    }
+  },
+  "analytics_audience": {
+    "id": "analytics_audience",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "Who will use dashboards?",
+    "helper": "Select all that apply. We'll customize views for each audience.",
+    "required": true,
+    "mapsTo": "analytics.audience",
+    "multiSelect": true,
+    "options": [
+      { "value": "exec", "label": "Executives", "description": "High-level KPIs and trends" },
+      { "value": "ops", "label": "Operations", "description": "Detailed metrics and tables" },
+      { "value": "floor", "label": "Floor supervisors", "description": "Real-time status updates" },
+      { "value": "partners", "label": "External partners", "description": "Limited shared views" }
+    ]
+  },
+  "analytics_metrics_nlp": {
+    "id": "analytics_metrics_nlp",
+    "type": "nlp_input",
+    "section": "analytics",
+    "promptContext": "analytics_metrics",
+    "prompt": "What metrics matter most to you?",
+    "helper": "List the KPIs you track or want to track.",
+    "placeholder": "On-time delivery, defect rate, throughput, capacity utilization, WIP age...",
+    "required": true,
+    "mapsTo": "analytics.keyMetrics",
+    "minLength": 10,
+    "maxLength": 200
+  },
+  "analytics_chart_preference": {
+    "id": "analytics_chart_preference",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "What type of charts do you prefer?",
+    "helper": "We'll design your dashboards accordingly.",
+    "required": true,
+    "mapsTo": "analytics.chartPreference",
+    "options": [
+      { "value": "trends", "label": "Trend charts", "description": "Line and area charts for tracking over time" },
+      { "value": "comparison", "label": "Comparison charts", "description": "Bar and column charts for comparing values" },
+      { "value": "metrics", "label": "Metrics & gauges", "description": "Large numbers and progress indicators" },
+      { "value": "tables", "label": "Tables", "description": "Detailed data in rows and columns" }
+    ]
+  },
+  "analytics_report_frequency": {
+    "id": "analytics_report_frequency",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "How often do you need reports?",
+    "required": true,
+    "mapsTo": "analytics.reportFrequency",
+    "options": [
+      { "value": "realtime", "label": "Real-time dashboard", "description": "Always up-to-date live view" },
+      { "value": "daily", "label": "Daily emails", "description": "Automated daily summaries" },
+      { "value": "weekly", "label": "Weekly summaries", "description": "Week-over-week analysis" },
+      { "value": "monthly", "label": "Monthly reviews", "description": "Comprehensive monthly reports" }
+    ]
+  },
+  "playbooks_auto_tasks": {
+    "id": "playbooks_auto_tasks",
+    "type": "yes_no",
+    "section": "analytics",
+    "prompt": "For each order, should we auto-create purchasing and QC tasks?",
+    "helper": "Playbooks automate routine tasks when orders are created.",
+    "required": true,
+    "mapsTo": "playbooks"
+  },
+  "playbooks_task_selection": {
+    "id": "playbooks_task_selection",
+    "type": "task_checklist",
+    "section": "analytics",
+    "prompt": "Which tasks should be created automatically?",
+    "helper": "Select the tasks that apply to your process.",
+    "required": true,
+    "mapsTo": "playbooks.orderOnAccepted",
+    "conditional": {
+      "dependsOn": "playbooks_auto_tasks",
+      "showIf": true
+    }
+  },
+  "gap_filling": {
+    "id": "gap_filling",
+    "type": "gap_filling",
+    "section": "review",
+    "prompt": "Fill in missing details",
+    "subtitle": "We need a few more pieces of information",
+    "helper": "These details are required to complete your setup.",
+    "required": false,
+    "mapsTo": null
+  },
+  "review": {
+    "id": "review",
+    "type": "review_summary",
+    "section": "review",
+    "prompt": "Review your configuration",
+    "helper": "Check everything looks correct. You can go back to edit any section.",
+    "required": true,
+    "mapsTo": null
+  },
+  "review_confirm": {
+    "id": "review_confirm",
+    "type": "final_confirmation",
+    "section": "review",
+    "prompt": "Ready to generate your application?",
+    "subtitle": "This will take about 20 seconds",
+    "helper": "You can always customize further after generation.",
+    "required": true,
+    "mapsTo": null,
+    "cta": "Build My Application"
+  }
+}
+

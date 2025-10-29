@@ -1,0 +1,227 @@
+{
+  "construction_intro_nlp": {
+    "id": "construction_intro_nlp",
+    "type": "enriched_text",
+    "section": "company",
+    "industries": ["construction"],
+    "promptContext": "company_profile",
+    "prompt": "Tell us about your construction business",
+    "subtitle": "What do you build? Where do you operate? What's your typical project size?",
+    "helper": "Describe your business in a few sentences. We'll help you expand this with relevant details.",
+    "placeholder": "We build residential homes in the Pacific Northwest...",
+    "required": true,
+    "mapsTo": "company.*",
+    "minLength": 20,
+    "maxLength": 500,
+    "clarificationOptions": {
+      "question": "What type of construction?",
+      "options": [
+        { "value": "residential", "label": "Residential" },
+        { "value": "commercial", "label": "Commercial" },
+        { "value": "infrastructure", "label": "Infrastructure" },
+        { "value": "mixed", "label": "Mixed Projects" }
+      ]
+    }
+  },
+  "construction_project_types": {
+    "id": "construction_project_types",
+    "type": "multiple_choice",
+    "section": "operations",
+    "industries": ["construction"],
+    "prompt": "What types of projects do you work on?",
+    "helper": "Select all that apply.",
+    "required": true,
+    "mapsTo": "constructionExt.projectTypes",
+    "multiSelect": true,
+    "options": [
+      { "value": "residential", "label": "Residential", "description": "Homes, apartments, condos" },
+      { "value": "commercial", "label": "Commercial", "description": "Offices, retail, warehouses" },
+      { "value": "infrastructure", "label": "Infrastructure", "description": "Roads, bridges, utilities" },
+      { "value": "industrial", "label": "Industrial", "description": "Factories, plants" },
+      { "value": "renovation", "label": "Renovation", "description": "Remodels, improvements" }
+    ]
+  },
+  "construction_project_size": {
+    "id": "construction_project_size",
+    "type": "multiple_choice",
+    "section": "operations",
+    "industries": ["construction"],
+    "prompt": "What's your typical project size?",
+    "helper": "Choose the category that best fits most of your work.",
+    "required": true,
+    "mapsTo": "constructionExt.typicalProjectSize",
+    "options": [
+      { "value": "small", "label": "Small", "description": "Under $500K" },
+      { "value": "medium", "label": "Medium", "description": "$500K - $5M" },
+      { "value": "large", "label": "Large", "description": "Over $5M" },
+      { "value": "mixed", "label": "Mixed", "description": "Varies widely" }
+    ]
+  },
+  "construction_concurrent_projects": {
+    "id": "construction_concurrent_projects",
+    "type": "text_input",
+    "section": "operations",
+    "industries": ["construction"],
+    "prompt": "How many projects do you typically run at once?",
+    "helper": "Average number of active job sites.",
+    "placeholder": "5",
+    "required": true,
+    "mapsTo": "constructionExt.concurrentProjects"
+  },
+  "construction_subcontractors": {
+    "id": "construction_subcontractors",
+    "type": "yes_no",
+    "section": "operations",
+    "industries": ["construction"],
+    "prompt": "Do you work with subcontractors?",
+    "helper": "Electrical, plumbing, HVAC, etc.",
+    "required": true,
+    "mapsTo": "constructionExt.subcontractors.used"
+  },
+  "construction_subcontractor_types": {
+    "id": "construction_subcontractor_types",
+    "type": "dynamic_list",
+    "section": "operations",
+    "industries": ["construction"],
+    "prompt": "What types of subcontractors do you use?",
+    "helper": "List the trades you work with regularly.",
+    "placeholder": "e.g., Electrical, Plumbing, HVAC",
+    "required": true,
+    "mapsTo": "constructionExt.subcontractors.types",
+    "maxItems": 15,
+    "conditional": {
+      "dependsOn": "construction_subcontractors",
+      "showIf": true
+    }
+  },
+  "construction_materials_tracking": {
+    "id": "construction_materials_tracking",
+    "type": "yes_no",
+    "section": "items",
+    "industries": ["construction"],
+    "prompt": "Do you need to track materials?",
+    "helper": "Inventory management for lumber, concrete, steel, etc.",
+    "required": true,
+    "mapsTo": "constructionExt.materials.tracking"
+  },
+  "construction_major_materials": {
+    "id": "construction_major_materials",
+    "type": "dynamic_list",
+    "section": "items",
+    "industries": ["construction"],
+    "prompt": "What are your major material categories?",
+    "helper": "List the main materials you need to track.",
+    "placeholder": "e.g., Concrete, Steel, Lumber",
+    "required": true,
+    "mapsTo": "constructionExt.materials.majorMaterials",
+    "maxItems": 20,
+    "conditional": {
+      "dependsOn": "construction_materials_tracking",
+      "showIf": true
+    }
+  },
+  "construction_permit_management": {
+    "id": "construction_permit_management",
+    "type": "yes_no",
+    "section": "operations",
+    "industries": ["construction"],
+    "prompt": "Do you manage permits and inspections?",
+    "helper": "Track building permits, inspections, and compliance.",
+    "required": true,
+    "mapsTo": "constructionExt.permits.management"
+  },
+  "construction_phases": {
+    "id": "construction_phases",
+    "type": "dynamic_list",
+    "section": "operations",
+    "industries": ["construction"],
+    "prompt": "What are your typical project phases?",
+    "helper": "List the stages your projects go through.",
+    "placeholder": "e.g., Planning, Foundation, Framing, Finishing",
+    "required": true,
+    "mapsTo": "constructionExt.phases.typical",
+    "maxItems": 15
+  },
+  "construction_change_orders": {
+    "id": "construction_change_orders",
+    "type": "multiple_choice",
+    "section": "operations",
+    "industries": ["construction"],
+    "prompt": "How often do you deal with change orders?",
+    "helper": "Modifications to original project scope.",
+    "required": true,
+    "mapsTo": "constructionExt.changeOrders.frequency",
+    "options": [
+      { "value": "rare", "label": "Rarely", "description": "Less than 10% of projects" },
+      { "value": "occasional", "label": "Occasionally", "description": "10-30% of projects" },
+      { "value": "frequent", "label": "Frequently", "description": "More than 30% of projects" }
+    ]
+  },
+  "construction_teams_nlp": {
+    "id": "construction_teams_nlp",
+    "type": "enriched_text",
+    "section": "teams",
+    "industries": ["construction"],
+    "promptContext": "teams_departments",
+    "prompt": "Describe your team structure",
+    "helper": "Tell us about your project managers, site supervisors, admin team, etc.",
+    "placeholder": "We have project managers who oversee sites, site supervisors who manage daily operations...",
+    "required": true,
+    "mapsTo": "teams.departments",
+    "minLength": 20,
+    "maxLength": 300,
+    "clarificationOptions": {
+      "question": "What's your team organization?",
+      "options": [
+        { "value": "project_based", "label": "Project-Based Teams" },
+        { "value": "functional", "label": "Functional Departments" },
+        { "value": "hybrid", "label": "Hybrid Structure" }
+      ]
+    }
+  },
+  "construction_analytics_audience": {
+    "id": "construction_analytics_audience",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "industries": ["construction"],
+    "prompt": "Who will use dashboards?",
+    "helper": "Select all that apply.",
+    "required": true,
+    "mapsTo": "analytics.audience",
+    "multiSelect": true,
+    "options": [
+      { "value": "exec", "label": "Executives", "description": "Portfolio overview, financials" },
+      { "value": "ops", "label": "Project Managers", "description": "Project tracking, timelines" },
+      { "value": "floor", "label": "Site Supervisors", "description": "Daily progress, safety" },
+      { "value": "partners", "label": "Clients/Partners", "description": "Progress reports" }
+    ]
+  },
+  "construction_metrics": {
+    "id": "construction_metrics",
+    "type": "dynamic_list",
+    "section": "analytics",
+    "industries": ["construction"],
+    "prompt": "What metrics matter most to you?",
+    "helper": "List the KPIs you track or want to track.",
+    "placeholder": "e.g., Schedule variance, Budget variance, Safety incidents",
+    "required": true,
+    "mapsTo": "analytics.keyMetrics",
+    "maxItems": 15
+  },
+  "construction_chart_preference": {
+    "id": "construction_chart_preference",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "industries": ["construction"],
+    "prompt": "What type of charts do you prefer?",
+    "helper": "We'll design your dashboards accordingly.",
+    "required": true,
+    "mapsTo": "analytics.chartPreference",
+    "options": [
+      { "value": "trends", "label": "Trend charts", "description": "Track progress over time" },
+      { "value": "comparison", "label": "Comparison charts", "description": "Compare projects or phases" },
+      { "value": "metrics", "label": "Metrics & gauges", "description": "Key project indicators" }
+    ]
+  }
+}
+

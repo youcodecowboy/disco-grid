@@ -12,3 +12,9 @@ export default function Spacer({ size = 'medium' }: SpacerProps) {
   return <div className={heights[size]} />;
 }
 
+
+
+
+
+
+
