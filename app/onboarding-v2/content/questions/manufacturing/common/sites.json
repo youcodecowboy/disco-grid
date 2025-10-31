@@ -1,0 +1,41 @@
+{
+  "sites_want_mapping": {
+    "id": "sites_want_mapping",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do you want to map your physical facility?",
+    "helper": "Floor plans help visualize where work happens and track items by location.",
+    "required": true,
+    "mapsTo": "sites",
+    "industries": ["manufacturing"]
+  },
+  "sites_floor_builder": {
+    "id": "sites_floor_builder",
+    "type": "floor_plan_builder",
+    "section": "sites",
+    "prompt": "Paint your floor plan",
+    "helper": "Click zones to designate areas: Production, QA, Storage, Shipping, Office.",
+    "required": true,
+    "mapsTo": "sites.floors",
+    "conditional": {
+      "dependsOn": "sites_want_mapping",
+      "showIf": true
+    },
+    "industries": ["manufacturing"]
+  },
+  "sites_multiple_floors": {
+    "id": "sites_multiple_floors",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do you have multiple floors or buildings?",
+    "helper": "You can map up to 5 separate floors.",
+    "required": false,
+    "mapsTo": "sites.floors.length",
+    "conditional": {
+      "dependsOn": "sites_want_mapping",
+      "showIf": true
+    },
+    "industries": ["manufacturing"]
+  }
+}
+

@@ -1,0 +1,13 @@
+{
+  "placeholder": {
+    "id": "placeholder",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "Placeholder",
+    "helper": "Construction questions will be migrated here",
+    "required": false,
+    "mapsTo": null,
+    "industries": ["construction"]
+  }
+}
+

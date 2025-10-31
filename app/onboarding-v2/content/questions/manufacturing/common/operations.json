@@ -1,0 +1,61 @@
+{
+  "operations_model_nlp": {
+    "id": "operations_model_nlp",
+    "type": "nlp_input",
+    "section": "operations",
+    "promptContext": "operations",
+    "prompt": "Describe your production process",
+    "subtitle": "How do you operate? Make-to-order, make-to-stock, or both?",
+    "helper": "Tell us about your production model and how you handle orders.",
+    "placeholder": "We work on custom orders. Each order is unique and we start production only after receiving customer specifications. Lead time is typically 2-3 weeks...",
+    "required": true,
+    "mapsTo": "operations.*",
+    "minLength": 30,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  },
+  "operations_shifts": {
+    "id": "operations_shifts",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "How many shifts do you run per day?",
+    "required": false,
+    "mapsTo": "operations.shiftsPerDay",
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"],
+    "options": [
+      { "value": 1, "label": "1 shift", "description": "8 hours per day" },
+      { "value": 2, "label": "2 shifts", "description": "16 hours per day" },
+      { "value": 3, "label": "3 shifts", "description": "24 hours per day" },
+      { "value": 24, "label": "24/7", "description": "Continuous operation" }
+    ]
+  },
+  "operations_seasonality": {
+    "id": "operations_seasonality",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Do you have seasonal demand spikes?",
+    "helper": "Some businesses experience higher demand during certain months.",
+    "required": true,
+    "mapsTo": "operations.seasonality",
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  },
+  "operations_peak_months": {
+    "id": "operations_peak_months",
+    "type": "month_selector",
+    "section": "operations",
+    "prompt": "Which months are your peak season?",
+    "helper": "Select all months when demand is typically higher.",
+    "required": true,
+    "mapsTo": "operations.seasonality.months",
+    "conditional": {
+      "dependsOn": "operations_seasonality",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  }
+}
+

@@ -73,8 +73,8 @@ export default function WorkflowBuilderPage() {
         }
       })
 
-      // Create limbo zones
-      const newLimboZones: LimboZone[] = (generatedData.limboZones || []).map((lz: any, index: number) => {
+      // Create limbo zones from LLM response
+      const llmLimboZones: LimboZone[] = (generatedData.limboZones || []).map((lz: any, index: number) => {
         // Find stage IDs by name
         const fromStage = newStages.find(s => s.name === lz.betweenStages[0])
         const toStage = newStages.find(s => s.name === lz.betweenStages[1])
@@ -93,6 +93,33 @@ export default function WorkflowBuilderPage() {
           }))
         }
       }).filter(Boolean) as LimboZone[]
+
+      // Automatically create limbo zones between consecutive stages (if they don't already exist)
+      // This ensures every pair of consecutive stages has a limbo zone, just like handleAddStage does
+      const autoLimboZones: LimboZone[] = []
+      const existingLimboZonePairs = new Set(
+        llmLimboZones.map(lz => `${lz.betweenStages[0]}-${lz.betweenStages[1]}`)
+      )
+
+      // Sort stages by sequence to ensure correct order
+      const sortedStages = [...newStages].sort((a, b) => a.sequence - b.sequence)
+
+      // Create limbo zone between each pair of consecutive stages
+      for (let i = 0; i < sortedStages.length - 1; i++) {
+        const fromStage = sortedStages[i]
+        const toStage = sortedStages[i + 1]
+        const limboKey = `${fromStage.id}-${toStage.id}`
+
+        // Only create if limbo zone doesn't already exist
+        if (!existingLimboZonePairs.has(limboKey)) {
+          const limboZone = createEmptyLimboZone(workflow.id, fromStage.id, toStage.id)
+          autoLimboZones.push(limboZone)
+          existingLimboZonePairs.add(limboKey) // Track to avoid duplicates
+        }
+      }
+
+      // Combine LLM-generated limbo zones with auto-generated ones
+      const newLimboZones = [...llmLimboZones, ...autoLimboZones]
 
       // Update workflow with suggested name and generated stages
       setWorkflow({
@@ -177,6 +204,13 @@ export default function WorkflowBuilderPage() {
   }
 
   const handleSave = () => {
+    // TODO: Check for enrichment gaps before allowing save
+    // For now, basic validation
+    if (!workflow || workflow.stages.length === 0) {
+      alert("Please add at least one stage before saving.")
+      return
+    }
+    
     console.log("Saving workflow:", workflow)
     alert("Workflow saved! (mock)")
     router.push("/workflows-v3")

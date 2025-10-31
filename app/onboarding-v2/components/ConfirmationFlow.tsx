@@ -18,6 +18,8 @@ import type { EntityExtraction } from '../lib/nlp.intents';
 interface ConfirmationFlowProps {
   extractedEntities: EntityExtraction[];
   industry: string;
+  subIndustry?: string;
+  contract?: any;
   onConfirm: (allEntities: EntityExtraction[]) => void;
   onSkip: () => void;
 }
@@ -25,6 +27,8 @@ interface ConfirmationFlowProps {
 export function ConfirmationFlow({
   extractedEntities,
   industry,
+  subIndustry,
+  contract,
   onConfirm,
   onSkip,
 }: ConfirmationFlowProps) {
@@ -61,6 +65,8 @@ export function ConfirmationFlow({
       <DynamicFollowUpQuestions
         extractedEntities={extractedEntities}
         industry={industry}
+        subIndustry={subIndustry}
+        contract={contract}
         onComplete={handleFollowUpsComplete}
       />
 

@@ -1,0 +1,481 @@
+{
+  "teams_total_people_confirm": {
+    "id": "teams_total_people_confirm",
+    "type": "confirm_number",
+    "section": "teams",
+    "prompt": "You mentioned earlier you have about {previous_value} people total. Does that number still sound correct?",
+    "helper": "Confirm or update the total number of employees.",
+    "required": true,
+    "mapsTo": "teams.total_people",
+    "referenceField": "company.teamSizeTotal",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_total_people": {
+    "id": "teams_total_people",
+    "type": "text_input",
+    "section": "teams",
+    "prompt": "What's the total now?",
+    "helper": "Enter the total number of employees.",
+    "placeholder": "47",
+    "required": false,
+    "mapsTo": "teams.total_people",
+    "conditional": {
+      "dependsOn": "teams.total_people_confirm",
+      "showIf": false
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_departments_list": {
+    "id": "teams_departments_list",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "Which departments or teams exist in your company?",
+    "helper": "Select all departments that exist in your organization.",
+    "required": true,
+    "mapsTo": "teams.departments_list",
+    "multiSelect": true,
+    "options": [
+      { "value": "Cutting", "label": "Cutting" },
+      { "value": "Sewing", "label": "Sewing" },
+      { "value": "Washing", "label": "Washing" },
+      { "value": "Finishing", "label": "Finishing" },
+      { "value": "QC", "label": "Quality Control (QC)" },
+      { "value": "Packing", "label": "Packing" },
+      { "value": "Maintenance", "label": "Maintenance" },
+      { "value": "Admin", "label": "Admin" },
+      { "value": "Logistics", "label": "Logistics" },
+      { "value": "Management", "label": "Management" },
+      { "value": "Other", "label": "Other" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_departments_other": {
+    "id": "teams_departments_other",
+    "type": "text_input",
+    "section": "teams",
+    "prompt": "Please describe other departments",
+    "helper": "List any additional departments not in the list.",
+    "placeholder": "Customer Service, R&D",
+    "required": false,
+    "mapsTo": "teams.departments_other",
+    "conditional": {
+      "dependsOn": "teams.departments_list",
+      "showIf": ["Other"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_department_sizes": {
+    "id": "teams_department_sizes",
+    "type": "department_sizes",
+    "section": "teams",
+    "prompt": "Roughly how many people are in each department?",
+    "helper": "Enter the approximate number of people for each department.",
+    "required": true,
+    "mapsTo": "teams.department_sizes",
+    "dynamicOptionsFrom": "teams.departments_list",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_assign_supervisors": {
+    "id": "teams_assign_supervisors",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Would you like to assign supervisors now?",
+    "helper": "You can add supervisor information now or later.",
+    "required": false,
+    "mapsTo": "teams.assign_supervisors",
+    "conditional": {
+      "dependsOn": "teams.department_sizes",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_supervisors": {
+    "id": "teams_supervisors",
+    "type": "supervisors_list",
+    "section": "teams",
+    "prompt": "Who leads each department?",
+    "helper": "Enter supervisor names for each department.",
+    "required": false,
+    "mapsTo": "teams.supervisors",
+    "dynamicOptionsFrom": "teams.departments_list",
+    "conditional": {
+      "dependsOn": "teams.assign_supervisors",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_role_types": {
+    "id": "teams_role_types",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "What types of roles exist in your operation?",
+    "helper": "Select all role types that exist in your company.",
+    "required": true,
+    "mapsTo": "teams.role_types",
+    "multiSelect": true,
+    "options": [
+      { "value": "Operators", "label": "Operators", "description": "Production workers" },
+      { "value": "Supervisors", "label": "Supervisors", "description": "Department supervisors" },
+      { "value": "QualityInspectors", "label": "Quality Inspectors", "description": "QC staff" },
+      { "value": "Maintenance", "label": "Maintenance", "description": "Maintenance team" },
+      { "value": "Logistics", "label": "Logistics", "description": "Warehouse, shipping" },
+      { "value": "Admin", "label": "Admin", "description": "Administrative staff" },
+      { "value": "Management", "label": "Management", "description": "Managers, directors" },
+      { "value": "Other", "label": "Other", "description": "Other roles" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_role_types_other": {
+    "id": "teams_role_types_other",
+    "type": "text_input",
+    "section": "teams",
+    "prompt": "Please describe other role types",
+    "helper": "List any additional role types.",
+    "placeholder": "Designers, Pattern Makers",
+    "required": false,
+    "mapsTo": "teams.role_types_other",
+    "conditional": {
+      "dependsOn": "teams.role_types",
+      "showIf": ["Other"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_role_counts": {
+    "id": "teams_role_counts",
+    "type": "role_counts",
+    "section": "teams",
+    "prompt": "How many people roughly per role type?",
+    "helper": "Enter approximate counts for each role type.",
+    "required": true,
+    "mapsTo": "teams.role_counts",
+    "dynamicOptionsFrom": "teams.role_types",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_shift_structure": {
+    "id": "teams_shift_structure",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "How are shifts organized?",
+    "helper": "Select your shift structure.",
+    "required": true,
+    "mapsTo": "teams.shift_structure",
+    "options": [
+      { "value": "SingleShift", "label": "Single Shift", "description": "One shift per day" },
+      { "value": "TwoShifts", "label": "Two Shifts", "description": "Morning and evening" },
+      { "value": "ThreeShifts", "label": "Three Shifts", "description": "24-hour operation" },
+      { "value": "Variable", "label": "Variable", "description": "Rotating or flexible" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_shift_lead_overlap": {
+    "id": "teams_shift_lead_overlap",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Are shift leads the same as supervisors?",
+    "helper": "Do shift leads have the same role as department supervisors?",
+    "required": false,
+    "mapsTo": "teams.shift_lead_overlap",
+    "conditional": {
+      "dependsOn": "teams.shift_structure",
+      "showIf": ["TwoShifts", "ThreeShifts", "Variable"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_communication_method": {
+    "id": "teams_communication_method",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "How do teams usually communicate during production?",
+    "helper": "Select the primary communication method.",
+    "required": true,
+    "mapsTo": "teams.communication_method",
+    "options": [
+      { "value": "Verbal", "label": "Verbal", "description": "In-person conversations" },
+      { "value": "WhatsApp", "label": "WhatsApp", "description": "WhatsApp groups or messages" },
+      { "value": "Paper", "label": "Paper", "description": "Paper forms, clipboards" },
+      { "value": "WalkieTalkie", "label": "Walkie-Talkie", "description": "Radio communication" },
+      { "value": "Software", "label": "Software", "description": "ERP chat, Slack, etc." },
+      { "value": "Mixed", "label": "Mixed", "description": "Combination of methods" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_communication_tool": {
+    "id": "teams_communication_tool",
+    "type": "text_input",
+    "section": "teams",
+    "prompt": "What tool?",
+    "helper": "Enter the name of the software or tool used.",
+    "placeholder": "WhatsApp Groups, Slack, ERP Chat",
+    "required": false,
+    "mapsTo": "teams.communication_tool",
+    "conditional": {
+      "dependsOn": "teams.communication_method",
+      "showIf": "Software"
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_meeting_frequency": {
+    "id": "teams_meeting_frequency",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "How often do supervisors/managers review production status?",
+    "helper": "Select how frequently production reviews happen.",
+    "required": false,
+    "mapsTo": "teams.meeting_frequency",
+    "options": [
+      { "value": "Daily", "label": "Daily", "description": "Every day" },
+      { "value": "Weekly", "label": "Weekly", "description": "Once per week" },
+      { "value": "BiWeekly", "label": "Bi-Weekly", "description": "Twice per week" },
+      { "value": "Monthly", "label": "Monthly", "description": "Once per month" },
+      { "value": "AdHoc", "label": "Ad-Hoc", "description": "As needed" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_training_method": {
+    "id": "teams_training_method",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "How do you train new operators?",
+    "helper": "Select the primary training method.",
+    "required": false,
+    "mapsTo": "teams.training_method",
+    "options": [
+      { "value": "Shadowing", "label": "Shadowing", "description": "Learn by watching" },
+      { "value": "FormalSessions", "label": "Formal Sessions", "description": "Structured training" },
+      { "value": "VideoGuides", "label": "Video Guides", "description": "Video tutorials" },
+      { "value": "Mixed", "label": "Mixed", "description": "Combination of methods" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_training_host_interest": {
+    "id": "teams_training_host_interest",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Would you like Groovy to host training content for you?",
+    "helper": "We can provide a platform for training materials and guides.",
+    "required": false,
+    "mapsTo": "teams.training_host_interest",
+    "conditional": {
+      "dependsOn": "teams.training_method",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_cross_training_level": {
+    "id": "teams_cross_training_level",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "Are operators cross-trained to work in multiple areas?",
+    "helper": "How flexible is your workforce?",
+    "required": true,
+    "mapsTo": "teams.cross_training_level",
+    "options": [
+      { "value": "Low", "label": "Low", "description": "Operators work in one area only" },
+      { "value": "Medium", "label": "Medium", "description": "Some overlap between areas" },
+      { "value": "High", "label": "High", "description": "Most can do multiple jobs" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_cross_training_links": {
+    "id": "teams_cross_training_links",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "Which departments share the most staff?",
+    "helper": "Select departments where people commonly move between.",
+    "required": false,
+    "mapsTo": "teams.cross_training_links",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "teams.cross_training_level",
+      "showIf": ["Medium", "High"]
+    },
+    "dynamicOptionsFrom": "teams.departments_list",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_issue_ownership_style": {
+    "id": "teams_issue_ownership_style",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "When something goes wrong (e.g., delay or defect), who usually handles it first?",
+    "helper": "Select who typically takes ownership of issues.",
+    "required": true,
+    "mapsTo": "teams.issue_ownership_style",
+    "options": [
+      { "value": "Supervisor", "label": "Supervisor", "description": "Department supervisor" },
+      { "value": "Manager", "label": "Manager", "description": "Production manager" },
+      { "value": "QC", "label": "QC Team", "description": "Quality control" },
+      { "value": "TeamLead", "label": "Team Lead", "description": "Shift or team lead" },
+      { "value": "Mixed", "label": "Mixed", "description": "Depends on the issue" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_auto_assign_issues": {
+    "id": "teams_auto_assign_issues",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Would you like Groovy to automatically assign issues to those people?",
+    "helper": "We can automatically route issues to the appropriate person based on type.",
+    "required": false,
+    "mapsTo": "teams.auto_assign_issues",
+    "conditional": {
+      "dependsOn": "teams.issue_ownership_style",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_performance_tracking": {
+    "id": "teams_performance_tracking",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "Do you track individual or team performance metrics?",
+    "helper": "How do you measure performance?",
+    "required": false,
+    "mapsTo": "teams.performance_tracking",
+    "options": [
+      { "value": "Individual", "label": "Individual", "description": "Track per person" },
+      { "value": "Team", "label": "Team", "description": "Track per team/department" },
+      { "value": "Both", "label": "Both", "description": "Track both individual and team" },
+      { "value": "None", "label": "None", "description": "Don't track performance" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_performance_metrics": {
+    "id": "teams_performance_metrics",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "Which metrics matter most?",
+    "helper": "Select all performance metrics you track.",
+    "required": false,
+    "mapsTo": "teams.performance_metrics",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "teams.performance_tracking",
+      "showIf": ["Individual", "Team", "Both"]
+    },
+    "options": [
+      { "value": "Output", "label": "Output", "description": "Production quantity" },
+      { "value": "Quality", "label": "Quality", "description": "Defect rates, pass rates" },
+      { "value": "Attendance", "label": "Attendance", "description": "Punctuality, attendance" },
+      { "value": "Efficiency", "label": "Efficiency", "description": "Time efficiency, waste" },
+      { "value": "Other", "label": "Other", "description": "Other metrics" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_rewards_exist": {
+    "id": "teams_rewards_exist",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Do you offer any incentives or bonuses for high performance?",
+    "helper": "Do you have incentive programs or performance bonuses?",
+    "required": false,
+    "mapsTo": "teams.rewards_exist",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_rewards_method": {
+    "id": "teams_rewards_method",
+    "type": "text_input",
+    "section": "teams",
+    "prompt": "How are they determined?",
+    "helper": "Describe how incentives or bonuses are calculated.",
+    "placeholder": "Monthly bonus for meeting efficiency target",
+    "required": false,
+    "mapsTo": "teams.rewards_method",
+    "conditional": {
+      "dependsOn": "teams.rewards_exist",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_hiring_method": {
+    "id": "teams_hiring_method",
+    "type": "multiple_choice",
+    "section": "teams",
+    "prompt": "How do you typically hire or add new operators?",
+    "helper": "Select your primary hiring method.",
+    "required": false,
+    "mapsTo": "teams.hiring_method",
+    "options": [
+      { "value": "Referral", "label": "Referral", "description": "Employee referrals" },
+      { "value": "Agency", "label": "Agency", "description": "Recruitment agencies" },
+      { "value": "DirectHire", "label": "Direct Hire", "description": "Direct applications" },
+      { "value": "Mixed", "label": "Mixed", "description": "Combination of methods" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_hiring_integration_interest": {
+    "id": "teams_hiring_integration_interest",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Would you like Groovy to integrate a hiring form or applicant tracker?",
+    "helper": "We can provide tools for managing hiring and applicants.",
+    "required": false,
+    "mapsTo": "teams.hiring_integration_interest",
+    "conditional": {
+      "dependsOn": "teams.hiring_method",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_management_focus_text": {
+    "id": "teams_management_focus_text",
+    "type": "nlp_input",
+    "section": "teams",
+    "promptContext": "teams_departments",
+    "prompt": "What's the management team's main focus for the next 6–12 months?",
+    "subtitle": "Tell us about leadership priorities",
+    "helper": "Describe the main goals and priorities for management.",
+    "placeholder": "Improve communication between shifts and reduce rework by 20%...",
+    "required": true,
+    "mapsTo": "teams.management_focus_text",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "teams_management_kpi_tracking": {
+    "id": "teams_management_kpi_tracking",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Would you like Groovy to track KPIs against that goal?",
+    "helper": "We can set up dashboard tracking for your management priorities.",
+    "required": false,
+    "mapsTo": "teams.management_kpi_tracking",
+    "conditional": {
+      "dependsOn": "teams.management_focus_text",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  }
+}
+

@@ -9,28 +9,51 @@
 import { useOnboardingStore } from '../store/onboardingStore';
 import { Check, X } from 'lucide-react';
 import type { SectionId } from '../types';
-import questionsData from '../content/questions.en.json';
+import { loadQuestionsForIndustry } from '../lib/question-loader';
 
 interface OnboardingHeaderProps {
   progress: number;
   section: SectionId;
+  allQuestions?: any[]; // Pass in the actual loaded questions
 }
 
-const SECTIONS: Array<{ id: SectionId; name: string }> = [
-  { id: 'company', name: 'Company' },
-  { id: 'operations', name: 'Operations' },
-  { id: 'items', name: 'Items' },
-  { id: 'workflows', name: 'Workflows' },
-  { id: 'sites', name: 'Sites' },
-  { id: 'teams', name: 'Teams' },
-  { id: 'integrations', name: 'Integrations' },
-  { id: 'analytics', name: 'Analytics' },
-  { id: 'review', name: 'Review' },
-];
+// Section display names
+const SECTION_NAMES: Record<SectionId, string> = {
+  welcome: 'Welcome',
+  company: 'Company',
+  operations: 'Operations',
+  items: 'Items',
+  workflows: 'Workflows',
+  sites: 'Sites',
+  teams: 'Teams',
+  integrations: 'Integrations',
+  analytics: 'Analytics',
+  review: 'Review',
+};
 
-export function OnboardingHeader({ progress, section }: OnboardingHeaderProps) {
-  const { uiState, jumpToQuestion, jumpToStep, getSectionCompletion } = useOnboardingStore();
-  const questions = Object.values(questionsData);
+export function OnboardingHeader({ progress, section, allQuestions = [] }: OnboardingHeaderProps) {
+  const { uiState, jumpToQuestion, jumpToStep, getSectionCompletion, contract } = useOnboardingStore();
+  
+  // Derive sections from actually loaded questions
+  const loadedSections = new Set<SectionId>();
+  allQuestions.forEach((q: any) => {
+    if (q.section) {
+      loadedSections.add(q.section);
+    }
+  });
+  
+  // Convert to array with order: company, operations, sites, teams, integrations, analytics, review (only show loaded sections)
+  const SECTIONS: Array<{ id: SectionId; name: string }> = [
+    { id: 'company', name: 'Company' },
+    { id: 'operations', name: 'Operations' },
+    { id: 'sites', name: 'Sites' },
+    { id: 'teams', name: 'Teams' },
+    { id: 'integrations', name: 'Integrations' },
+    { id: 'analytics', name: 'Analytics' },
+    { id: 'review', name: 'Review' },
+  ].filter(s => loadedSections.has(s.id));
+  
+  const questions = allQuestions;
   
   // Format last saved time
   const getTimeSince = (date?: Date) => {

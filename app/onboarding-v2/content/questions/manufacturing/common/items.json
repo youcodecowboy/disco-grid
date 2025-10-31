@@ -1,0 +1,107 @@
+{
+  "items_types_nlp": {
+    "id": "items_types_nlp",
+    "type": "nlp_input",
+    "section": "items",
+    "promptContext": "items_products",
+    "prompt": "What types of items do you produce or manage?",
+    "helper": "List the categories of products, materials, or assets you work with.",
+    "placeholder": "We make jeans, jackets, t-shirts, and other denim apparel. We also manage raw fabric, zippers, buttons, and other components...",
+    "required": true,
+    "mapsTo": "items.categories",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"]
+  },
+  "items_sku_builder": {
+    "id": "items_sku_builder",
+    "type": "lego_attribute_builder",
+    "section": "items",
+    "prompt": "Let's define what makes up your items",
+    "subtitle": "Build your item structure",
+    "helper": "Start with the basics (name, code, quantity) and add custom attributes that matter to you.",
+    "required": true,
+    "mapsTo": "items.attributes",
+    "industries": ["manufacturing"],
+    "defaultAttributes": [
+      { "key": "name", "type": "text", "required": true },
+      { "key": "code", "type": "text", "required": true },
+      { "key": "quantity", "type": "number", "required": true }
+    ]
+  },
+  "items_complexity": {
+    "id": "items_complexity",
+    "type": "yes_no",
+    "section": "items",
+    "prompt": "Do your items have components or sub-parts?",
+    "helper": "For example, a jacket might have fabric, zippers, buttons, and thread as components.",
+    "required": true,
+    "mapsTo": "items.components",
+    "industries": ["manufacturing"]
+  },
+  "items_components_builder": {
+    "id": "items_components_builder",
+    "type": "lego_component_builder",
+    "section": "items",
+    "prompt": "Define your components",
+    "helper": "For each component type, specify its attributes.",
+    "required": false,
+    "mapsTo": "items.components",
+    "conditional": {
+      "dependsOn": "items_complexity",
+      "showIf": true
+    },
+    "industries": ["manufacturing"]
+  },
+  "items_tracking_level": {
+    "id": "items_tracking_level",
+    "type": "multiple_choice",
+    "section": "items",
+    "prompt": "How do you track items?",
+    "helper": "Choose the level of granularity for your tracking.",
+    "required": true,
+    "mapsTo": "items.trackingLevel",
+    "industries": ["manufacturing"],
+    "options": [
+      { "value": "unit", "label": "Per unit", "description": "Each item has a unique ID (serial number)" },
+      { "value": "batch", "label": "Per batch", "description": "Groups of items tracked together (lot numbers)" },
+      { "value": "order", "label": "Per order", "description": "Track by order only (no individual IDs)" }
+    ]
+  },
+  "fashion_garment_types": {
+    "id": "fashion_garment_types",
+    "type": "dynamic_list",
+    "section": "items",
+    "prompt": "What types of garments do you produce?",
+    "helper": "List the specific garment categories you manufacture.",
+    "placeholder": "e.g., Jeans, Jackets, Dresses",
+    "required": true,
+    "mapsTo": "manufacturingExt.fashion.garmentTypes",
+    "maxItems": 20,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "fashion_variants": {
+    "id": "fashion_variants",
+    "type": "yes_no",
+    "section": "items",
+    "prompt": "Do you produce multiple sizes and colors?",
+    "helper": "We'll help you set up size ranges and color variants.",
+    "required": true,
+    "mapsTo": "manufacturingExt.fashion.sizeRanges",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "fashion_seasonal": {
+    "id": "fashion_seasonal",
+    "type": "yes_no",
+    "section": "items",
+    "prompt": "Do you work with seasonal collections?",
+    "helper": "Spring/Summer, Fall/Winter collections",
+    "required": true,
+    "mapsTo": "manufacturingExt.fashion.seasonalCollections.enabled",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  }
+}
+

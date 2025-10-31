@@ -6,7 +6,7 @@
  * Sticky footer with navigation controls, progress bar, and demo mode toggle
  */
 
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Code } from 'lucide-react';
 import type { SectionId } from '../types';
 
 interface OnboardingFooterProps {
@@ -21,6 +21,8 @@ interface OnboardingFooterProps {
   isExtracting?: boolean;
   demoMode?: boolean;
   onToggleDemoMode?: (enabled: boolean) => void;
+  devMode?: boolean;
+  onToggleDevMode?: (enabled: boolean) => void;
 }
 
 export function OnboardingFooter({
@@ -35,6 +37,8 @@ export function OnboardingFooter({
   isExtracting = false,
   demoMode = false,
   onToggleDemoMode,
+  devMode = false,
+  onToggleDevMode,
 }: OnboardingFooterProps) {
   // Get the current step within section (mock for now)
   const stepInSection = 1;
@@ -52,8 +56,25 @@ export function OnboardingFooter({
       
       <div className="px-6 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          {/* Left side - Demo mode toggle + Step indicator or validation error */}
+          {/* Left side - Dev/Demo mode toggles + Step indicator or validation error */}
           <div className="flex items-center gap-4">
+            {/* Dev Mode Toggle */}
+            {onToggleDevMode && (
+              <button
+                onClick={() => onToggleDevMode(!devMode)}
+                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                  devMode
+                    ? 'bg-orange-50 border-orange-300 text-orange-700'
+                    : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'
+                }`}
+                type="button"
+                title="Dev Mode: Skip validation, allow free navigation"
+              >
+                <Code className={`h-3.5 w-3.5 ${devMode ? 'text-orange-600' : 'text-gray-500'}`} />
+                <span>{devMode ? 'Dev Mode' : 'Dev'}</span>
+              </button>
+            )}
+            
             {/* Demo Mode Toggle */}
             {onToggleDemoMode && section !== 'review' && (
               <button
@@ -72,7 +93,7 @@ export function OnboardingFooter({
             
             {/* Step indicator or validation error */}
             <div className="text-sm">
-              {validationError ? (
+              {validationError && !devMode ? (
                 <div className="flex items-center gap-2 text-red-600">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -102,7 +123,7 @@ export function OnboardingFooter({
 
               <button
                 onClick={onNext}
-                disabled={!canGoNext || !!validationError || isExtracting}
+                disabled={!canGoNext || (!devMode && !!validationError) || isExtracting}
                 className="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Continue to next question"
               >

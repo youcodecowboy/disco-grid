@@ -1,0 +1,117 @@
+{
+  "version": "1.0.0",
+  "contracts": {
+    "manufacturing.fashion": {
+      "baseContract": "GenerationContractV1",
+      "extensionContract": "ManufacturingContract",
+      "extensionType": "manufacturingExt",
+      "requiredSections": ["company", "operations", "items"],
+      "requiredFields": {
+        "company": ["name", "hqLocation", "manufacturerType", "clientType", "teamSizeTotal", "capacityMonthlyPcs", "productTypes"],
+        "operations": ["overview_text", "stages_list", "stage_durations", "planning_method", "track_materials_internally", "qr_or_barcode_use", "qc_stages", "total_lead_time_days", "data_tracking_method", "biggest_bottleneck_text"],
+        "items": ["categories", "trackingLevel"]
+      },
+      "optionalFields": {
+        "company": ["description", "foundedYear", "ownBrand", "complianceHas", "decisionMakerTitle", "materialsList", "demandSpikesMonths", "slowMonths"],
+        "operations": ["model", "monthlyCapacity", "shiftsPerDay", "seasonality", "stage_buffer_use", "subcontract_use", "subcontract_stages", "subcontract_partners_consistent", "planning_method_other", "daily_planning_style", "target_output_metric", "target_output_qty", "inventory_levels_tracked", "storage_system", "storage_system_other", "qc_record_defects", "defect_rate_estimate", "delay_bottleneck_stage", "data_tracking_tool", "data_entry_frequency", "bottleneck_type", "auto_reports_interest", "auto_report_frequency", "delay_alert_interest"],
+        "items": ["components"],
+        "workflows": ["stages"],
+        "sites": ["floors"],
+        "teams": ["departments"],
+        "analytics": ["keyMetrics"]
+      }
+    },
+    "manufacturing.general": {
+      "baseContract": "GenerationContractV1",
+      "extensionContract": "ManufacturingContract",
+      "extensionType": "manufacturingExt",
+      "requiredSections": ["company", "operations", "items"],
+      "requiredFields": {
+        "company": ["name", "hqLocation", "manufacturerType", "teamSizeTotal"],
+        "operations": ["model"],
+        "items": ["categories"]
+      },
+      "optionalFields": {
+        "company": ["description", "foundedYear"],
+        "operations": ["monthlyCapacity", "shiftsPerDay"],
+        "items": ["trackingLevel", "components"],
+        "workflows": ["stages"],
+        "teams": ["departments"]
+      }
+    },
+    "construction": {
+      "baseContract": "GenerationContractV1",
+      "extensionContract": "ConstructionContract",
+      "extensionType": "constructionExt",
+      "requiredSections": ["company", "operations"],
+      "requiredFields": {
+        "company": ["name", "hqLocation", "size"],
+        "operations": ["model"]
+      },
+      "optionalFields": {
+        "company": ["description"],
+        "sites": ["floors"],
+        "teams": ["departments"]
+      }
+    },
+    "defense": {
+      "baseContract": "GenerationContractV1",
+      "extensionContract": "DefenseContract",
+      "extensionType": "defenseExt",
+      "requiredSections": ["company", "operations"],
+      "requiredFields": {
+        "company": ["name", "hqLocation", "size"],
+        "operations": ["model"]
+      },
+      "optionalFields": {
+        "company": ["description"],
+        "teams": ["departments"]
+      }
+    }
+  },
+  "questionSets": {
+    "manufacturing.fashion": {
+      "loadOrder": [
+        "common/base",
+        "manufacturing/fashion/company",
+        "manufacturing/fashion/operations",
+        "manufacturing/fashion/sites",
+        "manufacturing/fashion/teams",
+        "manufacturing/fashion/integrations",
+        "manufacturing/fashion/analytics",
+        "common/review"
+      ],
+      "contractPath": "manufacturing.fashion"
+    },
+    "manufacturing.general": {
+      "loadOrder": [
+        "common/base",
+        "manufacturing/common",
+        "manufacturing/general/company",
+        "manufacturing/common/operations",
+        "manufacturing/common/items",
+        "manufacturing/common/workflows",
+        "manufacturing/common/teams",
+        "common/review"
+      ],
+      "contractPath": "manufacturing.general"
+    },
+    "construction": {
+      "loadOrder": [
+        "common/base",
+        "construction/common",
+        "common/review"
+      ],
+      "contractPath": "construction"
+    },
+    "defense": {
+      "loadOrder": [
+        "common/base",
+        "defense/common",
+        "common/review"
+      ],
+      "contractPath": "defense"
+    }
+  }
+}
+

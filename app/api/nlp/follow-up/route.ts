@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { EntityExtraction } from '@/app/onboarding-v2/lib/nlp.intents';
+import { getContractMetadata } from '@/app/onboarding-v2/lib/question-loader';
 
 interface FollowUpQuestion {
   id: string;
@@ -23,7 +24,7 @@ interface FollowUpQuestion {
 
 export async function POST(request: NextRequest) {
   try {
-    const { entities, industry, previousAnswers, triggeredBy } = await request.json();
+    const { entities, industry, subIndustry, previousAnswers, triggeredBy, contract } = await request.json();
 
     if (!entities || !industry) {
       return NextResponse.json(
@@ -33,11 +34,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate follow-up questions based on what's missing or vague
+    // Now contract-aware: checks registry for required fields
     const questions = generateFollowUpQuestions(
       entities,
       industry,
+      subIndustry,
       previousAnswers || [],
-      triggeredBy
+      triggeredBy,
+      contract
     );
 
     return NextResponse.json({
@@ -55,15 +59,48 @@ export async function POST(request: NextRequest) {
 
 /**
  * Generate follow-up questions based on extracted entities and industry
+ * Now contract-aware: uses registry to check missing required fields
  */
 function generateFollowUpQuestions(
   entities: EntityExtraction[],
   industry: string,
-  previousAnswers: any[],
-  triggeredBy?: string
+  subIndustry?: string,
+  previousAnswers: any[] = [],
+  triggeredBy?: string,
+  contract?: any
 ): FollowUpQuestion[] {
   const questions: FollowUpQuestion[] = [];
   const answeredQuestions = new Set(previousAnswers.map((a: any) => a.questionId));
+  
+  // Get contract metadata from registry to know what's required
+  const contractMetadata = getContractMetadata(industry, subIndustry);
+  const missingRequiredFields: string[] = [];
+  
+  if (contractMetadata && contract) {
+    // Check which required fields are missing from contract
+    for (const [section, fields] of Object.entries(contractMetadata.requiredFields)) {
+      for (const field of fields) {
+        const path = `${section}.${field}`;
+        const value = getValueAtPath(contract, path);
+        
+        // Check if field is missing or empty
+        if (!value || value === '' || (Array.isArray(value) && value.length === 0)) {
+          missingRequiredFields.push(path);
+        }
+      }
+    }
+  }
+  
+  // Helper to get value from nested path
+  function getValueAtPath(obj: any, path: string): any {
+    const parts = path.split('.');
+    let value: any = obj;
+    for (const part of parts) {
+      if (value === undefined || value === null) return undefined;
+      value = value[part];
+    }
+    return value;
+  }
 
   // If this was triggered by a specific answer, generate conditional follow-ups
   if (triggeredBy) {
@@ -316,4 +353,7 @@ function generateConditionalQuestions(
 
   return questions;
 }
+
+
+
 

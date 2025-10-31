@@ -20,13 +20,14 @@ import { ReviewPage } from './ReviewPage';
 import { ConfirmationFlow } from './ConfirmationFlow';
 import { GapFillingQuestions } from './GapFillingQuestions';
 import { DynamicListInput } from './inputs/DynamicListInput';
-import questionsData from '../content/questions.en.json';
+// Removed legacy import: import questionsData from '../content/questions.en.json';
 import { type EntityExtraction } from '../lib/nlp.intents';
 import { extractEntitiesWithLLM } from '../lib/llm-extraction';
 import { analyzeContractCompleteness } from '../lib/contract-completeness';
 
 interface StepContainerProps {
   question: Question;
+  allQuestions?: Question[];
 }
 
     /**
@@ -285,7 +286,7 @@ interface StepContainerProps {
   );
 }
 
-export function StepContainer({ question }: StepContainerProps) {
+export function StepContainer({ question, allQuestions = [] }: StepContainerProps) {
   if (!question) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -341,7 +342,7 @@ export function StepContainer({ question }: StepContainerProps) {
             
             {/* Right column - Input */}
             <div className="col-span-8">
-              <QuestionRenderer question={question} />
+              <QuestionRenderer question={question} allQuestions={allQuestions} />
             </div>
           </div>
         ) : useFullWidth ? (
@@ -370,7 +371,7 @@ export function StepContainer({ question }: StepContainerProps) {
             )}
             
             <div className="mt-8">
-              <QuestionRenderer question={question} />
+              <QuestionRenderer question={question} allQuestions={allQuestions} />
             </div>
           </div>
         ) : (
@@ -399,7 +400,7 @@ export function StepContainer({ question }: StepContainerProps) {
             )}
             
             <div className="mt-8">
-              <QuestionRenderer question={question} />
+              <QuestionRenderer question={question} allQuestions={allQuestions} />
             </div>
           </div>
         )}
@@ -411,9 +412,9 @@ export function StepContainer({ question }: StepContainerProps) {
 /**
  * Render the appropriate input component based on question type
  */
-function QuestionRenderer({ question }: { question: Question }) {
+function QuestionRenderer({ question, allQuestions = [] }: { question: Question; allQuestions?: Question[] }) {
   const { contract, updateContract, jumpToStep, nextStep, uiState } = useOnboardingStore();
-  const questions = Object.values(questionsData);
+  const questions = allQuestions; // Use passed questions instead of legacy import
   
   // Auto-fill demo data on mount if demo mode is active
   useEffect(() => {
@@ -582,15 +583,51 @@ function QuestionRenderer({ question }: { question: Question }) {
       );
       
     case 'multiple_choice':
+      // Handle dynamic options from contract
+      let options = question.options || [];
+      if ((question as any).dynamicOptionsFrom) {
+        const dynamicPath = (question as any).dynamicOptionsFrom.split('.');
+        let dynamicValue: any = contract;
+        for (const key of dynamicPath) {
+          dynamicValue = dynamicValue?.[key];
+        }
+        
+        if (Array.isArray(dynamicValue) && dynamicValue.length > 0) {
+          // Convert array of strings to option format
+          options = dynamicValue.map((stage: string) => ({
+            value: stage,
+            label: stage,
+            description: `${stage} stage`,
+          }));
+        }
+      }
+      
+      const isMultiSelect = question.multiSelect === true;
+      const selectedValues = isMultiSelect 
+        ? (Array.isArray(currentValue) ? currentValue : [])
+        : (currentValue !== undefined && currentValue !== null ? [currentValue] : []);
+      
       return (
         <div className="space-y-2.5">
-          {question.options?.map((option) => {
-            const isSelected = currentValue === option.value || currentValue === option.value.toString();
+          {options.map((option) => {
+            const isSelected = isMultiSelect
+              ? selectedValues.includes(option.value)
+              : (currentValue === option.value || currentValue === option.value.toString());
             
             return (
               <button
                 key={option.value.toString()}
-                onClick={() => handleUpdate(option.value)}
+                onClick={() => {
+                  if (isMultiSelect) {
+                    // Toggle in array
+                    const newValues = isSelected
+                      ? selectedValues.filter(v => v !== option.value)
+                      : [...selectedValues, option.value];
+                    handleUpdate(newValues);
+                  } else {
+                    handleUpdate(option.value);
+                  }
+                }}
                 className={`group w-full text-left px-5 py-4 border rounded-lg transition-all bg-white ${
                   isSelected
                     ? 'border-blue-500 bg-blue-50'
@@ -675,6 +712,38 @@ function QuestionRenderer({ question }: { question: Question }) {
       );
     
     case 'workflow_stages':
+      // Handle both workflows.stages (array) and operations.stage_durations (object)
+      const isOperationsDurations = question.mapsTo === 'operations.stage_durations';
+      
+      if (isOperationsDurations) {
+        // Convert operations.stage_durations (Record<string, number>) to WorkflowStage[]
+        const stagesList = (contract as any).operations?.stages_list || [];
+        const durationsObj = (currentValue as Record<string, number>) || {};
+        
+        const stagesArray = stagesList.map((name: string) => ({
+          name,
+          durationHours: durationsObj[name] || undefined,
+          ownerDept: undefined,
+          quality: null,
+        }));
+        
+        return (
+          <WorkflowStagesBuilder
+            value={stagesArray}
+            onChange={(stages) => {
+              // Convert back to Record<string, number>
+              const durations: Record<string, number> = {};
+              stages.forEach((stage) => {
+                if (stage.durationHours !== undefined) {
+                  durations[stage.name] = stage.durationHours;
+                }
+              });
+              handleUpdate(durations);
+            }}
+          />
+        );
+      }
+      
       return (
         <WorkflowStagesBuilder
           value={currentValue as any}
@@ -698,6 +767,149 @@ function QuestionRenderer({ question }: { question: Question }) {
         />
       );
     
+    case 'confirm_number':
+      // Confirm number question with reference to previous value
+      const referencePath = (question as any).referenceField;
+      let referenceValue: any = undefined;
+      if (referencePath) {
+        const path = referencePath.split('.');
+        let value: any = contract;
+        for (const key of path) {
+          value = value?.[key];
+        }
+        referenceValue = value;
+      }
+      
+      const promptText = referenceValue !== undefined 
+        ? question.prompt.replace('{previous_value}', referenceValue.toString())
+        : question.prompt;
+      
+      return (
+        <div className="space-y-4">
+          <p className="text-base text-gray-700 mb-4">{promptText}</p>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => {
+                if (referenceValue !== undefined) {
+                  handleUpdate(referenceValue);
+                } else {
+                  handleUpdate(true);
+                }
+              }}
+              className={`px-6 py-4 text-base font-medium border-2 rounded-lg transition-all ${
+                currentValue === referenceValue || currentValue === true
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+              }`}
+            >
+              Yes, correct
+            </button>
+            <button
+              onClick={() => handleUpdate(false)}
+              className={`px-6 py-4 text-base font-medium border-2 rounded-lg transition-all ${
+                currentValue === false
+                  ? 'border-red-500 bg-red-50 text-red-700'
+                  : 'border-gray-300 hover:border-red-400 hover:bg-gray-50'
+              }`}
+            >
+              No, update
+            </button>
+          </div>
+        </div>
+      );
+    
+    case 'department_sizes':
+    case 'role_counts':
+      // Form table for department/role sizes
+      const dynamicPath = (question as any).dynamicOptionsFrom;
+      let items: string[] = [];
+      if (dynamicPath) {
+        const path = dynamicPath.split('.');
+        let value: any = contract;
+        for (const key of path) {
+          value = value?.[key];
+        }
+        if (Array.isArray(value)) {
+          items = value;
+        }
+      }
+      
+      const sizes = currentValue as Record<string, number> || {};
+      
+      return (
+        <div className="space-y-3">
+          {items.map((item) => (
+            <div key={item} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-white">
+              <div className="flex-1 font-medium text-gray-900">{item}</div>
+              <input
+                type="number"
+                min="0"
+                placeholder="0"
+                value={sizes[item] || ''}
+                onChange={(e) => {
+                  const newSizes = {
+                    ...sizes,
+                    [item]: e.target.value ? parseInt(e.target.value, 10) : undefined,
+                  };
+                  // Remove undefined values
+                  Object.keys(newSizes).forEach(key => {
+                    if (newSizes[key] === undefined) {
+                      delete newSizes[key];
+                    }
+                  });
+                  handleUpdate(newSizes);
+                }}
+                className="w-24 px-3 py-2 text-base border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              />
+              <div className="text-sm text-gray-500">people</div>
+            </div>
+          ))}
+        </div>
+      );
+    
+    case 'supervisors_list':
+      // Supervisors list builder
+      const supervisorsPath = (question as any).dynamicOptionsFrom;
+      let departments: string[] = [];
+      if (supervisorsPath) {
+        const path = supervisorsPath.split('.');
+        let value: any = contract;
+        for (const key of path) {
+          value = value?.[key];
+        }
+        if (Array.isArray(value)) {
+          departments = value;
+        }
+      }
+      
+      const supervisors = currentValue as Array<{ department: string; name: string }> || [];
+      
+      return (
+        <div className="space-y-3">
+          {departments.map((dept) => {
+            const supervisor = supervisors.find(s => s.department === dept);
+            return (
+              <div key={dept} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-white">
+                <div className="flex-1 font-medium text-gray-900">{dept}</div>
+                <input
+                  type="text"
+                  placeholder="Supervisor name"
+                  value={supervisor?.name || ''}
+                  onChange={(e) => {
+                    const newSupervisors = supervisors.filter(s => s.department !== dept);
+                    if (e.target.value.trim()) {
+                      newSupervisors.push({ department: dept, name: e.target.value.trim() });
+                    }
+                    handleUpdate(newSupervisors);
+                  }}
+                  className="flex-1 px-3 py-2 text-base border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+            );
+          })}
+        </div>
+      );
+    
     case 'metrics_selector':
       return (
         <MetricsSelector
@@ -705,6 +917,134 @@ function QuestionRenderer({ question }: { question: Question }) {
           onChange={(metrics) => handleUpdate(metrics)}
           industry={(contract as any)?.company?.industry || 'manufacturing'}
         />
+      );
+    
+    case 'color_picker':
+      return (
+        <div className="space-y-4">
+          <input
+            type="color"
+            value={(currentValue as string) || '#0045FF'}
+            onChange={(e) => handleUpdate(e.target.value)}
+            className="w-24 h-24 rounded-lg border-2 border-gray-300 cursor-pointer"
+          />
+          <input
+            type="text"
+            placeholder="#0045FF"
+            value={(currentValue as string) || ''}
+            onChange={(e) => {
+              // Validate hex color
+              if (/^#[0-9A-F]{6}$/i.test(e.target.value) || e.target.value === '') {
+                handleUpdate(e.target.value);
+              }
+            }}
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white font-mono"
+          />
+          <p className="text-sm text-gray-500">Enter a hex color code or use the color picker</p>
+        </div>
+      );
+    
+    case 'grid_layout_builder':
+      // Grid layout builder - can use existing grid-based component or create simple version
+      // For now, create a basic grid layout interface
+      const gridConfig = currentValue as any || { rows: 3, columns: 4, widgets: [] };
+      const kpisFromContract = (contract as any)?.analytics?.kpis_priority || [];
+      const dashboardsFromContract = (contract as any)?.analytics?.default_dashboards || [];
+      
+      return (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 mb-4">
+            Select widgets and arrange them on your dashboard grid. You can customize this later.
+          </p>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Grid Rows</label>
+              <input
+                type="number"
+                min="2"
+                max="6"
+                value={gridConfig.rows || 3}
+                onChange={(e) => handleUpdate({
+                  ...gridConfig,
+                  rows: parseInt(e.target.value, 10)
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Grid Columns</label>
+              <input
+                type="number"
+                min="2"
+                max="6"
+                value={gridConfig.columns || 4}
+                onChange={(e) => handleUpdate({
+                  ...gridConfig,
+                  columns: parseInt(e.target.value, 10)
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          </div>
+          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <p className="text-sm text-gray-600 mb-2">Available Widgets:</p>
+            <div className="flex flex-wrap gap-2">
+              {kpisFromContract.length > 0 && kpisFromContract.map((kpi: string) => (
+                <button
+                  key={kpi}
+                  onClick={() => {
+                    const newWidgets = [...(gridConfig.widgets || []), {
+                      type: 'KPI',
+                      metric: kpi,
+                      size: '1x1'
+                    }];
+                    handleUpdate({ ...gridConfig, widgets: newWidgets });
+                  }}
+                  className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  + {kpi} KPI
+                </button>
+              ))}
+              {dashboardsFromContract.length > 0 && dashboardsFromContract.map((dashboard: string) => (
+                <button
+                  key={dashboard}
+                  onClick={() => {
+                    const newWidgets = [...(gridConfig.widgets || []), {
+                      type: 'Dashboard',
+                      metric: dashboard,
+                      size: '2x2'
+                    }];
+                    handleUpdate({ ...gridConfig, widgets: newWidgets });
+                  }}
+                  className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  + {dashboard} Dashboard
+                </button>
+              ))}
+            </div>
+          </div>
+          {gridConfig.widgets && gridConfig.widgets.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-700 mb-2">Selected Widgets:</p>
+              <div className="space-y-2">
+                {gridConfig.widgets.map((widget: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between p-2 bg-white border border-gray-200 rounded">
+                    <span className="text-sm">{widget.type}: {widget.metric} ({widget.size})</span>
+                    <button
+                      onClick={() => {
+                        const newWidgets = gridConfig.widgets.filter((_: any, i: number) => i !== idx);
+                        handleUpdate({ ...gridConfig, widgets: newWidgets });
+                      }}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       );
     
     case 'gap_filling':
@@ -745,17 +1085,18 @@ function QuestionRenderer({ question }: { question: Question }) {
         <ReviewPage
           contract={contract as any}
           onEdit={(sectionId) => {
-            // Find first question in this section
+            // Find first question in this section (using loaded questions)
             const firstQuestionIndex = questions.findIndex((q: any) => {
+              // Map review section IDs to actual section IDs
               const sectionMapping: { [key: string]: string } = {
-                'company': 'Company Profile',
-                'operations': 'Operations Setup',
-                'items': 'Items & SKUs',
-                'workflows': 'Workflows',
-                'sites': 'Site Map',
-                'teams': 'Teams & Access',
-                'integrations': 'Integrations',
-                'analytics': 'Analytics & Metrics',
+                'company': 'company',
+                'operations': 'operations',
+                'items': 'items',
+                'workflows': 'workflows',
+                'sites': 'sites',
+                'teams': 'teams',
+                'integrations': 'integrations',
+                'analytics': 'analytics',
               };
               return q.section === sectionMapping[sectionId];
             });
@@ -774,6 +1115,8 @@ function QuestionRenderer({ question }: { question: Question }) {
             <ConfirmationFlow
               extractedEntities={extractedEntities}
               industry={contract.company.industry || 'manufacturing'}
+              subIndustry={contract.company.subIndustry || undefined}
+              contract={contract}
               onConfirm={(confirmedEntities) => {
                 
                 // Apply confirmed entities to contract
@@ -884,6 +1227,126 @@ function QuestionRenderer({ question }: { question: Question }) {
                           seasonality: {
                             months: entity.value,
                           },
+                        },
+                      } as any);
+                      break;
+                    
+                    // NEW OPERATIONS ENTITIES
+                    case 'overview_text':
+                      updateContract({
+                        operations: {
+                          ...(contract as any).operations,
+                          overview_text: entity.value,
+                        },
+                      } as any);
+                      break;
+                    
+                    case 'stages_list':
+                      // stages_list can be an array - extract all stages
+                      const currentStagesList = (contract as any).operations?.stages_list || [];
+                      if (Array.isArray(entity.value)) {
+                        // If value is array, merge it
+                        const merged = [...new Set([...currentStagesList, ...entity.value])];
+                        updateContract({
+                          operations: {
+                            ...(contract as any).operations,
+                            stages_list: merged,
+                          },
+                        } as any);
+                      } else if (!currentStagesList.includes(entity.value)) {
+                        // If single value, add to array
+                        updateContract({
+                          operations: {
+                            ...(contract as any).operations,
+                            stages_list: [...currentStagesList, entity.value],
+                          },
+                        } as any);
+                      }
+                      break;
+                    
+                    case 'stage_durations':
+                      // stage_durations is an object mapping stage names to hours
+                      const currentDurations = (contract as any).operations?.stage_durations || {};
+                      if (typeof entity.value === 'object' && !Array.isArray(entity.value)) {
+                        updateContract({
+                          operations: {
+                            ...(contract as any).operations,
+                            stage_durations: { ...currentDurations, ...entity.value },
+                          },
+                        } as any);
+                      }
+                      break;
+                    
+                    case 'planning_method':
+                      updateContract({
+                        operations: {
+                          ...(contract as any).operations,
+                          planning_method: entity.value,
+                        },
+                      } as any);
+                      break;
+                    
+                    case 'track_materials_internally':
+                      updateContract({
+                        operations: {
+                          ...(contract as any).operations,
+                          track_materials_internally: entity.value,
+                        },
+                      } as any);
+                      break;
+                    
+                    case 'qr_or_barcode_use':
+                      updateContract({
+                        operations: {
+                          ...(contract as any).operations,
+                          qr_or_barcode_use: entity.value,
+                        },
+                      } as any);
+                      break;
+                    
+                    case 'qc_stages':
+                      const currentQcStages = (contract as any).operations?.qc_stages || [];
+                      if (Array.isArray(entity.value)) {
+                        const mergedQc = [...new Set([...currentQcStages, ...entity.value])];
+                        updateContract({
+                          operations: {
+                            ...(contract as any).operations,
+                            qc_stages: mergedQc,
+                          },
+                        } as any);
+                      } else if (!currentQcStages.includes(entity.value)) {
+                        updateContract({
+                          operations: {
+                            ...(contract as any).operations,
+                            qc_stages: [...currentQcStages, entity.value],
+                          },
+                        } as any);
+                      }
+                      break;
+                    
+                    case 'total_lead_time_days':
+                      updateContract({
+                        operations: {
+                          ...(contract as any).operations,
+                          total_lead_time_days: entity.value,
+                        },
+                      } as any);
+                      break;
+                    
+                    case 'data_tracking_method':
+                      updateContract({
+                        operations: {
+                          ...(contract as any).operations,
+                          data_tracking_method: entity.value,
+                        },
+                      } as any);
+                      break;
+                    
+                    case 'biggest_bottleneck_text':
+                      updateContract({
+                        operations: {
+                          ...(contract as any).operations,
+                          biggest_bottleneck_text: entity.value,
                         },
                       } as any);
                       break;
@@ -1108,6 +1571,17 @@ function QuestionRenderer({ question }: { question: Question }) {
                   'subcontractor_stage': 'operations.subcontractorStages',
                   'component_usage': 'items.components',
                   'department': 'teams.departments',
+                  // New operations fields
+                  'overview_text': 'operations.overview_text',
+                  'stages_list': 'operations.stages_list',
+                  'stage_durations': 'operations.stage_durations',
+                  'planning_method': 'operations.planning_method',
+                  'track_materials_internally': 'operations.track_materials_internally',
+                  'qr_or_barcode_use': 'operations.qr_or_barcode_use',
+                  'qc_stages': 'operations.qc_stages',
+                  'total_lead_time_days': 'operations.total_lead_time_days',
+                  'data_tracking_method': 'operations.data_tracking_method',
+                  'biggest_bottleneck_text': 'operations.biggest_bottleneck_text',
                 };
                 
                 const newCommittedFields = confirmedEntities

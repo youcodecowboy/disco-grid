@@ -1,0 +1,37 @@
+{
+  "workflow_process_nlp": {
+    "id": "workflow_process_nlp",
+    "type": "nlp_input",
+    "section": "workflows",
+    "promptContext": "workflows",
+    "prompt": "Describe your production process from start to finish",
+    "helper": "List the stages items go through. We'll create a workflow for you.",
+    "placeholder": "We receive fabric, cut patterns, sew garments, wash and finish them, do QA inspection, then package and ship...",
+    "required": true,
+    "mapsTo": "workflows.stages",
+    "minLength": 30,
+    "maxLength": 400,
+    "industries": ["manufacturing"]
+  },
+  "workflow_stages_confirm": {
+    "id": "workflow_stages_confirm",
+    "type": "editable_list",
+    "section": "workflows",
+    "prompt": "Review and edit your workflow stages",
+    "helper": "Drag to reorder, click to edit details, or add/remove stages.",
+    "required": true,
+    "mapsTo": "workflows.stages",
+    "industries": ["manufacturing"]
+  },
+  "workflow_quality_control": {
+    "id": "workflow_quality_control",
+    "type": "yes_no",
+    "section": "workflows",
+    "prompt": "Do you have quality control checkpoints?",
+    "helper": "Quality checkpoints ensure items meet standards at key stages.",
+    "required": true,
+    "mapsTo": "workflows.*.quality",
+    "industries": ["manufacturing"]
+  }
+}
+

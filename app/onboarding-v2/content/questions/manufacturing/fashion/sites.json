@@ -1,0 +1,446 @@
+{
+  "sites_count": {
+    "id": "sites_count",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "How many factory sites or locations do you operate?",
+    "helper": "Enter the total number of factories, warehouses, or production locations.",
+    "placeholder": "1",
+    "required": true,
+    "mapsTo": "sites.count",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_list_name": {
+    "id": "sites_list_name",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "What's the name of this site?",
+    "helper": "Give this location a name (e.g., Main Factory, Warehouse A, Downtown Facility).",
+    "placeholder": "Main Factory",
+    "required": true,
+    "mapsTo": "sites.list[].name",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_list_is_primary": {
+    "id": "sites_list_is_primary",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Is this your main site?",
+    "helper": "Is this your primary production facility?",
+    "required": false,
+    "mapsTo": "sites.list[].is_primary",
+    "conditional": {
+      "dependsOn": "sites.list[].name",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_list_address": {
+    "id": "sites_list_address",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "Where is this site located?",
+    "helper": "Enter the address or location (city, country).",
+    "placeholder": "Istanbul, Türkiye",
+    "required": true,
+    "mapsTo": "sites.list[].address",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_list_handles_shipping": {
+    "id": "sites_list_handles_shipping",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do you have inbound/outbound logistics directly from this site?",
+    "helper": "Does this site handle receiving materials or shipping finished goods?",
+    "required": false,
+    "mapsTo": "sites.list[].handles_shipping",
+    "conditional": {
+      "dependsOn": "sites.list[].address",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_floors_count": {
+    "id": "sites_floors_count",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "How many floors or levels does this site have?",
+    "helper": "Enter the number of floors, levels, or distinct areas.",
+    "placeholder": "3",
+    "required": true,
+    "mapsTo": "sites.list[].floors_count",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_floor_plan_builder": {
+    "id": "sites_floor_plan_builder",
+    "type": "floor_plan_builder",
+    "section": "sites",
+    "prompt": "Map your factory floor",
+    "subtitle": "Define zones on each floor",
+    "helper": "Create zones for each floor: cutting, sewing, washing, finishing, QC, storage, etc.",
+    "required": true,
+    "mapsTo": "sites.list[].floors",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_zones_people_count": {
+    "id": "sites_zones_people_count",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "How many people usually work in this zone?",
+    "helper": "Enter the approximate number of workers in this zone.",
+    "placeholder": "10",
+    "required": false,
+    "mapsTo": "sites.list[].floors[].zones[].people_count",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_zones_has_machines": {
+    "id": "sites_zones_has_machines",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Does this zone contain machines or equipment?",
+    "helper": "Are there production machines in this zone?",
+    "required": false,
+    "mapsTo": "sites.list[].floors[].zones[].has_machines",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_zones_machine_count": {
+    "id": "sites_zones_machine_count",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "Roughly how many machines?",
+    "helper": "Enter the approximate number of machines.",
+    "placeholder": "6",
+    "required": false,
+    "mapsTo": "sites.list[].floors[].zones[].machine_count",
+    "conditional": {
+      "dependsOn": "sites.list[].floors[].zones[].has_machines",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_zones_machine_types": {
+    "id": "sites_zones_machine_types",
+    "type": "multiple_choice",
+    "section": "sites",
+    "prompt": "What type of machines?",
+    "helper": "Select all that apply.",
+    "required": false,
+    "mapsTo": "sites.list[].floors[].zones[].machine_types",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "sites.list[].floors[].zones[].has_machines",
+      "showIf": true
+    },
+    "options": [
+      { "value": "Sewing", "label": "Sewing Machines" },
+      { "value": "Cutting", "label": "Cutting Machines" },
+      { "value": "Washing", "label": "Washing Equipment" },
+      { "value": "Ironing", "label": "Ironing/Pressing" },
+      { "value": "Embroidery", "label": "Embroidery Machines" },
+      { "value": "Other", "label": "Other" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_zones_has_storage": {
+    "id": "sites_zones_has_storage",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Does this zone have storage systems?",
+    "helper": "Are there storage areas or systems in this zone?",
+    "required": false,
+    "mapsTo": "sites.list[].floors[].zones[].has_storage",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_zones_storage_type": {
+    "id": "sites_zones_storage_type",
+    "type": "multiple_choice",
+    "section": "sites",
+    "prompt": "What kind of storage?",
+    "helper": "Select the primary storage system used.",
+    "required": false,
+    "mapsTo": "sites.list[].floors[].zones[].storage_type",
+    "conditional": {
+      "dependsOn": "sites.list[].floors[].zones[].has_storage",
+      "showIf": true
+    },
+    "options": [
+      { "value": "Racks", "label": "Racks" },
+      { "value": "Bins", "label": "Bins" },
+      { "value": "Hanging", "label": "Hanging" },
+      { "value": "Mixed", "label": "Mixed" },
+      { "value": "Other", "label": "Other" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_zones_storage_capacity": {
+    "id": "sites_zones_storage_capacity",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "Approx. capacity?",
+    "helper": "Approximate number of items this storage can hold.",
+    "placeholder": "400",
+    "required": false,
+    "mapsTo": "sites.list[].floors[].zones[].storage_capacity_estimate",
+    "conditional": {
+      "dependsOn": "sites.list[].floors[].zones[].has_storage",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_flow_between_floors": {
+    "id": "sites_flow_between_floors",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do items move between floors during production?",
+    "helper": "Does production involve moving items between different floors or levels?",
+    "required": true,
+    "mapsTo": "sites.flow_between_floors",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_flow_transport_methods": {
+    "id": "sites_flow_transport_methods",
+    "type": "multiple_choice",
+    "section": "sites",
+    "prompt": "How are they transported?",
+    "helper": "Select all methods used to move items between floors.",
+    "required": false,
+    "mapsTo": "sites.flow_transport_methods",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "sites.flow_between_floors",
+      "showIf": true
+    },
+    "options": [
+      { "value": "Elevator", "label": "Elevator" },
+      { "value": "Stairs", "label": "Stairs" },
+      { "value": "Carts", "label": "Carts" },
+      { "value": "ManualCarry", "label": "Manual Carry" },
+      { "value": "Other", "label": "Other" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_external_flow": {
+    "id": "sites_external_flow",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do any items leave this site mid-production (e.g. for washing, printing)?",
+    "helper": "Are items sent to external locations during production?",
+    "required": true,
+    "mapsTo": "sites.external_flow",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_external_flow_locations": {
+    "id": "sites_external_flow_locations",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "Where do they go?",
+    "helper": "Enter locations or subcontractor names (e.g., Local Washer, Printing Shop).",
+    "placeholder": "Local Washer",
+    "required": false,
+    "mapsTo": "sites.external_flow_locations",
+    "conditional": {
+      "dependsOn": "sites.external_flow",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_external_flow_duration": {
+    "id": "sites_external_flow_duration",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "How long are they usually out?",
+    "helper": "Enter duration in days.",
+    "placeholder": "2",
+    "required": false,
+    "mapsTo": "sites.external_flow_duration_days",
+    "conditional": {
+      "dependsOn": "sites.external_flow",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_receiving_area_exists": {
+    "id": "sites_receiving_area_exists",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do you have a dedicated receiving area for materials coming in?",
+    "helper": "Is there a specific area where incoming materials are received?",
+    "required": true,
+    "mapsTo": "sites.receiving_area_exists",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_receiving_floor": {
+    "id": "sites_receiving_floor",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "Which floor?",
+    "helper": "Enter the floor name or level.",
+    "placeholder": "Ground Floor",
+    "required": false,
+    "mapsTo": "sites.receiving_floor",
+    "conditional": {
+      "dependsOn": "sites.receiving_area_exists",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_receiving_responsible": {
+    "id": "sites_receiving_responsible",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "Who is responsible for receiving?",
+    "helper": "Enter the role or person responsible.",
+    "placeholder": "Logistics Coordinator",
+    "required": false,
+    "mapsTo": "sites.receiving_responsible",
+    "conditional": {
+      "dependsOn": "sites.receiving_area_exists",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_dispatch_area_exists": {
+    "id": "sites_dispatch_area_exists",
+    "type": "multiple_choice",
+    "section": "sites",
+    "prompt": "Where do packed goods leave from?",
+    "helper": "Select the primary dispatch area.",
+    "required": true,
+    "mapsTo": "sites.dispatch_area_exists",
+    "options": [
+      { "value": "GroundFloor", "label": "Ground Floor" },
+      { "value": "Basement", "label": "Basement" },
+      { "value": "LoadingDock", "label": "Loading Dock" },
+      { "value": "SharedWarehouse", "label": "Shared Warehouse" },
+      { "value": "Other", "label": "Other" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_dispatch_wait_time": {
+    "id": "sites_dispatch_wait_time",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "Average wait time before shipping?",
+    "helper": "Enter wait time in hours or days (e.g., 0.5 for 12 hours, 2 for 2 days).",
+    "placeholder": "0.5",
+    "required": false,
+    "mapsTo": "sites.dispatch_wait_time",
+    "conditional": {
+      "dependsOn": "sites.dispatch_area_exists",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_shifts_count": {
+    "id": "sites_shifts_count",
+    "type": "text_input",
+    "section": "sites",
+    "prompt": "How many shifts operate daily at this site?",
+    "helper": "Enter the number of shifts per day.",
+    "placeholder": "2",
+    "required": false,
+    "mapsTo": "sites.shifts_count",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_shifts_shared_workstations": {
+    "id": "sites_shifts_shared_workstations",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do shifts share the same workstations?",
+    "helper": "Do different shifts use the same machines and work areas?",
+    "required": false,
+    "mapsTo": "sites.shifts_shared_workstations",
+    "conditional": {
+      "dependsOn": "sites.shifts_count",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_environment_tracking_interest": {
+    "id": "sites_environment_tracking_interest",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Would you like Groovy to track environmental factors like temperature or lighting per floor?",
+    "helper": "This enables IoT integration for environmental monitoring.",
+    "required": false,
+    "mapsTo": "sites.environment_tracking_interest",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_has_environment_sensors": {
+    "id": "sites_has_environment_sensors",
+    "type": "yes_no",
+    "section": "sites",
+    "prompt": "Do you have existing sensors?",
+    "helper": "Do you already have temperature, lighting, or other environmental sensors installed?",
+    "required": false,
+    "mapsTo": "sites.has_environment_sensors",
+    "conditional": {
+      "dependsOn": "sites.environment_tracking_interest",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_bottleneck_location_text": {
+    "id": "sites_bottleneck_location_text",
+    "type": "nlp_input",
+    "section": "sites",
+    "promptContext": "sites_facilities",
+    "prompt": "Are there specific areas where items tend to pile up or slow down?",
+    "subtitle": "Tell us about bottlenecks in your facility",
+    "helper": "Describe areas where production slows down or items accumulate.",
+    "placeholder": "Items often pile up between sewing and washing because of limited carts...",
+    "required": true,
+    "mapsTo": "sites.bottleneck_location_text",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "sites_bottleneck_cause": {
+    "id": "sites_bottleneck_cause",
+    "type": "multiple_choice",
+    "section": "sites",
+    "prompt": "Is that due to space, layout, or coordination?",
+    "helper": "What causes the bottleneck?",
+    "required": false,
+    "mapsTo": "sites.bottleneck_cause",
+    "skipIfCommitted": true,
+    "options": [
+      { "value": "Space", "label": "Space", "description": "Too crowded, not enough room" },
+      { "value": "Layout", "label": "Layout", "description": "Distance, pathway issues" },
+      { "value": "Coordination", "label": "Coordination", "description": "Timing, handoffs" },
+      { "value": "Other", "label": "Other", "description": "Different cause" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  }
+}
+

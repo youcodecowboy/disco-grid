@@ -1,0 +1,384 @@
+{
+  "design_brand_colors": {
+    "id": "design_brand_colors",
+    "type": "yes_no",
+    "section": "analytics",
+    "prompt": "Would you like to match Groovy's interface to your brand colors?",
+    "helper": "We can customize the interface to match your brand identity.",
+    "required": true,
+    "mapsTo": "design.brand_colors",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "design_brand_primary": {
+    "id": "design_brand_primary",
+    "type": "color_picker",
+    "section": "analytics",
+    "prompt": "Please pick or enter your brand's primary color.",
+    "helper": "Select the main color that represents your brand.",
+    "required": false,
+    "mapsTo": "design.brand_primary",
+    "conditional": {
+      "dependsOn": "design.brand_colors",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "design_brand_logo_url": {
+    "id": "design_brand_logo_url",
+    "type": "file_upload",
+    "section": "analytics",
+    "prompt": "Do you have a logo file?",
+    "helper": "Upload your company logo to personalize the interface.",
+    "required": false,
+    "mapsTo": "design.brand_logo_url",
+    "accept": "image/*",
+    "conditional": {
+      "dependsOn": "design.brand_colors",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "design_ui_density": {
+    "id": "design_ui_density",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "Do you prefer a compact interface (more info per screen) or a spacious one (clean and minimal)?",
+    "helper": "Select your preferred information density.",
+    "required": true,
+    "mapsTo": "design.ui_density",
+    "options": [
+      { "value": "Compact", "label": "Compact", "description": "More info per screen" },
+      { "value": "Balanced", "label": "Balanced", "description": "Just right" },
+      { "value": "Spacious", "label": "Spacious", "description": "Clean and minimal" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_default_dashboard_type": {
+    "id": "analytics_default_dashboard_type",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "What kind of dashboard layout best fits how you like to see data?",
+    "helper": "Select your preferred dashboard style.",
+    "required": true,
+    "mapsTo": "analytics.default_dashboard_type",
+    "options": [
+      { "value": "TableView", "label": "Table View", "description": "Grid-based data tables" },
+      { "value": "CardView", "label": "Card View", "description": "Visual blocks and cards" },
+      { "value": "ChartView", "label": "Chart View", "description": "Charts and graphs" },
+      { "value": "Mixed", "label": "Mixed", "description": "Combination of all" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_show_kpi_header": {
+    "id": "analytics_show_kpi_header",
+    "type": "yes_no",
+    "section": "analytics",
+    "prompt": "Would you like to see performance KPIs at the top?",
+    "helper": "Display key performance indicators at the top of dashboards.",
+    "required": false,
+    "mapsTo": "analytics.show_kpi_header",
+    "conditional": {
+      "dependsOn": "analytics.default_dashboard_type",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_default_dashboards": {
+    "id": "analytics_default_dashboards",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "Which dashboards would you like to start with?",
+    "helper": "Select all dashboards you want to see in your workspace.",
+    "required": true,
+    "mapsTo": "analytics.default_dashboards",
+    "multiSelect": true,
+    "options": [
+      { "value": "Production", "label": "Production", "description": "Production metrics" },
+      { "value": "Inventory", "label": "Inventory", "description": "Stock and materials" },
+      { "value": "Quality", "label": "Quality", "description": "QC and defect tracking" },
+      { "value": "Orders", "label": "Orders", "description": "Order management" },
+      { "value": "Team", "label": "Team", "description": "Team performance" },
+      { "value": "Finance", "label": "Finance", "description": "Financial metrics" },
+      { "value": "Custom", "label": "Custom", "description": "Custom dashboard" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_custom_dashboard_description": {
+    "id": "analytics_custom_dashboard_description",
+    "type": "text_input",
+    "section": "analytics",
+    "prompt": "Please describe your custom dashboard",
+    "helper": "Tell us what you'd like to see in your custom dashboard.",
+    "placeholder": "Supplier performance and material costs",
+    "required": false,
+    "mapsTo": "analytics.custom_dashboard_description",
+    "conditional": {
+      "dependsOn": "analytics.default_dashboards",
+      "showIf": ["Custom"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_kpis_priority": {
+    "id": "analytics_kpis_priority",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "Which metrics matter most to you right now?",
+    "helper": "Select all KPIs that are most important for your operations.",
+    "required": true,
+    "mapsTo": "analytics.kpis_priority",
+    "multiSelect": true,
+    "options": [
+      { "value": "Output", "label": "Output", "description": "Production quantity" },
+      { "value": "Efficiency", "label": "Efficiency", "description": "Time efficiency" },
+      { "value": "LeadTime", "label": "Lead Time", "description": "Time to completion" },
+      { "value": "ReworkRate", "label": "Rework Rate", "description": "Items needing rework" },
+      { "value": "DefectRate", "label": "Defect Rate", "description": "Quality issues" },
+      { "value": "CapacityUtilization", "label": "Capacity Utilization", "description": "Resource usage" },
+      { "value": "OnTimeDelivery", "label": "On-Time Delivery", "description": "Delivery performance" },
+      { "value": "ProfitMargin", "label": "Profit Margin", "description": "Financial performance" },
+      { "value": "Other", "label": "Other", "description": "Different metric" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_kpis_other": {
+    "id": "analytics_kpis_other",
+    "type": "text_input",
+    "section": "analytics",
+    "prompt": "Please specify other KPIs",
+    "helper": "List any additional KPIs you want to track.",
+    "placeholder": "Supplier reliability, Material waste",
+    "required": false,
+    "mapsTo": "analytics.kpis_other",
+    "conditional": {
+      "dependsOn": "analytics.kpis_priority",
+      "showIf": ["Other"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_kpis_update_frequency": {
+    "id": "analytics_kpis_update_frequency",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "How often would you like KPIs to update?",
+    "helper": "Select how frequently KPI values should refresh.",
+    "required": true,
+    "mapsTo": "analytics.kpis_update_frequency",
+    "options": [
+      { "value": "RealTime", "label": "Real-Time", "description": "Instant updates" },
+      { "value": "Hourly", "label": "Hourly", "description": "Every hour" },
+      { "value": "Daily", "label": "Daily", "description": "Once per day" },
+      { "value": "Weekly", "label": "Weekly", "description": "Once per week" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_visual_preference": {
+    "id": "analytics_visual_preference",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "How do you prefer to view data trends?",
+    "helper": "Select your preferred chart and visualization style.",
+    "required": true,
+    "mapsTo": "analytics.visual_preference",
+    "options": [
+      { "value": "BarCharts", "label": "Bar Charts", "description": "Bar graphs" },
+      { "value": "LineCharts", "label": "Line Charts", "description": "Trend lines" },
+      { "value": "PieCharts", "label": "Pie Charts", "description": "Distribution charts" },
+      { "value": "Heatmaps", "label": "Heatmaps", "description": "Color-coded grids" },
+      { "value": "Tables", "label": "Tables", "description": "Raw data tables" },
+      { "value": "Mixed", "label": "Mixed", "description": "Auto-select best style" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_auto_visual_suggestions": {
+    "id": "analytics_auto_visual_suggestions",
+    "type": "yes_no",
+    "section": "analytics",
+    "prompt": "Would you like Groovy to suggest chart styles automatically?",
+    "helper": "We can automatically choose the best chart type for each metric.",
+    "required": false,
+    "mapsTo": "analytics.auto_visual_suggestions",
+    "conditional": {
+      "dependsOn": "analytics.visual_preference",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "design_theme_style": {
+    "id": "design_theme_style",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "Do you prefer a light or dark theme?",
+    "helper": "Select your preferred interface appearance.",
+    "required": false,
+    "mapsTo": "design.theme_style",
+    "options": [
+      { "value": "Light", "label": "Light", "description": "Light background" },
+      { "value": "Dark", "label": "Dark", "description": "Dark background" },
+      { "value": "Auto", "label": "Auto", "description": "Follow system preference" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "design_grid_layout_interest": {
+    "id": "design_grid_layout_interest",
+    "type": "yes_no",
+    "section": "analytics",
+    "prompt": "Would you like to customize your dashboard layout now using the grid builder?",
+    "helper": "You can arrange widgets and customize your dashboard layout.",
+    "required": true,
+    "mapsTo": "design.grid_layout_interest",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "design_grid_layout_config": {
+    "id": "design_grid_layout_config",
+    "type": "grid_layout_builder",
+    "section": "analytics",
+    "prompt": "Customize your dashboard layout",
+    "subtitle": "Drag and arrange widgets to build your perfect dashboard",
+    "helper": "Add widgets, resize them, and arrange them to match your workflow.",
+    "required": false,
+    "mapsTo": "design.grid_layout_config",
+    "conditional": {
+      "dependsOn": "design.grid_layout_interest",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_alert_preferences": {
+    "id": "analytics_alert_preferences",
+    "type": "yes_no",
+    "section": "analytics",
+    "prompt": "Would you like to receive alerts for certain KPI thresholds?",
+    "helper": "Get notified when metrics exceed or fall below your thresholds.",
+    "required": false,
+    "mapsTo": "analytics.alert_preferences",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_alert_kpis": {
+    "id": "analytics_alert_kpis",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "Which KPIs?",
+    "helper": "Select KPIs you want to receive alerts for.",
+    "required": false,
+    "mapsTo": "analytics.alert_kpis",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "analytics.alert_preferences",
+      "showIf": true
+    },
+    "dynamicOptionsFrom": "analytics.kpis_priority",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_alert_channels": {
+    "id": "analytics_alert_channels",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "How should alerts appear?",
+    "helper": "Select all channels where you want to receive alerts.",
+    "required": false,
+    "mapsTo": "analytics.alert_channels",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "analytics.alert_preferences",
+      "showIf": true
+    },
+    "options": [
+      { "value": "Email", "label": "Email" },
+      { "value": "InApp", "label": "In-App", "description": "Notifications in Groovy" },
+      { "value": "WhatsApp", "label": "WhatsApp" },
+      { "value": "Slack", "label": "Slack" },
+      { "value": "DashboardBanner", "label": "Dashboard Banner", "description": "Banner on dashboard" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_auto_reports_enable": {
+    "id": "analytics_auto_reports_enable",
+    "type": "yes_no",
+    "section": "analytics",
+    "prompt": "Would you like automated reports summarizing your performance?",
+    "helper": "Receive regular reports with key insights and metrics.",
+    "required": true,
+    "mapsTo": "analytics.auto_reports_enable",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_auto_report_frequency": {
+    "id": "analytics_auto_report_frequency",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "How often?",
+    "helper": "Select how frequently you want automated reports.",
+    "required": false,
+    "mapsTo": "analytics.auto_report_frequency",
+    "conditional": {
+      "dependsOn": "analytics.auto_reports_enable",
+      "showIf": true
+    },
+    "options": [
+      { "value": "Daily", "label": "Daily" },
+      { "value": "Weekly", "label": "Weekly" },
+      { "value": "Monthly", "label": "Monthly" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "analytics_auto_report_recipients": {
+    "id": "analytics_auto_report_recipients",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "Who should receive them?",
+    "helper": "Select all recipients for automated reports.",
+    "required": false,
+    "mapsTo": "analytics.auto_report_recipients",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "analytics.auto_reports_enable",
+      "showIf": true
+    },
+    "options": [
+      { "value": "Me", "label": "Me", "description": "Primary user" },
+      { "value": "Supervisors", "label": "Supervisors", "description": "Department supervisors" },
+      { "value": "Clients", "label": "Clients", "description": "External clients" },
+      { "value": "Finance", "label": "Finance", "description": "Finance team" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "design_interaction_style": {
+    "id": "design_interaction_style",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "How do you prefer Groovy to communicate with you?",
+    "helper": "Select the tone for system messages and interactions.",
+    "required": false,
+    "mapsTo": "design.interaction_style",
+    "options": [
+      { "value": "Concise", "label": "Concise", "description": "Brief and to the point" },
+      { "value": "Conversational", "label": "Conversational", "description": "Friendly and chatty" },
+      { "value": "Playful", "label": "Playful", "description": "Fun and light-hearted" },
+      { "value": "Professional", "label": "Professional", "description": "Formal and businesslike" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  }
+}
+

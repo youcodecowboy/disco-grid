@@ -117,17 +117,31 @@ export function shouldShowQuestion(
   allQuestions: Question[]
 ): boolean {
   // Check industry match
-  if (!matchesIndustry(question, contract)) {
+  const industryMatch = matchesIndustry(question, contract);
+  if (!industryMatch) {
+    if (question.section === 'operations' && typeof window !== 'undefined') {
+      console.log(`[Question Engine] ❌ Skipping "${question.id}": industry/sub-industry mismatch`);
+    }
     return false;
   }
   
   // Check dependencies
-  if (!dependenciesMet(question, contract, allQuestions)) {
+  const depsOk = dependenciesMet(question, contract, allQuestions);
+  if (!depsOk) {
+    if (question.section === 'operations' && typeof window !== 'undefined') {
+      console.log(`[Question Engine] ❌ Skipping "${question.id}": dependencies not met`);
+    }
     return false;
   }
   
   // Check if already answered
-  if (alreadyAnswered(question, contract)) {
+  const answered = alreadyAnswered(question, contract);
+  if (answered) {
+    if (question.section === 'operations' && typeof window !== 'undefined') {
+      const isCommitted = isFieldCommitted(contract, question.mapsTo || '');
+      const hasValue = hasContractValue(contract, question.mapsTo || '');
+      console.log(`[Question Engine] ⏭️ Skipping "${question.id}": already answered (committed: ${isCommitted}, hasValue: ${hasValue}, mapsTo: ${question.mapsTo})`);
+    }
     return false;
   }
   
@@ -171,17 +185,25 @@ export function getNextVisibleQuestionIndex(
       const depsOk = dependenciesMet(question, contract, questions);
       const answered = alreadyAnswered(question, contract);
       
-      console.log(`[Question Engine] Q${i} "${question.id}": ${shouldShow ? '✅ SHOW' : '❌ SKIP'}`);
+      console.log(`[Question Engine] Q${i} "${question.id}" (section: ${question.section}): ${shouldShow ? '✅ SHOW' : '❌ SKIP'}`);
       if (!shouldShow) {
         console.log(`    Industry match: ${industryMatch}, Dependencies: ${depsOk}, Already answered: ${answered}`);
         if (question.industries) {
           console.log(`    Question industries: ${JSON.stringify(question.industries)}`);
         }
+        if (question.subIndustries) {
+          console.log(`    Question subIndustries: ${JSON.stringify(question.subIndustries)}, Contract subIndustry: ${contract.company.subIndustry}`);
+        }
+        if (question.skipIfCommitted && question.mapsTo) {
+          const isCommitted = isFieldCommitted(contract, question.mapsTo);
+          const hasValue = hasContractValue(contract, question.mapsTo);
+          console.log(`    skipIfCommitted check: mapsTo="${question.mapsTo}", isCommitted=${isCommitted}, hasValue=${hasValue}`);
+        }
       }
     }
     
     if (shouldShow) {
-      console.log(`[Question Engine] ✅ Found next visible question at index ${i}: "${question.id}"`);
+      console.log(`[Question Engine] ✅ Found next visible question at index ${i}: "${question.id}" (section: ${question.section})`);
       return i;
     }
   }

@@ -1,0 +1,44 @@
+{
+  "welcome": {
+    "id": "welcome",
+    "type": "welcome_screen",
+    "section": "welcome",
+    "prompt": "Welcome to Groovy!",
+    "subtitle": "Let's build your perfect operations platform",
+    "helper": "This will take about 30 minutes. We'll ask questions about your business to create a customized workspace.",
+    "required": false,
+    "mapsTo": null,
+    "cta": "Let's get started"
+  },
+  "industry_select": {
+    "id": "industry_select",
+    "type": "multiple_choice",
+    "section": "welcome",
+    "prompt": "What industry are you in?",
+    "subtitle": "This helps us customize your experience",
+    "helper": "Choose the category that best describes your business. We'll ask specific questions based on your selection.",
+    "required": true,
+    "mapsTo": "company.industry",
+    "options": [
+      {
+        "value": "manufacturing",
+        "label": "Manufacturing",
+        "description": "Produce physical products or goods",
+        "icon": "⚙️"
+      },
+      {
+        "value": "construction",
+        "label": "Construction",
+        "description": "Build structures, manage projects",
+        "icon": "🏗️"
+      },
+      {
+        "value": "defense",
+        "label": "Defense",
+        "description": "Government contracts, compliance",
+        "icon": "🛡️"
+      }
+    ]
+  }
+}
+

@@ -1,0 +1,17 @@
+{
+  "manufacturing_subindustry": {
+    "id": "manufacturing_subindustry",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "What type of manufacturing?",
+    "helper": "This helps us understand your specific needs.",
+    "required": true,
+    "mapsTo": "company.subIndustry",
+    "industries": ["manufacturing"],
+    "options": [
+      { "value": "fashion", "label": "Fashion & Apparel", "description": "Clothing, textiles, garments" },
+      { "value": "general", "label": "Other Manufacturing", "description": "Consumer goods, furniture, electronics, etc." }
+    ]
+  }
+}
+

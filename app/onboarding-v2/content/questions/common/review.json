@@ -1,0 +1,23 @@
+{
+  "review": {
+    "id": "review",
+    "type": "review_summary",
+    "section": "review",
+    "prompt": "Review your configuration",
+    "helper": "Check everything looks correct. You can go back to edit any section.",
+    "required": true,
+    "mapsTo": null
+  },
+  "review_confirm": {
+    "id": "review_confirm",
+    "type": "final_confirmation",
+    "section": "review",
+    "prompt": "Ready to generate your application?",
+    "subtitle": "This will take about 20 seconds",
+    "helper": "You can always customize further after generation.",
+    "required": true,
+    "mapsTo": null,
+    "cta": "Build My Application"
+  }
+}
+

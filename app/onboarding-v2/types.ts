@@ -31,7 +31,13 @@ export type QuestionType =
   | 'task_checklist'
   | 'gap_filling'
   | 'review_summary'
-  | 'final_confirmation';
+  | 'final_confirmation'
+  | 'confirm_number'
+  | 'department_sizes'
+  | 'role_counts'
+  | 'supervisors_list'
+  | 'color_picker'
+  | 'grid_layout_builder';
 
 export type SectionId =
   | 'welcome'
@@ -113,6 +119,7 @@ export interface OnboardingUIState {
   visitedSteps: Set<number>;
   offlineMode: boolean;
   demoMode: boolean; // Demo mode for investor presentations
+  devMode: boolean; // Dev mode: skip validation, allow free navigation
 }
 
 export interface OnboardingStore {
@@ -140,6 +147,7 @@ export interface OnboardingStore {
   // Offline & Demo
   setOfflineMode: (offline: boolean) => void;
   setDemoMode: (enabled: boolean) => void;
+  setDevMode: (enabled: boolean) => void;
   queueUpdate: (update: any) => void;
   flushQueue: () => void;
 }

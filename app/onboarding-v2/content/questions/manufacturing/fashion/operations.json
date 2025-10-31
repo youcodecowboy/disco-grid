@@ -1,0 +1,456 @@
+{
+  "operations_overview_nlp": {
+    "id": "operations_overview_nlp",
+    "type": "nlp_input",
+    "section": "operations",
+    "promptContext": "operations",
+    "prompt": "Can you walk me through how production flows in your factory — from start to finish?",
+    "subtitle": "Describe your production process",
+    "helper": "Tell us about each stage your products go through. We'll extract the stages automatically.",
+    "placeholder": "We start with cutting fabric, then move to sewing where garments are assembled, followed by washing and finishing, and finally packing for shipment...",
+    "required": true,
+    "mapsTo": "operations.overview_text",
+    "minLength": 50,
+    "maxLength": 500,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "skipIfCommitted": true
+  },
+  "operations_stages_confirm": {
+    "id": "operations_stages_confirm",
+    "type": "dynamic_list",
+    "section": "operations",
+    "prompt": "We identified these stages. Does this look right?",
+    "helper": "Review and edit the stages we extracted. You can add, remove, or modify stages.",
+    "required": true,
+    "mapsTo": "operations.stages_list",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "placeholder": "e.g., Cutting, Sewing, Washing, Finishing, Packing",
+    "maxItems": 20,
+    "skipIfCommitted": true
+  },
+  "operations_stage_durations": {
+    "id": "operations_stage_durations",
+    "type": "workflow_stages",
+    "section": "operations",
+    "prompt": "Let's set approximate times for each stage",
+    "subtitle": "How long does each stage typically take?",
+    "helper": "Enter duration in hours for each stage. This helps us calculate throughput and lead times.",
+    "required": true,
+    "mapsTo": "operations.stage_durations",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "skipIfCommitted": true
+  },
+  "operations_stage_buffer_use": {
+    "id": "operations_stage_buffer_use",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Would you like to include buffer time between stages?",
+    "helper": "Buffer time accounts for waiting, material handling, and transitions between stages.",
+    "required": false,
+    "mapsTo": "operations.stage_buffer_use",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_subcontract_use": {
+    "id": "operations_subcontract_use",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Do you subcontract any part of production?",
+    "helper": "This helps us understand your full production flow including external partners.",
+    "required": false,
+    "mapsTo": "operations.subcontract_use",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_subcontract_stages": {
+    "id": "operations_subcontract_stages",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "Which stages or tasks do you subcontract?",
+    "helper": "Select all stages that are done by external partners.",
+    "required": false,
+    "mapsTo": "operations.subcontract_stages",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "operations.subcontract_use",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "dynamicOptionsFrom": "operations.stages_list"
+  },
+  "operations_subcontract_partners_consistent": {
+    "id": "operations_subcontract_partners_consistent",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Are these consistent partners?",
+    "helper": "Do you work with the same subcontractors regularly, or does it vary?",
+    "required": false,
+    "mapsTo": "operations.subcontract_partners_consistent",
+    "conditional": {
+      "dependsOn": "operations.subcontract_use",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_planning_method": {
+    "id": "operations_planning_method",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "How do you plan production each week?",
+    "helper": "What tool or method do you use to schedule and plan production?",
+    "required": true,
+    "mapsTo": "operations.planning_method",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "ManualBoard", "label": "Manual Board", "description": "Whiteboard, kanban board, notes on wall" },
+      { "value": "Spreadsheet", "label": "Spreadsheet", "description": "Excel, Google Sheets" },
+      { "value": "ERP", "label": "ERP System", "description": "SAP, NetSuite, or other ERP" },
+      { "value": "Verbal", "label": "Verbal Planning", "description": "Discussions, memory-based" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ]
+  },
+  "operations_planning_method_other": {
+    "id": "operations_planning_method_other",
+    "type": "text_input",
+    "section": "operations",
+    "prompt": "Please describe your planning method",
+    "helper": "Tell us about how you plan production.",
+    "required": false,
+    "mapsTo": "operations.planning_method_other",
+    "conditional": {
+      "dependsOn": "operations.planning_method",
+      "showIf": "Other"
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_daily_planning_style": {
+    "id": "operations_daily_planning_style",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "Do you plan by order, by batch, or by capacity slots?",
+    "helper": "How do you structure your daily production planning?",
+    "required": false,
+    "mapsTo": "operations.daily_planning_style",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "ByOrder", "label": "By Order", "description": "Order-based planning" },
+      { "value": "ByBatch", "label": "By Batch", "description": "Grouped by product type" },
+      { "value": "ByCapacity", "label": "By Capacity Slots", "description": "Machine hours, takt time" },
+      { "value": "Mixed", "label": "Mixed", "description": "Combination of methods" }
+    ]
+  },
+  "operations_target_output_metric": {
+    "id": "operations_target_output_metric",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Do you have a daily or weekly production target?",
+    "helper": "Do you track production targets or quotas?",
+    "required": false,
+    "mapsTo": "operations.target_output_metric",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_target_output_qty": {
+    "id": "operations_target_output_qty",
+    "type": "text_input",
+    "section": "operations",
+    "prompt": "Roughly how many units?",
+    "helper": "Enter your target production quantity (units per day or week).",
+    "placeholder": "800",
+    "required": false,
+    "mapsTo": "operations.target_output_qty",
+    "conditional": {
+      "dependsOn": "operations.target_output_metric",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_track_materials_internally": {
+    "id": "operations_track_materials_internally",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Do you track materials and stock movement inside the factory?",
+    "helper": "Do you monitor raw materials, WIP, and finished goods inventory?",
+    "required": true,
+    "mapsTo": "operations.track_materials_internally",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_inventory_levels_tracked": {
+    "id": "operations_inventory_levels_tracked",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "Do you track raw materials, WIP, and finished goods separately?",
+    "helper": "Select all inventory types you currently track.",
+    "required": false,
+    "mapsTo": "operations.inventory_levels_tracked",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "operations.track_materials_internally",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "Raw", "label": "Raw Materials", "description": "Fabric, components, supplies" },
+      { "value": "WIP", "label": "Work in Progress", "description": "Items between stages" },
+      { "value": "Finished", "label": "Finished Goods", "description": "Completed products ready to ship" }
+    ]
+  },
+  "operations_storage_system": {
+    "id": "operations_storage_system",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "How do you store goods between stages?",
+    "helper": "What storage system do you use for materials and WIP?",
+    "required": false,
+    "mapsTo": "operations.storage_system",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "DefinedBins", "label": "Defined Bins", "description": "Specific bins or locations" },
+      { "value": "Racks", "label": "Racks", "description": "Storage racks" },
+      { "value": "Carts", "label": "Carts", "description": "Mobile carts" },
+      { "value": "Mixed", "label": "Mixed", "description": "Combination of systems" },
+      { "value": "Other", "label": "Other", "description": "Different system" }
+    ]
+  },
+  "operations_storage_system_other": {
+    "id": "operations_storage_system_other",
+    "type": "text_input",
+    "section": "operations",
+    "prompt": "Please describe your storage system",
+    "helper": "Tell us about how you store materials and goods.",
+    "required": false,
+    "mapsTo": "operations.storage_system_other",
+    "conditional": {
+      "dependsOn": "operations.storage_system",
+      "showIf": "Other"
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_qr_or_barcode_use": {
+    "id": "operations_qr_or_barcode_use",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "Do you currently use barcodes or QR codes to track items?",
+    "helper": "This helps us determine if we need to integrate with existing codes or generate new ones.",
+    "required": true,
+    "mapsTo": "operations.qr_or_barcode_use",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "None", "label": "None", "description": "Don't use codes" },
+      { "value": "Barcodes", "label": "Barcodes", "description": "UPC, EAN, standard barcodes" },
+      { "value": "QRCodes", "label": "QR Codes", "description": "QR code labels" },
+      { "value": "Both", "label": "Both", "description": "Use both types" }
+    ]
+  },
+  "operations_qc_stages": {
+    "id": "operations_qc_stages",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "At which stages do you perform quality checks?",
+    "helper": "Select all stages where quality inspection happens.",
+    "required": true,
+    "mapsTo": "operations.qc_stages",
+    "multiSelect": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "dynamicOptionsFrom": "operations.stages_list"
+  },
+  "operations_qc_record_defects": {
+    "id": "operations_qc_record_defects",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Do you record reasons for defects or rework?",
+    "helper": "Do you track why items fail QC and need rework?",
+    "required": false,
+    "mapsTo": "operations.qc_record_defects",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_defect_rate_estimate": {
+    "id": "operations_defect_rate_estimate",
+    "type": "text_input",
+    "section": "operations",
+    "prompt": "Roughly what % of items require rework or repair?",
+    "helper": "Enter an approximate percentage (e.g., 3.2 for 3.2%).",
+    "placeholder": "3.2",
+    "required": false,
+    "mapsTo": "operations.defect_rate_estimate",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_total_lead_time_days": {
+    "id": "operations_total_lead_time_days",
+    "type": "text_input",
+    "section": "operations",
+    "prompt": "From start to finish, how long does one unit usually take?",
+    "helper": "Enter the total lead time in days from when production starts to when it's ready to ship.",
+    "placeholder": "4",
+    "required": true,
+    "mapsTo": "operations.total_lead_time_days",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_delay_bottleneck_stage": {
+    "id": "operations_delay_bottleneck_stage",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "Which stage causes the most delay?",
+    "helper": "Select the stage that is most often the bottleneck.",
+    "required": false,
+    "mapsTo": "operations.delay_bottleneck_stage",
+    "conditional": {
+      "dependsOn": "operations.total_lead_time_days",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "dynamicOptionsFrom": "operations.stages_list"
+  },
+  "operations_data_tracking_method": {
+    "id": "operations_data_tracking_method",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "How do you currently record production data?",
+    "helper": "What method or tool do you use to track production progress?",
+    "required": true,
+    "mapsTo": "operations.data_tracking_method",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "Paper", "label": "Paper", "description": "Manual logs, paper forms" },
+      { "value": "Spreadsheet", "label": "Spreadsheet", "description": "Excel, Google Sheets" },
+      { "value": "Software", "label": "Software System", "description": "ERP, production software" },
+      { "value": "Verbal", "label": "Verbal", "description": "Discussions, memory" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ]
+  },
+  "operations_data_tracking_tool": {
+    "id": "operations_data_tracking_tool",
+    "type": "text_input",
+    "section": "operations",
+    "prompt": "What tool?",
+    "helper": "Enter the name of the software or system you use.",
+    "placeholder": "Excel, SAP, NetSuite",
+    "required": false,
+    "mapsTo": "operations.data_tracking_tool",
+    "conditional": {
+      "dependsOn": "operations.data_tracking_method",
+      "showIf": "Software"
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_data_entry_frequency": {
+    "id": "operations_data_entry_frequency",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "How often is production data updated?",
+    "helper": "How frequently do you update or record production information?",
+    "required": false,
+    "mapsTo": "operations.data_entry_frequency",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "RealTime", "label": "Real-time", "description": "Updated continuously" },
+      { "value": "Daily", "label": "Daily", "description": "Updated once per day" },
+      { "value": "Weekly", "label": "Weekly", "description": "Updated weekly" },
+      { "value": "AfterCompletion", "label": "After Completion", "description": "Updated when job is done" },
+      { "value": "Never", "label": "Never", "description": "Don't track regularly" }
+    ]
+  },
+  "operations_biggest_bottleneck_text": {
+    "id": "operations_biggest_bottleneck_text",
+    "type": "nlp_input",
+    "section": "operations",
+    "promptContext": "operations",
+    "prompt": "What part of your operation causes the most delays or frustration?",
+    "subtitle": "Tell us about your biggest bottleneck",
+    "helper": "Describe the main challenges or delays you face in production.",
+    "placeholder": "Delays happen during washing because we outsource it and don't have visibility into their schedule...",
+    "required": true,
+    "mapsTo": "operations.biggest_bottleneck_text",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_bottleneck_type": {
+    "id": "operations_bottleneck_type",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "Would you say it's related to people, machines, or data?",
+    "helper": "Which category best describes your bottleneck?",
+    "required": false,
+    "mapsTo": "operations.bottleneck_type",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "People", "label": "People", "description": "Staff, training, team capacity" },
+      { "value": "Machines", "label": "Machines", "description": "Equipment, breakdowns, availability" },
+      { "value": "Data", "label": "Data", "description": "Information, tracking, visibility" },
+      { "value": "Other", "label": "Other", "description": "Different cause" }
+    ]
+  },
+  "operations_auto_reports_interest": {
+    "id": "operations_auto_reports_interest",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Would you like Groovy to automatically send production summaries to you or clients?",
+    "helper": "We can automatically generate and send production reports.",
+    "required": false,
+    "mapsTo": "operations.auto_reports_interest",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "operations_auto_report_frequency": {
+    "id": "operations_auto_report_frequency",
+    "type": "multiple_choice",
+    "section": "operations",
+    "prompt": "How often?",
+    "helper": "Select how frequently you'd like to receive reports.",
+    "required": false,
+    "mapsTo": "operations.auto_report_frequency",
+    "conditional": {
+      "dependsOn": "operations.auto_reports_interest",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "Daily", "label": "Daily", "description": "Daily summaries" },
+      { "value": "Weekly", "label": "Weekly", "description": "Weekly reports" },
+      { "value": "Monthly", "label": "Monthly", "description": "Monthly summaries" }
+    ]
+  },
+  "operations_delay_alert_interest": {
+    "id": "operations_delay_alert_interest",
+    "type": "yes_no",
+    "section": "operations",
+    "prompt": "Would you like to be alerted if a stage exceeds its target time?",
+    "helper": "We can send alerts when production stages take longer than expected.",
+    "required": false,
+    "mapsTo": "operations.delay_alert_interest",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  }
+}
+

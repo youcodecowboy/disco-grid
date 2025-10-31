@@ -1,0 +1,383 @@
+{
+  "integrations_digital_tools_level": {
+    "id": "integrations_digital_tools_level",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "How would you describe your current level of digital tools in daily use?",
+    "helper": "Select the option that best describes your digital maturity.",
+    "required": true,
+    "mapsTo": "integrations.digital_tools_level",
+    "options": [
+      { "value": "None", "label": "None", "description": "No digital tools in regular use" },
+      { "value": "Basic (Excel/Sheets)", "label": "Basic (Excel/Sheets)", "description": "Spreadsheets and basic tools" },
+      { "value": "Intermediate (ERP/CRM)", "label": "Intermediate (ERP/CRM)", "description": "ERP or CRM systems" },
+      { "value": "Advanced (Integrated Systems)", "label": "Advanced (Integrated Systems)", "description": "Multiple integrated systems" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_production_system": {
+    "id": "integrations_production_system",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "How do you currently track production data?",
+    "helper": "Select your primary method for tracking production.",
+    "required": true,
+    "mapsTo": "integrations.production_system",
+    "options": [
+      { "value": "Paper", "label": "Paper", "description": "Handwritten logs, clipboards" },
+      { "value": "Spreadsheet", "label": "Spreadsheet", "description": "Excel, Google Sheets" },
+      { "value": "ERP", "label": "ERP", "description": "ERP system" },
+      { "value": "CustomSoftware", "label": "Custom Software", "description": "Your own system" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_production_system_name": {
+    "id": "integrations_production_system_name",
+    "type": "text_input",
+    "section": "integrations",
+    "prompt": "Which system?",
+    "helper": "Enter the name of your ERP or custom software.",
+    "placeholder": "NetSuite, SAP, Custom System",
+    "required": false,
+    "mapsTo": "integrations.production_system_name",
+    "conditional": {
+      "dependsOn": "integrations.production_system",
+      "showIf": ["ERP", "CustomSoftware"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_inventory_system": {
+    "id": "integrations_inventory_system",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "How do you track inventory or materials?",
+    "helper": "Select your primary inventory tracking method.",
+    "required": true,
+    "mapsTo": "integrations.inventory_system",
+    "options": [
+      { "value": "None", "label": "None", "description": "Don't track inventory" },
+      { "value": "Paper", "label": "Paper", "description": "Paper logs" },
+      { "value": "Spreadsheet", "label": "Spreadsheet", "description": "Excel, Sheets" },
+      { "value": "ERP", "label": "ERP", "description": "ERP system" },
+      { "value": "WMS", "label": "WMS", "description": "Warehouse Management System" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_inventory_system_name": {
+    "id": "integrations_inventory_system_name",
+    "type": "text_input",
+    "section": "integrations",
+    "prompt": "Which system?",
+    "helper": "Enter the name of your ERP or WMS.",
+    "placeholder": "NetSuite, SAP, Fishbowl",
+    "required": false,
+    "mapsTo": "integrations.inventory_system_name",
+    "conditional": {
+      "dependsOn": "integrations.inventory_system",
+      "showIf": ["ERP", "WMS"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_order_system": {
+    "id": "integrations_order_system",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "How are orders currently recorded and managed?",
+    "helper": "Select your primary order management method.",
+    "required": true,
+    "mapsTo": "integrations.order_system",
+    "options": [
+      { "value": "Paper", "label": "Paper", "description": "Paper forms" },
+      { "value": "Spreadsheet", "label": "Spreadsheet", "description": "Excel, Sheets" },
+      { "value": "ERP", "label": "ERP", "description": "ERP system" },
+      { "value": "ECommerce", "label": "E-Commerce Platform", "description": "Online store" },
+      { "value": "Email", "label": "Email", "description": "Email orders" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_order_platforms": {
+    "id": "integrations_order_platforms",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "Which platform?",
+    "helper": "Select all e-commerce platforms you use.",
+    "required": false,
+    "mapsTo": "integrations.order_platforms",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "integrations.order_system",
+      "showIf": "ECommerce"
+    },
+    "options": [
+      { "value": "Shopify", "label": "Shopify" },
+      { "value": "WooCommerce", "label": "WooCommerce" },
+      { "value": "Custom", "label": "Custom Platform" },
+      { "value": "Other", "label": "Other" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_accounting_system": {
+    "id": "integrations_accounting_system",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "What do you use for accounting or invoicing?",
+    "helper": "Select your accounting system.",
+    "required": false,
+    "mapsTo": "integrations.accounting_system",
+    "options": [
+      { "value": "None", "label": "None", "description": "No accounting system" },
+      { "value": "Manual", "label": "Manual", "description": "Handwritten invoices" },
+      { "value": "Excel", "label": "Excel", "description": "Excel spreadsheets" },
+      { "value": "QuickBooks", "label": "QuickBooks" },
+      { "value": "Xero", "label": "Xero" },
+      { "value": "ERP", "label": "ERP", "description": "ERP accounting module" },
+      { "value": "Other", "label": "Other", "description": "Different system" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_accounting_system_name": {
+    "id": "integrations_accounting_system_name",
+    "type": "text_input",
+    "section": "integrations",
+    "prompt": "Which system?",
+    "helper": "Enter the name of your accounting system.",
+    "placeholder": "NetSuite, SAP, Custom",
+    "required": false,
+    "mapsTo": "integrations.accounting_system_name",
+    "conditional": {
+      "dependsOn": "integrations.accounting_system",
+      "showIf": ["ERP", "Other"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_communication_tools": {
+    "id": "integrations_communication_tools",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "What tools do you use to communicate internally or with clients?",
+    "helper": "Select all communication tools you use.",
+    "required": true,
+    "mapsTo": "integrations.communication_tools",
+    "multiSelect": true,
+    "options": [
+      { "value": "Verbal", "label": "Verbal", "description": "In-person conversations" },
+      { "value": "WhatsApp", "label": "WhatsApp" },
+      { "value": "Email", "label": "Email" },
+      { "value": "Slack", "label": "Slack" },
+      { "value": "Teams", "label": "Microsoft Teams" },
+      { "value": "ERPChat", "label": "ERP Chat", "description": "Internal ERP chat" },
+      { "value": "Other", "label": "Other", "description": "Different tool" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_communication_other": {
+    "id": "integrations_communication_other",
+    "type": "text_input",
+    "section": "integrations",
+    "prompt": "Please specify other communication tools",
+    "helper": "List any other communication tools you use.",
+    "placeholder": "Telegram, WeChat, etc.",
+    "required": false,
+    "mapsTo": "integrations.communication_other",
+    "conditional": {
+      "dependsOn": "integrations.communication_tools",
+      "showIf": ["Other"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_file_storage_system": {
+    "id": "integrations_file_storage_system",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "Where do you store important documents, tech packs, or reports?",
+    "helper": "Select all storage systems you use.",
+    "required": true,
+    "mapsTo": "integrations.file_storage_system",
+    "multiSelect": true,
+    "options": [
+      { "value": "LocalComputer", "label": "Local Computer", "description": "Desktop, local files" },
+      { "value": "GoogleDrive", "label": "Google Drive" },
+      { "value": "Dropbox", "label": "Dropbox" },
+      { "value": "OneDrive", "label": "OneDrive / SharePoint" },
+      { "value": "ERP", "label": "ERP", "description": "ERP document management" },
+      { "value": "Paper", "label": "Paper", "description": "Physical files" },
+      { "value": "Other", "label": "Other", "description": "Different system" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_reporting_method": {
+    "id": "integrations_reporting_method",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "How do you currently review production or performance data?",
+    "helper": "Select your primary reporting method.",
+    "required": true,
+    "mapsTo": "integrations.reporting_method",
+    "options": [
+      { "value": "PaperReports", "label": "Paper Reports", "description": "Printed reports" },
+      { "value": "ExcelDashboards", "label": "Excel Dashboards", "description": "Spreadsheet charts" },
+      { "value": "ERP", "label": "ERP", "description": "ERP dashboards" },
+      { "value": "None", "label": "None", "description": "Don't review reports" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_reporting_frequency": {
+    "id": "integrations_reporting_frequency",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "How often do you review it?",
+    "helper": "Select how frequently you review production data.",
+    "required": false,
+    "mapsTo": "integrations.reporting_frequency",
+    "conditional": {
+      "dependsOn": "integrations.reporting_method",
+      "showIf": ["PaperReports", "ExcelDashboards", "ERP", "Other"]
+    },
+    "options": [
+      { "value": "Daily", "label": "Daily" },
+      { "value": "Weekly", "label": "Weekly" },
+      { "value": "Monthly", "label": "Monthly" },
+      { "value": "Rarely", "label": "Rarely", "description": "As needed" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_data_sharing_partners": {
+    "id": "integrations_data_sharing_partners",
+    "type": "yes_no",
+    "section": "integrations",
+    "prompt": "Do you share any production or quality data with clients or partners?",
+    "helper": "Do you provide data reports to external parties?",
+    "required": false,
+    "mapsTo": "integrations.data_sharing_partners",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_data_sharing_format": {
+    "id": "integrations_data_sharing_format",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "How is that data shared?",
+    "helper": "Select all methods you use to share data.",
+    "required": false,
+    "mapsTo": "integrations.data_sharing_format",
+    "multiSelect": true,
+    "conditional": {
+      "dependsOn": "integrations.data_sharing_partners",
+      "showIf": true
+    },
+    "options": [
+      { "value": "Email", "label": "Email" },
+      { "value": "PDF", "label": "PDF", "description": "PDF reports" },
+      { "value": "Spreadsheet", "label": "Spreadsheet", "description": "sc/sheets" },
+      { "value": "Portal", "label": "Portal", "description": "Online portal" },
+      { "value": "Verbal", "label": "Verbal", "description": "Phone or in-person" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_data_backup_method": {
+    "id": "integrations_data_backup_method",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "Do you back up your data?",
+    "helper": "Select your backup method.",
+    "required": false,
+    "mapsTo": "integrations.data_backup_method",
+    "options": [
+      { "value": "None", "label": "None", "description": "No backup" },
+      { "value": "ManualCopies", "label": "Manual Copies", "description": "USB, external drive" },
+      { "value": "CloudAuto", "label": "Cloud Auto", "description": "Automatic cloud backup" },
+      { "value": "ITManaged", "label": "IT Managed", "description": "Server backup, IT handles" },
+      { "value": "Other", "label": "Other", "description": "Different method" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_data_backup_frequency": {
+    "id": "integrations_data_backup_frequency",
+    "type": "multiple_choice",
+    "section": "integrations",
+    "prompt": "How frequently?",
+    "helper": "Select backup frequency.",
+    "required": false,
+    "mapsTo": "integrations.data_backup_frequency",
+    "conditional": {
+      "dependsOn": "integrations.data_backup_method",
+      "showIf": ["ManualCopies", "CloudAuto", "ITManaged", "Other"]
+    },
+    "options": [
+      { "value": "Daily", "label": "Daily" },
+      { "value": "Weekly", "label": "Weekly" },
+      { "value": "Monthly", "label": "Monthly" },
+      { "value": "Rarely", "label": "Rarely", "description": "As needed" }
+    ],
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_data_challenges_text": {
+    "id": "integrations_data_challenges_text",
+    "type": "nlp_input",
+    "section": "integrations",
+    "promptContext": "integrations",
+    "prompt": "What's most frustrating about your current data or system setup?",
+    "subtitle": "Tell us about your data challenges",
+    "helper": "Describe what problems you face with your current systems.",
+    "placeholder": "Everything is scattered across files and folders, no single view of progress...",
+    "required": true,
+    "mapsTo": "integrations.data_challenges_text",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_priority_issue_flag": {
+    "id": "integrations_priority_issue_flag",
+    "type": "yes_no",
+    "section": "integrations",
+    "prompt": "Would you like Groovy to help solve that first?",
+    "helper": "We can prioritize this challenge in your integration plan.",
+    "required": false,
+    "mapsTo": "integrations.priority_issue_flag",
+    "conditional": {
+      "dependsOn": "integrations.data_challenges_text",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "integrations_integration_interest": {
+    "id": "integrations_integration_interest",
+    "type": "nlp_input",
+    "section": "integrations",
+    "promptContext": "integrations",
+    "prompt": "Are there any systems you'd like Groovy to integrate with in the future?",
+    "subtitle": "Future integration interests",
+    "helper": "Describe any systems or tools you'd like to connect with Groovy.",
+    "placeholder": "We'd like to integrate with Shopify orders and QuickBooks invoices later...",
+    "required": false,
+    "mapsTo": "integrations.integration_interest",
+    "minLength": 10,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  }
+}
+

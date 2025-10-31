@@ -1,0 +1,27 @@
+{
+  "teams_structure_nlp": {
+    "id": "teams_structure_nlp",
+    "type": "nlp_input",
+    "section": "teams",
+    "promptContext": "teams_departments",
+    "prompt": "Describe your team structure",
+    "helper": "Tell us about your departments, roles, and how your team is organized.",
+    "placeholder": "We have an operations team that handles production, a quality team for inspections, warehouse team for receiving and shipping, and admin team for planning...",
+    "required": true,
+    "mapsTo": "teams.departments",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"]
+  },
+  "teams_floor_app": {
+    "id": "teams_floor_app",
+    "type": "yes_no",
+    "section": "teams",
+    "prompt": "Will you have floor workers scanning QR codes?",
+    "helper": "Enable the mobile Floor App for workers to scan items and update status.",
+    "required": true,
+    "mapsTo": "teams.floorAppEnabled",
+    "industries": ["manufacturing"]
+  }
+}
+

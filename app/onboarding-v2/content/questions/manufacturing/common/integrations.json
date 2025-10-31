@@ -1,0 +1,41 @@
+{
+  "integrations_existing_systems": {
+    "id": "integrations_existing_systems",
+    "type": "yes_no",
+    "section": "integrations",
+    "prompt": "Do you use an ERP, MRP, or other business system?",
+    "helper": "We can integrate with your existing tools.",
+    "required": true,
+    "mapsTo": "integrations",
+    "industries": ["manufacturing"]
+  },
+  "integrations_system_selection": {
+    "id": "integrations_system_selection",
+    "type": "integration_grid",
+    "section": "integrations",
+    "prompt": "Which systems do you use?",
+    "helper": "Select all that apply. We'll prioritize integrations based on your needs.",
+    "required": true,
+    "mapsTo": "integrations.systems",
+    "conditional": {
+      "dependsOn": "integrations_existing_systems",
+      "showIf": true
+    },
+    "industries": ["manufacturing"]
+  },
+  "integrations_api_access": {
+    "id": "integrations_api_access",
+    "type": "yes_no",
+    "section": "integrations",
+    "prompt": "Do you need API access or webhooks?",
+    "helper": "API access lets you build custom integrations.",
+    "required": false,
+    "mapsTo": "integrations.apiAccess",
+    "conditional": {
+      "dependsOn": "integrations_existing_systems",
+      "showIf": true
+    },
+    "industries": ["manufacturing"]
+  }
+}
+

@@ -20,10 +20,9 @@ import { WelcomeModal } from './components/WelcomeModal';
 import { generateApplication } from './lib/generation';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import { loadQuestionsForIndustry } from './lib/question-loader';
-import { shouldShowQuestion, getNextVisibleQuestionIndex, getPreviousVisibleQuestionIndex } from './lib/question-engine';
+import { shouldShowQuestion } from './lib/question-engine';
 import { getContractForIndustry } from './lib/contract-factory';
 import { generateDemoContract } from './lib/demo-data';
-import type { Question } from './types';
 
 export default function OnboardingV2Page() {
   const router = useRouter();
@@ -37,6 +36,7 @@ export default function OnboardingV2Page() {
     updateGenerationProgress,
     completeGeneration,
     setDemoMode,
+    setDevMode,
   } = useOnboardingStore();
   
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -45,15 +45,21 @@ export default function OnboardingV2Page() {
   const [showEntityConfirmation, setShowEntityConfirmation] = useState(false);
   const [isExtractingNLP, setIsExtractingNLP] = useState(false);
   
-  // Load questions based on selected industry
-  const allQuestions = loadQuestionsForIndustry(contract.company.industry);
-  
-  // Filter to only visible questions using intelligent question engine
-  const visibleQuestions = allQuestions.filter(q => 
-    shouldShowQuestion(q as Question, contract, allQuestions as Question[])
+  // Load questions based on selected industry and sub-industry
+  const allQuestions = loadQuestionsForIndustry(
+    contract.company.industry,
+    contract.company.subIndustry || undefined
   );
   
-  const currentQuestion = allQuestions[uiState.currentStep];
+  // Filter to only visible questions using intelligent question engine
+  // Type assertion needed due to different Question type definitions
+  const visibleQuestions = allQuestions.filter(q => 
+    shouldShowQuestion(q as any, contract, allQuestions as any)
+  );
+  
+  // CRITICAL: Use visibleQuestions for navigation, not allQuestions
+  // This ensures we only navigate through questions that should actually be shown
+  const currentQuestion = visibleQuestions[uiState.currentStep];
   
   // Check if we should show entity confirmation after current NLP input
   const shouldShowConfirmation = 
@@ -153,6 +159,11 @@ export default function OnboardingV2Page() {
     }
   };
   
+  // Handle dev mode toggle
+  const handleDevModeToggle = (enabled: boolean) => {
+    setDevMode(enabled);
+  };
+  
   // Check for saved progress on mount
   useEffect(() => {
     setMounted(true);
@@ -180,15 +191,39 @@ export default function OnboardingV2Page() {
     router.push('/playground');
   };
   
-  // Calculate progress based on visible questions
-  const totalQuestions = allQuestions.length;
-  const progress = Math.round((uiState.currentStep / totalQuestions) * 100);
+  // Calculate progress based on ALL loaded questions (not filtered)
+  // This gives accurate total count regardless of filtering
+  // Use visibleQuestions for total count - this is what user actually sees
+  const totalQuestions = visibleQuestions.length;
+  const progress = Math.round(((uiState.currentStep + 1) / totalQuestions) * 100);
+  
+  // Debug logging
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    const opsLoaded = allQuestions.filter(q => q.section === 'operations');
+    const opsVisible = visibleQuestions.filter(q => q.section === 'operations');
+    console.log(`[Onboarding] 📊 Question Summary:`);
+    console.log(`  Total loaded: ${allQuestions.length}, Visible: ${visibleQuestions.length}`);
+    console.log(`  Current step: ${uiState.currentStep + 1} of ${visibleQuestions.length}`);
+    console.log(`  Current question: ${currentQuestion?.id || 'none'} (section: ${currentQuestion?.section || 'none'})`);
+    console.log(`  Operations loaded: ${opsLoaded.length}, Operations visible: ${opsVisible.length}`);
+    if (opsVisible.length > 0) {
+      console.log(`  Operations question IDs (visible):`, opsVisible.map((q: any) => q.id).slice(0, 10));
+    }
+    if (opsLoaded.length !== opsVisible.length) {
+      console.warn(`  ⚠️ ${opsLoaded.length - opsVisible.length} operations questions filtered out!`);
+      const filteredOps = opsLoaded.filter(q => !opsVisible.includes(q));
+      console.warn(`  Filtered out:`, filteredOps.map((q: any) => q.id));
+    }
+  }
   
   // Handle next
   const handleNext = async () => {
-    // Validate before proceeding
-    if (!validateCurrentQuestion()) {
-      return;
+    // Skip validation in dev mode
+    if (!uiState.devMode) {
+      // Validate before proceeding
+      if (!validateCurrentQuestion()) {
+        return;
+      }
     }
 
     // Check if this is the last question or review step
@@ -198,25 +233,28 @@ export default function OnboardingV2Page() {
       return;
     }
 
-    // If current question is NLP input or enriched_text, extract entities first
-    if (currentQuestion?.type === 'nlp_input' || currentQuestion?.type === 'enriched_text') {
-      const extractFn = (window as any).__nlpExtractFunction;
-      if (extractFn) {
-        setIsExtractingNLP(true);
-        
-        try {
-          const result = await extractFn();
-          setIsExtractingNLP(false);
+    // Skip NLP extraction in dev mode
+    if (!uiState.devMode) {
+      // If current question is NLP input or enriched_text, extract entities first
+      if (currentQuestion?.type === 'nlp_input' || currentQuestion?.type === 'enriched_text') {
+        const extractFn = (window as any).__nlpExtractFunction;
+        if (extractFn) {
+          setIsExtractingNLP(true);
           
-          if (result.success && result.entities.length > 0) {
-            // Show entity confirmation
-            setShowEntityConfirmation(true);
-            return;
+          try {
+            const result = await extractFn();
+            setIsExtractingNLP(false);
+            
+            if (result.success && result.entities.length > 0) {
+              // Show entity confirmation
+              setShowEntityConfirmation(true);
+              return;
+            }
+          } catch (error) {
+            console.error('Extraction error:', error);
+            setIsExtractingNLP(false);
+            // Continue anyway on error
           }
-        } catch (error) {
-          console.error('Extraction error:', error);
-          setIsExtractingNLP(false);
-          // Continue anyway on error
         }
       }
     }
@@ -233,17 +271,14 @@ export default function OnboardingV2Page() {
       } as any);
     }
 
-    // Find next visible question using new question engine
-    const nextIndex = getNextVisibleQuestionIndex(
-      allQuestions as Question[], 
-      uiState.currentStep, 
-      contract
-    );
-    
-    if (nextIndex < allQuestions.length) {
-      jumpToStep(nextIndex);
+    // Move to next visible question (simple increment since we're using visibleQuestions)
+    if (uiState.currentStep < visibleQuestions.length - 1) {
+      jumpToStep(uiState.currentStep + 1);
       setValidationError(undefined);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Reached end - mark onboarding as complete
+      markOnboardingComplete();
     }
   };
 
@@ -280,14 +315,9 @@ export default function OnboardingV2Page() {
       return;
     }
 
+    // Move to previous visible question (simple decrement since we're using visibleQuestions)
     if (uiState.currentStep > 0) {
-      // Find previous visible question using new question engine
-      const prevIndex = getPreviousVisibleQuestionIndex(
-        allQuestions as Question[], 
-        uiState.currentStep, 
-        contract
-      );
-      jumpToStep(prevIndex);
+      jumpToStep(uiState.currentStep - 1);
       setValidationError(undefined);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -302,7 +332,7 @@ export default function OnboardingV2Page() {
   useKeyboardNavigation({
     onNext: handleNext,
     onBack: handleBack,
-    canGoNext: uiState.currentStep < allQuestions.length,
+    canGoNext: uiState.currentStep < visibleQuestions.length - 1,
     canGoBack: uiState.currentStep > 0,
     isModalOpen: uiState.isGenerating || showWelcomeModal || showResumePrompt,
   });
@@ -389,32 +419,36 @@ export default function OnboardingV2Page() {
             <OnboardingHeader
               progress={progress}
               section={currentQuestion?.section || 'welcome'}
+              allQuestions={allQuestions}
             />
 
             {/* Main content */}
             <main className="flex-1 pb-16 pt-28" role="form" aria-label="Onboarding form">
               {showEntityConfirmation ? (
-                <StepContainer question={{ 
-                  id: 'confirm_entities_dynamic',
-                  type: 'confirm_entities',
-                  section: currentQuestion?.section || 'company',
-                  prompt: 'Confirm Extracted Information',
-                  subtitle: 'Review and edit the information we detected',
-                  helper: 'You can edit any field or remove items that don\'t look right.',
-                  required: false,
-                  mapsTo: null,
-                } as any} />
+                <StepContainer 
+                  question={{ 
+                    id: 'confirm_entities_dynamic',
+                    type: 'confirm_entities',
+                    section: currentQuestion?.section || 'company',
+                    prompt: 'Confirm Extracted Information',
+                    subtitle: 'Review and edit the information we detected',
+                    helper: 'You can edit any field or remove items that don\'t look right.',
+                    required: false,
+                    mapsTo: null,
+                  } as any}
+                  allQuestions={allQuestions}
+                />
               ) : (
-                <StepContainer question={currentQuestion} />
+                <StepContainer question={currentQuestion} allQuestions={allQuestions} />
               )}
             </main>
 
             {/* Footer */}
             <OnboardingFooter
               currentStep={uiState.currentStep}
-              totalSteps={allQuestions.length}
+              totalSteps={visibleQuestions.length}
               canGoBack={uiState.currentStep > 0}
-              canGoNext={uiState.currentStep < allQuestions.length}
+              canGoNext={uiState.currentStep < visibleQuestions.length - 1}
               onBack={handleBack}
               onNext={handleNext}
               section={currentQuestion?.section || 'welcome'}
@@ -422,6 +456,8 @@ export default function OnboardingV2Page() {
               isExtracting={isExtractingNLP}
               demoMode={uiState.demoMode}
               onToggleDemoMode={handleDemoModeToggle}
+              devMode={uiState.devMode}
+              onToggleDevMode={handleDevModeToggle}
             />
 
             {/* Keyboard shortcut hint */}

@@ -6,6 +6,7 @@
  */
 
 import type { GenerationContractV1, Provenance, Confidence } from '../types.contract';
+import { getContractMetadata } from './question-loader';
 
 export interface ContractField {
   path: string; // e.g., "company.name"
@@ -134,6 +135,52 @@ function isFieldSatisfied(contract: GenerationContractV1, path: string): boolean
 }
 
 /**
+ * Get contract field definitions from registry (industry-aware)
+ */
+function getContractFieldDefinitions(contract: GenerationContractV1): Record<string, { required: boolean; description: string }> {
+  // Try to get metadata from registry
+  const metadata = getContractMetadata(
+    contract.company.industry,
+    contract.company.subIndustry
+  );
+  
+  if (metadata) {
+    // Build field definitions from registry
+    const definitions: Record<string, { required: boolean; description: string }> = {};
+    
+    // Add required fields
+    for (const [section, fields] of Object.entries(metadata.requiredFields)) {
+      for (const field of fields) {
+        const path = `${section}.${field}`;
+        definitions[path] = {
+          required: true,
+          description: `${section}.${field}`,
+        };
+      }
+    }
+    
+    // Add optional fields
+    for (const [section, fields] of Object.entries(metadata.optionalFields)) {
+      for (const field of fields) {
+        const path = `${section}.${field}`;
+        // Don't override if already required
+        if (!definitions[path]) {
+          definitions[path] = {
+            required: false,
+            description: `${section}.${field}`,
+          };
+        }
+      }
+    }
+    
+    return definitions;
+  }
+  
+  // Fallback to legacy definitions
+  return CONTRACT_FIELD_DEFINITIONS;
+}
+
+/**
  * Analyze contract completeness
  */
 export function analyzeContractCompleteness(contract: GenerationContractV1): ContractCompleteness {
@@ -143,8 +190,11 @@ export function analyzeContractCompleteness(contract: GenerationContractV1): Con
   const missingRequired: ContractField[] = [];
   const lowConfidenceFields: ContractField[] = [];
   
+  // Get field definitions (registry-aware or legacy)
+  const fieldDefinitions = getContractFieldDefinitions(contract);
+  
   // Analyze each defined field
-  for (const [path, definition] of Object.entries(CONTRACT_FIELD_DEFINITIONS)) {
+  for (const [path, definition] of Object.entries(fieldDefinitions)) {
     const satisfied = isFieldSatisfied(contract, path);
     const value = getValueAtPath(contract, path);
     const { provenance, confidence } = getFieldMetadata(contract, path);
@@ -198,19 +248,22 @@ export function analyzeContractCompleteness(contract: GenerationContractV1): Con
 export function shouldSkipQuestion(contract: GenerationContractV1, questionMapsTo: string | null): boolean {
   if (!questionMapsTo) return false;
   
+  // Get field definitions (registry-aware)
+  const fieldDefinitions = getContractFieldDefinitions(contract);
+  
   // Handle wildcard mappings (e.g., "company.*")
   if (questionMapsTo.endsWith('.*')) {
     const prefix = questionMapsTo.slice(0, -2);
     // Check if ALL required fields in this section are satisfied
-    const sectionFields = Object.keys(CONTRACT_FIELD_DEFINITIONS)
+    const sectionFields = Object.keys(fieldDefinitions)
       .filter(path => path.startsWith(prefix + '.'))
-      .filter(path => CONTRACT_FIELD_DEFINITIONS[path].required);
+      .filter(path => fieldDefinitions[path].required);
     
     return sectionFields.every(path => isFieldSatisfied(contract, path));
   }
   
   // Direct path check
-  if (CONTRACT_FIELD_DEFINITIONS[questionMapsTo]) {
+  if (fieldDefinitions[questionMapsTo]) {
     return isFieldSatisfied(contract, questionMapsTo);
   }
   

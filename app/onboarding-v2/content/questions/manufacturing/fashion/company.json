@@ -1,0 +1,611 @@
+{
+  "company_description_nlp": {
+    "id": "company_description_nlp",
+    "type": "enriched_text",
+    "section": "company",
+    "promptContext": "company_profile",
+    "prompt": "In a few sentences, how would you describe your company?",
+    "subtitle": "Tell us about your business, operations, and what makes you unique",
+    "helper": "Describe your company in your own words. We'll extract key information automatically.",
+    "placeholder": "We are a mid-size MTO denim manufacturer based in Istanbul with 45 staff. We produce custom jeans and jackets for fashion brands across Europe...",
+    "required": true,
+    "mapsTo": "company.description",
+    "minLength": 20,
+    "maxLength": 500,
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "clarificationOptions": {
+      "question": "What best describes your company?",
+      "options": [
+        { "value": "Manufacturer", "label": "Manufacturer" },
+        { "value": "Brand", "label": "Brand" },
+        { "value": "Both", "label": "Both" }
+      ]
+    }
+  },
+  "company_confirm_extracted": {
+    "id": "company_confirm_extracted",
+    "type": "confirm_entities",
+    "section": "company",
+    "prompt": "Does this look correct?",
+    "helper": "We extracted this information from your description. Click any card to edit.",
+    "required": true,
+    "mapsTo": "company.*",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_name": {
+    "id": "company_name",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "What's your company name?",
+    "helper": "This will appear throughout your workspace.",
+    "placeholder": "Acme Manufacturing Co.",
+    "required": true,
+    "mapsTo": "company.name",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_logo": {
+    "id": "company_logo",
+    "type": "file_upload",
+    "section": "company",
+    "prompt": "Upload your company logo (optional)",
+    "helper": "Your logo will appear in the header and reports.",
+    "required": false,
+    "mapsTo": "company.logoUrl",
+    "accept": "image/*",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_founded_year": {
+    "id": "company_founded_year",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "What year were you founded?",
+    "helper": "Enter the year your company was established (e.g., 2019).",
+    "placeholder": "2019",
+    "required": false,
+    "mapsTo": "company.foundedYear",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_hq_location": {
+    "id": "company_hq_location",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "Where is your HQ based? (City, Country)",
+    "helper": "Enter your headquarters location.",
+    "placeholder": "Istanbul, Türkiye",
+    "required": true,
+    "mapsTo": "company.hqLocation",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_locations_multiple": {
+    "id": "company_locations_multiple",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Do you operate in multiple locations?",
+    "helper": "Do you have facilities, offices, or operations in more than one city?",
+    "required": false,
+    "mapsTo": "company.locations",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_locations_list": {
+    "id": "company_locations_list",
+    "type": "dynamic_list",
+    "section": "company",
+    "prompt": "List your other locations",
+    "helper": "Add each city or location where you operate.",
+    "placeholder": "e.g., Izmir, Ankara",
+    "required": false,
+    "mapsTo": "company.locations",
+    "maxItems": 10,
+    "conditional": {
+      "dependsOn": "company_locations_multiple",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_manufacturer_type": {
+    "id": "company_manufacturer_type",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "What type of manufacturer are you?",
+    "helper": "How do you handle production?",
+    "required": true,
+    "mapsTo": "company.manufacturerType",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "MTO", "label": "Make-to-Order", "description": "Custom orders, start production after receiving orders" },
+      { "value": "Stock", "label": "Make-to-Stock", "description": "Build inventory for anticipated demand" },
+      { "value": "WhiteLabel", "label": "White Label", "description": "Private label manufacturing for other brands" },
+      { "value": "Mixed", "label": "Mixed", "description": "Combination of MTO, stock, and white label" },
+      { "value": "Other", "label": "Other", "description": "Different model" }
+    ]
+  },
+  "company_manufacturer_type_other": {
+    "id": "company_manufacturer_type_other",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "Please describe your manufacturing model",
+    "helper": "Tell us more about how you operate.",
+    "placeholder": "We use a hybrid approach...",
+    "required": false,
+    "mapsTo": "company.manufacturerTypeOther",
+    "conditional": {
+      "dependsOn": "company.manufacturerType",
+      "showIf": "Other"
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_client_type": {
+    "id": "company_client_type",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "Who do you primarily serve?",
+    "helper": "Select the main type of customers you work with.",
+    "required": true,
+    "mapsTo": "company.clientType",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "Brands", "label": "Fashion Brands", "description": "Fashion labels, clothing brands" },
+      { "value": "Distributors", "label": "Distributors", "description": "Wholesalers, distributors" },
+      { "value": "EndCustomers", "label": "End Customers", "description": "Direct to consumer, retail customers" },
+      { "value": "Mixed", "label": "Mixed", "description": "Serve multiple types of customers" }
+    ]
+  },
+  "company_own_brand": {
+    "id": "company_own_brand",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Do you sell your own branded products?",
+    "helper": "Do you have your own brand or label that you sell directly?",
+    "required": false,
+    "mapsTo": "company.ownBrand",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_sales_channels": {
+    "id": "company_sales_channels",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "How do you sell your branded products?",
+    "helper": "Select all channels where you sell your own brand.",
+    "required": false,
+    "mapsTo": "company.salesChannels",
+    "multiSelect": true,
+    "options": [
+      { "value": "Online", "label": "Online", "description": "Website, e-commerce, online marketplace" },
+      { "value": "Retail", "label": "Retail", "description": "Physical stores, boutiques" },
+      { "value": "Wholesale", "label": "Wholesale", "description": "B2B wholesale to retailers" }
+    ],
+    "conditional": {
+      "dependsOn": "company.ownBrand",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_team_size_total": {
+    "id": "company_team_size_total",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "Roughly how many people work at your company?",
+    "helper": "Enter the approximate total number of employees.",
+    "placeholder": "45",
+    "required": true,
+    "mapsTo": "company.teamSizeTotal",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_team_split": {
+    "id": "company_team_split",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Would you like to split this between production and management?",
+    "helper": "Help us understand your team structure.",
+    "required": false,
+    "mapsTo": "company.teamSplit",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_team_split_production": {
+    "id": "company_team_split_production",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "How many people work in production?",
+    "helper": "Enter the approximate number.",
+    "placeholder": "36",
+    "required": false,
+    "mapsTo": "company.teamSplitProduction",
+    "conditional": {
+      "dependsOn": "company.teamSplit",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_team_split_management": {
+    "id": "company_team_split_management",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "How many people work in management/admin?",
+    "helper": "Enter the approximate number.",
+    "placeholder": "9",
+    "required": false,
+    "mapsTo": "company.teamSplitManagement",
+    "conditional": {
+      "dependsOn": "company.teamSplit",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_capacity_monthly_pcs": {
+    "id": "company_capacity_monthly_pcs",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "What's your current monthly production capacity (pcs/month)?",
+    "helper": "Enter the approximate number of pieces/units you can produce per month.",
+    "placeholder": "25000",
+    "required": true,
+    "mapsTo": "company.capacityMonthlyPcs",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_capacity_utilization_full": {
+    "id": "company_capacity_utilization_full",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Do you typically run at full capacity?",
+    "helper": "Are you usually at or near your maximum monthly capacity?",
+    "required": false,
+    "mapsTo": "company.capacityUtilizationFull",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_capacity_increase_plan": {
+    "id": "company_capacity_increase_plan",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Do you plan to increase capacity in the next 12 months?",
+    "helper": "Are you planning to expand production capacity?",
+    "required": false,
+    "mapsTo": "company.capacityIncreasePlan",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_capacity_increase_pct": {
+    "id": "company_capacity_increase_pct",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "By approximately what percentage?",
+    "helper": "Enter the percentage increase you're planning (e.g., 40 for 40%).",
+    "placeholder": "40",
+    "required": false,
+    "mapsTo": "company.capacityIncreasePct",
+    "conditional": {
+      "dependsOn": "company.capacityIncreasePlan",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_product_types": {
+    "id": "company_product_types",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "What products do you primarily produce?",
+    "helper": "Select all that apply. This helps us set up your item catalog.",
+    "required": true,
+    "mapsTo": "company.productTypes",
+    "skipIfCommitted": true,
+    "multiSelect": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "Jeans", "label": "Jeans", "description": "Denim jeans, trousers" },
+      { "value": "Jackets", "label": "Jackets", "description": "Denim jackets, outerwear" },
+      { "value": "Shirts", "label": "Shirts", "description": "T-shirts, button-up shirts" },
+      { "value": "Dresses", "label": "Dresses", "description": "Dresses, skirts" },
+      { "value": "Skirts", "label": "Skirts", "description": "Skirts, bottoms" },
+      { "value": "Shorts", "label": "Shorts", "description": "Shorts, casual wear" },
+      { "value": "Accessories", "label": "Accessories", "description": "Bags, hats, other accessories" },
+      { "value": "Other", "label": "Other", "description": "Other products" }
+    ]
+  },
+  "company_product_types_other": {
+    "id": "company_product_types_other",
+    "type": "dynamic_list",
+    "section": "company",
+    "prompt": "List your other product types",
+    "helper": "Add each product type you produce.",
+    "placeholder": "e.g., Sportswear, Activewear",
+    "required": false,
+    "mapsTo": "company.productTypesOther",
+    "maxItems": 10,
+    "conditional": {
+      "dependsOn": "company.productTypes",
+      "showIf": ["Other"]
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_primary_product": {
+    "id": "company_primary_product",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "Which product is your main volume driver?",
+    "helper": "Select the product that represents the largest portion of your production.",
+    "required": false,
+    "mapsTo": "company.primaryProduct",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "Jeans", "label": "Jeans", "description": "Denim jeans, trousers" },
+      { "value": "Jackets", "label": "Jackets", "description": "Denim jackets, outerwear" },
+      { "value": "Shirts", "label": "Shirts", "description": "T-shirts, button-up shirts" },
+      { "value": "Dresses", "label": "Dresses", "description": "Dresses, skirts" },
+      { "value": "Skirts", "label": "Skirts", "description": "Skirts, bottoms" },
+      { "value": "Shorts", "label": "Shorts", "description": "Shorts, casual wear" },
+      { "value": "Accessories", "label": "Accessories", "description": "Bags, hats, other accessories" }
+    ]
+  },
+  "company_materials_list": {
+    "id": "company_materials_list",
+    "type": "dynamic_list",
+    "section": "company",
+    "prompt": "What materials/fabrics do you commonly use?",
+    "helper": "List the main materials, fabrics, or components you work with.",
+    "placeholder": "e.g., 13oz indigo denim, selvedge, YKK zippers",
+    "required": false,
+    "mapsTo": "company.materialsList",
+    "maxItems": 20,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_track_materials": {
+    "id": "company_track_materials",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Do you track materials separately as SKUs, rolls, or lots?",
+    "helper": "Do you manage raw materials inventory with SKUs, roll numbers, or lot tracking?",
+    "required": false,
+    "mapsTo": "company.trackMaterials",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_demand_spikes_months": {
+    "id": "company_demand_spikes_months",
+    "type": "month_selector",
+    "section": "company",
+    "prompt": "Do you have demand spikes during the year? Select months that spike.",
+    "helper": "Select all months when demand is typically higher than average.",
+    "required": false,
+    "mapsTo": "company.demandSpikesMonths",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_slow_months": {
+    "id": "company_slow_months",
+    "type": "month_selector",
+    "section": "company",
+    "prompt": "Which months are typically slow?",
+    "helper": "Select all months when demand is typically lower than average.",
+    "required": false,
+    "mapsTo": "company.slowMonths",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_decision_maker_title": {
+    "id": "company_decision_maker_title",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "Who usually makes day-to-day operational decisions? (role/title)",
+    "helper": "Enter the job title or role of the person who makes daily operational decisions.",
+    "placeholder": "Head of Production",
+    "required": false,
+    "mapsTo": "company.decisionMakerTitle",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_admin_account_create": {
+    "id": "company_admin_account_create",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Would you like us to create an admin account for this person?",
+    "helper": "We can set up an admin account for the decision maker with full access.",
+    "required": false,
+    "mapsTo": "company.adminAccountCreate",
+    "conditional": {
+      "dependsOn": "company.decisionMakerTitle",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_biggest_challenge_nlp": {
+    "id": "company_biggest_challenge_nlp",
+    "type": "nlp_input",
+    "section": "company",
+    "promptContext": "company_profile",
+    "prompt": "What's the biggest challenge you want Groovy to solve first?",
+    "subtitle": "Tell us about your main pain point or challenge",
+    "helper": "Describe the primary challenge or problem you're hoping Groovy will help solve.",
+    "placeholder": "We lose track of WIP and struggle to provide timely status updates to our brand partners...",
+    "required": true,
+    "mapsTo": "company.biggestChallengeText",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_challenge_category": {
+    "id": "company_challenge_category",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "Does this relate most to...",
+    "helper": "Which category best describes your challenge?",
+    "required": false,
+    "mapsTo": "company.challengeCategory",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "ProductionFlow", "label": "Production Flow", "description": "Bottlenecks, routing, WIP stuck" },
+      { "value": "DataVisibility", "label": "Data Visibility", "description": "Reporting, tracking, visibility" },
+      { "value": "Communication", "label": "Communication", "description": "Handoffs, updates, coordination" },
+      { "value": "Quality", "label": "Quality", "description": "Defects, returns, quality control" },
+      { "value": "LeadTime", "label": "Lead Time", "description": "Speed, delivery times" },
+      { "value": "Costs", "label": "Costs", "description": "Margins, cost control, profitability" }
+    ]
+  },
+  "company_long_term_goal_nlp": {
+    "id": "company_long_term_goal_nlp",
+    "type": "nlp_input",
+    "section": "company",
+    "promptContext": "company_profile",
+    "prompt": "In plain words, what's your 12–18 month goal?",
+    "subtitle": "Tell us about your strategic goals",
+    "helper": "Describe what you want to achieve in the next 12-18 months.",
+    "placeholder": "Increase capacity 40% without hurting margins, expand to serve more European brands...",
+    "required": true,
+    "mapsTo": "company.longTermGoalText",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_goal_category": {
+    "id": "company_goal_category",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "Which goal style best matches?",
+    "helper": "Select the category that best describes your goal.",
+    "required": false,
+    "mapsTo": "company.goalCategory",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "Maintain", "label": "Maintain", "description": "Maintain current level, steady state" },
+      { "value": "Expand", "label": "Expand", "description": "Grow capacity, expand operations" },
+      { "value": "AggressiveExpand", "label": "Aggressive Expand", "description": "Double, new markets, aggressive growth" },
+      { "value": "Efficiency", "label": "Efficiency", "description": "Reduce waste, improve efficiency" },
+      { "value": "Profitability", "label": "Profitability", "description": "Improve margins, increase profit" },
+      { "value": "Quality", "label": "Quality", "description": "Improve quality, craftsmanship" }
+    ]
+  },
+  "company_success_12mo_nlp": {
+    "id": "company_success_12mo_nlp",
+    "type": "nlp_input",
+    "section": "company",
+    "promptContext": "company_profile",
+    "prompt": "What would \"success in 12 months\" look like?",
+    "subtitle": "Describe your vision of success",
+    "helper": "What specific outcomes would make you feel successful?",
+    "placeholder": "Lead time under 14 days, first-time-right rate of 98%, capacity increased by 40%...",
+    "required": false,
+    "mapsTo": "company.success12moText",
+    "minLength": 20,
+    "maxLength": 300,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_enable_kpi_tracking": {
+    "id": "company_enable_kpi_tracking",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Would you like Groovy to automatically track KPIs towards this vision?",
+    "helper": "We can set up dashboards and KPIs to monitor progress towards your success metrics.",
+    "required": false,
+    "mapsTo": "company.enableKpiTracking",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_compliance_has": {
+    "id": "company_compliance_has",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Do you hold any certifications or audits?",
+    "helper": "Do you have any compliance certifications or undergo regular audits?",
+    "required": false,
+    "mapsTo": "company.complianceHas",
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_compliance_list": {
+    "id": "company_compliance_list",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "Which certifications do you hold?",
+    "helper": "Select all that apply.",
+    "required": false,
+    "mapsTo": "company.complianceList",
+    "multiSelect": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"],
+    "options": [
+      { "value": "BSCI", "label": "BSCI", "description": "Business Social Compliance Initiative" },
+      { "value": "WRAP", "label": "WRAP", "description": "Worldwide Responsible Accredited Production" },
+      { "value": "ISO9001", "label": "ISO 9001", "description": "Quality Management" },
+      { "value": "ISO14001", "label": "ISO 14001", "description": "Environmental Management" },
+      { "value": "Sedex", "label": "Sedex", "description": "Supplier Ethical Data Exchange" },
+      { "value": "GOTS", "label": "GOTS", "description": "Global Organic Textile Standard" },
+      { "value": "Other", "label": "Other", "description": "Other certification" }
+    ],
+    "conditional": {
+      "dependsOn": "company.complianceHas",
+      "showIf": true
+    }
+  },
+  "company_compliance_markets": {
+    "id": "company_compliance_markets",
+    "type": "dynamic_list",
+    "section": "company",
+    "prompt": "Do clients or markets enforce specific compliance? Which ones?",
+    "helper": "List any markets or client requirements for compliance.",
+    "placeholder": "e.g., EU, UK, US",
+    "required": false,
+    "mapsTo": "company.complianceMarkets",
+    "maxItems": 10,
+    "conditional": {
+      "dependsOn": "company.complianceHas",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  },
+  "company_compliance_reminders": {
+    "id": "company_compliance_reminders",
+    "type": "yes_no",
+    "section": "company",
+    "prompt": "Should Groovy manage audit/renewal reminders?",
+    "helper": "We can set up reminders for audit dates and certification renewals.",
+    "required": false,
+    "mapsTo": "company.complianceReminders",
+    "conditional": {
+      "dependsOn": "company.complianceHas",
+      "showIf": true
+    },
+    "industries": ["manufacturing"],
+    "subIndustries": ["fashion"]
+  }
+}
+

@@ -1,0 +1,89 @@
+{
+  "analytics_audience": {
+    "id": "analytics_audience",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "Who will use dashboards?",
+    "helper": "Select all that apply. We'll customize views for each audience.",
+    "required": true,
+    "mapsTo": "analytics.audience",
+    "multiSelect": true,
+    "industries": ["manufacturing"],
+    "options": [
+      { "value": "exec", "label": "Executives", "description": "High-level KPIs and trends" },
+      { "value": "ops", "label": "Operations", "description": "Detailed metrics and tables" },
+      { "value": "floor", "label": "Floor supervisors", "description": "Real-time status updates" },
+      { "value": "partners", "label": "External partners", "description": "Limited shared views" }
+    ]
+  },
+  "analytics_metrics_nlp": {
+    "id": "analytics_metrics_nlp",
+    "type": "nlp_input",
+    "section": "analytics",
+    "promptContext": "analytics_metrics",
+    "prompt": "What metrics matter most to you?",
+    "helper": "List the KPIs you track or want to track.",
+    "placeholder": "On-time delivery, defect rate, throughput, capacity utilization, WIP age...",
+    "required": true,
+    "mapsTo": "analytics.keyMetrics",
+    "minLength": 10,
+    "maxLength": 200,
+    "industries": ["manufacturing"]
+  },
+  "analytics_chart_preference": {
+    "id": "analytics_chart_preference",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "What type of charts do you prefer?",
+    "helper": "We'll design your dashboards accordingly.",
+    "required": true,
+    "mapsTo": "analytics.chartPreference",
+    "industries": ["manufacturing"],
+    "options": [
+      { "value": "trends", "label": "Trend charts", "description": "Line and area charts for tracking over time" },
+      { "value": "comparison", "label": "Comparison charts", "description": "Bar and column charts for comparing values" },
+      { "value": "metrics", "label": "Metrics & gauges", "description": "Large numbers and progress indicators" },
+      { "value": "tables", "label": "Tables", "description": "Detailed data in rows and columns" }
+    ]
+  },
+  "analytics_report_frequency": {
+    "id": "analytics_report_frequency",
+    "type": "multiple_choice",
+    "section": "analytics",
+    "prompt": "How often do you need reports?",
+    "required": true,
+    "mapsTo": "analytics.reportFrequency",
+    "industries": ["manufacturing"],
+    "options": [
+      { "value": "realtime", "label": "Real-time dashboard", "description": "Always up-to-date live view" },
+      { "value": "daily", "label": "Daily emails", "description": "Automated daily summaries" },
+      { "value": "weekly", "label": "Weekly summaries", "description": "Week-over-week analysis" },
+      { "value": "monthly", "label": "Monthly reviews", "description": "Comprehensive monthly reports" }
+    ]
+  },
+  "playbooks_auto_tasks": {
+    "id": "playbooks_auto_tasks",
+    "type": "yes_no",
+    "section": "analytics",
+    "prompt": "For each order, should we auto-create purchasing and QC tasks?",
+    "helper": "Playbooks automate routine tasks when orders are created.",
+    "required": true,
+    "mapsTo": "playbooks",
+    "industries": ["manufacturing"]
+  },
+  "playbooks_task_selection": {
+    "id": "playbooks_task_selection",
+    "type": "task_checklist",
+    "section": "analytics",
+    "prompt": "Which tasks should be created automatically?",
+    "helper": "Select the tasks that apply to your process.",
+    "required": true,
+    "mapsTo": "playbooks.orderOnAccepted",
+    "conditional": {
+      "dependsOn": "playbooks_auto_tasks",
+      "showIf": true
+    },
+    "industries": ["manufacturing"]
+  }
+}
+

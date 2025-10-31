@@ -90,6 +90,7 @@ const initialUIState: OnboardingUIState = {
   visitedSteps: new Set([0]),
   offlineMode: false,
   demoMode: false, // Demo mode for investor presentations
+  devMode: false, // Dev mode: skip validation, allow free navigation
 };
 
 /**
@@ -349,6 +350,18 @@ export const useOnboardingStore = create<OnboardingStore>((set, get) => {
         uiState: {
           ...state.uiState,
           demoMode: enabled,
+        },
+      }));
+    },
+    
+    /**
+     * Set dev mode (skip validation, allow free navigation)
+     */
+    setDevMode: (enabled) => {
+      set((state) => ({
+        uiState: {
+          ...state.uiState,
+          devMode: enabled,
         },
       }));
     },

@@ -1,0 +1,121 @@
+{
+  "company_description_nlp": {
+    "id": "company_description_nlp",
+    "type": "enriched_text",
+    "section": "company",
+    "promptContext": "company_profile",
+    "prompt": "In a few sentences, how would you describe your company?",
+    "subtitle": "Tell us about your business, operations, and what makes you unique",
+    "helper": "Describe your company in your own words. We'll extract key information automatically.",
+    "placeholder": "We are a mid-size manufacturer based in [city] with [X] staff. We produce [products] for [customers]...",
+    "required": true,
+    "mapsTo": "company.description",
+    "minLength": 20,
+    "maxLength": 500,
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"],
+    "clarificationOptions": {
+      "question": "What best describes your company?",
+      "options": [
+        { "value": "Manufacturer", "label": "Manufacturer" },
+        { "value": "Brand", "label": "Brand" },
+        { "value": "Both", "label": "Both" }
+      ]
+    }
+  },
+  "company_confirm_extracted": {
+    "id": "company_confirm_extracted",
+    "type": "confirm_entities",
+    "section": "company",
+    "prompt": "Does this look correct?",
+    "helper": "We extracted this information from your description. Click any card to edit.",
+    "required": true,
+    "mapsTo": "company.*",
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  },
+  "company_name": {
+    "id": "company_name",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "What's your company name?",
+    "helper": "This will appear throughout your workspace.",
+    "placeholder": "Acme Manufacturing Co.",
+    "required": true,
+    "mapsTo": "company.name",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  },
+  "company_logo": {
+    "id": "company_logo",
+    "type": "file_upload",
+    "section": "company",
+    "prompt": "Upload your company logo (optional)",
+    "helper": "Your logo will appear in the header and reports.",
+    "required": false,
+    "mapsTo": "company.logoUrl",
+    "accept": "image/*",
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  },
+  "company_founded_year": {
+    "id": "company_founded_year",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "What year were you founded?",
+    "helper": "Enter the year your company was established (e.g., 2019).",
+    "placeholder": "2019",
+    "required": false,
+    "mapsTo": "company.foundedYear",
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  },
+  "company_hq_location": {
+    "id": "company_hq_location",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "Where is your HQ based? (City, Country)",
+    "helper": "Enter your headquarters location.",
+    "placeholder": "City, Country",
+    "required": true,
+    "mapsTo": "company.hqLocation",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  },
+  "company_manufacturer_type": {
+    "id": "company_manufacturer_type",
+    "type": "multiple_choice",
+    "section": "company",
+    "prompt": "What type of manufacturer are you?",
+    "helper": "How do you handle production?",
+    "required": true,
+    "mapsTo": "company.manufacturerType",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"],
+    "options": [
+      { "value": "MTO", "label": "Make-to-Order", "description": "Custom orders, start production after receiving orders" },
+      { "value": "Stock", "label": "Make-to-Stock", "description": "Build inventory for anticipated demand" },
+      { "value": "WhiteLabel", "label": "White Label", "description": "Private label manufacturing for other brands" },
+      { "value": "Mixed", "label": "Mixed", "description": "Combination of MTO, stock, and white label" },
+      { "value": "Other", "label": "Other", "description": "Different model" }
+    ]
+  },
+  "company_team_size_total": {
+    "id": "company_team_size_total",
+    "type": "text_input",
+    "section": "company",
+    "prompt": "Roughly how many people work at your company?",
+    "helper": "Enter the approximate total number of employees.",
+    "placeholder": "50",
+    "required": true,
+    "mapsTo": "company.teamSizeTotal",
+    "skipIfCommitted": true,
+    "industries": ["manufacturing"],
+    "subIndustries": ["general"]
+  }
+}
+

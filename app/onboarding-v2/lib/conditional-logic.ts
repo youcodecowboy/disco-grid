@@ -43,7 +43,17 @@ export function shouldShowQuestion(question: Question, contract: GenerationContr
   }
 
   if (Array.isArray(showIf)) {
+    // If dependencyValue is also an array (multi-select), check if any value in showIf is in dependencyValue
+    if (Array.isArray(dependencyValue)) {
+      return showIf.some(value => dependencyValue.includes(value));
+    }
+    // Otherwise, check if dependencyValue is in showIf array
     return showIf.includes(dependencyValue);
+  }
+
+  // If dependencyValue is an array but showIf is not, check if showIf is in the array
+  if (Array.isArray(dependencyValue)) {
+    return dependencyValue.includes(showIf);
   }
 
   return dependencyValue === showIf;

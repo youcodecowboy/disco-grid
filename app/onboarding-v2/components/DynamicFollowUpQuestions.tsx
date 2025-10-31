@@ -34,12 +34,16 @@ interface QuestionAnswer {
 interface DynamicFollowUpQuestionsProps {
   extractedEntities: EntityExtraction[];
   industry: string;
+  subIndustry?: string;
+  contract?: any;
   onComplete: (answers: QuestionAnswer[], newEntities: EntityExtraction[]) => void;
 }
 
 export function DynamicFollowUpQuestions({
   extractedEntities,
   industry,
+  subIndustry,
+  contract,
   onComplete,
 }: DynamicFollowUpQuestionsProps) {
   const [questions, setQuestions] = useState<FollowUpQuestion[]>([]);
@@ -65,6 +69,8 @@ export function DynamicFollowUpQuestions({
         body: JSON.stringify({
           entities: extractedEntities,
           industry,
+          subIndustry,
+          contract,
           previousAnswers: answers,
         }),
       });
@@ -119,6 +125,8 @@ export function DynamicFollowUpQuestions({
         body: JSON.stringify({
           entities: extractedEntities,
           industry,
+          subIndustry,
+          contract,
           previousAnswers: updatedAnswers,
           triggeredBy: questionId,
         }),
@@ -219,6 +227,8 @@ export function DynamicFollowUpQuestions({
         body: JSON.stringify({
           entities: extractedEntities,
           industry,
+          subIndustry,
+          contract,
           previousAnswers: updatedAnswers,
           triggeredBy: questionId,
           customText, // Send the custom text for analysis
