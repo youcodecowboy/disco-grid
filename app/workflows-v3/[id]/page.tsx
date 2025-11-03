@@ -22,9 +22,129 @@ export default function WorkflowBuilderPage() {
     if (workflowId === "new") {
       setWorkflow(createEmptyWorkflow())
     } else {
+      // Check if this is a Disco-generated workflow
+      const discoWorkflow = sessionStorage.getItem('disco-generated-workflow')
+      if (discoWorkflow) {
+        try {
+          const data = JSON.parse(discoWorkflow)
+          if (data.id === workflowId) {
+            // We have a Disco-generated workflow, create it with the generated data
+            const newWorkflow = createEmptyWorkflow()
+            newWorkflow.id = workflowId
+            newWorkflow.name = data.name
+            newWorkflow.description = data.description
+            newWorkflow.industry = data.industry
+            
+            // Set workflow first
+            setWorkflow(newWorkflow)
+            
+            // Store generated data to use after workflow is set
+            setTimeout(() => {
+              if (data.generatedData) {
+                // Use the current workflow state
+                setWorkflow(current => {
+                  if (!current) return null
+                  // Call handleGenerate logic inline
+                  const generatedData = data.generatedData
+                  if (generatedData?.stages) {
+                    const newStages: WorkflowStageV3[] = generatedData.stages.map((genStage: any, index: number) => {
+                      const stageId = `stage-${Date.now()}-${index}`
+                      return {
+                        id: stageId,
+                        workflowId: current.id,
+                        sequence: genStage.sequence || index + 1,
+                        name: genStage.name || "",
+                        description: genStage.description,
+                        type: genStage.type || "sequential",
+                        parallelWith: genStage.parallelWith || [],
+                        inputs: (genStage.suggestedInputs || []).map((type: string, idx: number) => ({
+                          id: `input-${stageId}-${idx}`,
+                          type: type as any,
+                          label: `${type.replace('_', ' ')} input`,
+                          required: true
+                        })),
+                        dependencies: (genStage.dependencies || []).map((dep: any, idx: number) => ({
+                          id: `dep-${stageId}-${idx}`,
+                          type: dep.type,
+                          description: dep.description || "",
+                          details: dep.details || {}
+                        })),
+                        outputs: (genStage.suggestedOutputs || []).map((type: string, idx: number) => ({
+                          id: `output-${stageId}-${idx}`,
+                          type: type as any,
+                          label: `${type.replace('_', ' ')} output`,
+                          required: true
+                        })),
+                        assignedTeam: genStage.suggestedTeam,
+                        isExpanded: false,
+                        isComplete: true,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                      }
+                    })
+                    
+                    const llmLimboZones: LimboZone[] = (generatedData.limboZones || []).map((lz: any, index: number) => {
+                      const fromStage = newStages.find(s => s.name === lz.betweenStages[0])
+                      const toStage = newStages.find(s => s.name === lz.betweenStages[1])
+                      if (!fromStage || !toStage) return null
+                      return {
+                        id: `limbo-${Date.now()}-${index}`,
+                        workflowId: current.id,
+                        betweenStages: [fromStage.id, toStage.id],
+                        dependencies: (lz.dependencies || []).map((dep: any, idx: number) => ({
+                          id: `limbo-dep-${Date.now()}-${idx}`,
+                          type: dep.type,
+                          description: dep.description || "",
+                          details: dep.details || {}
+                        }))
+                      }
+                    }).filter(Boolean) as LimboZone[]
+                    
+                    const sortedStages = [...newStages].sort((a, b) => a.sequence - b.sequence)
+                    const existingLimboZonePairs = new Set(
+                      llmLimboZones.map(lz => `${lz.betweenStages[0]}-${lz.betweenStages[1]}`)
+                    )
+                    const autoLimboZones: LimboZone[] = []
+                    for (let i = 0; i < sortedStages.length - 1; i++) {
+                      const fromStage = sortedStages[i]
+                      const toStage = sortedStages[i + 1]
+                      const limboKey = `${fromStage.id}-${toStage.id}`
+                      if (!existingLimboZonePairs.has(limboKey)) {
+                        const limboZone = createEmptyLimboZone(current.id, fromStage.id, toStage.id)
+                        autoLimboZones.push(limboZone)
+                        existingLimboZonePairs.add(limboKey)
+                      }
+                    }
+                    
+                    return {
+                      ...current,
+                      name: generatedData.suggestedName || current.name,
+                      industry: generatedData.suggestedIndustry || current.industry,
+                      stages: newStages,
+                      limboZones: [...llmLimboZones, ...autoLimboZones]
+                    }
+                  }
+                  return current
+                })
+              }
+            }, 100)
+            
+            // Clear sessionStorage after using it
+            sessionStorage.removeItem('disco-generated-workflow')
+            return
+          }
+        } catch (e) {
+          console.error('Failed to parse Disco workflow data:', e)
+        }
+      }
+      
+      // Load existing workflow
       const existing = getWorkflowById(workflowId)
       if (existing) {
         setWorkflow(existing)
+      } else {
+        // Workflow not found, create empty one
+        setWorkflow(createEmptyWorkflow())
       }
     }
   }, [workflowId])

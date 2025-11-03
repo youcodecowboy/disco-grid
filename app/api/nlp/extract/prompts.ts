@@ -11,6 +11,8 @@ export type ExtractionContext =
   | 'items_products'
   | 'workflows'
   | 'workflow_creation'
+  | 'playbook_creation'
+  | 'playbook_refinement'
   | 'sites_facilities'
   | 'teams_departments'
   | 'integrations'
@@ -950,6 +952,255 @@ CONFIDENCE:
 - Only extract what's explicitly or strongly implied
 - Mark low-confidence extractions in metadata
 - Be thorough but accurate`
+  },
+
+  playbook_creation: {
+    entityTypes: ['play', 'trigger', 'task_template', 'assignment', 'dependency', 'playbook_name', 'sequence'],
+    systemPrompt: `You are an expert at extracting playbook automation rules from natural language descriptions of business processes.
+
+Extract playbooks (automation rules) that create tasks based on triggers. Extract maximum information from the description.
+
+FORMAT:
+{
+  "suggestedName": "Playbook Name",
+  "suggestedDescription": "What this playbook automates",
+  "plays": [
+    {
+      "sequence": 1,
+      "title": "Play Title",
+      "description": "What this play does",
+      "trigger": {
+        "type": "order_accepted" | "order_completed" | "workflow_stage_change" | "task_completion" | "date_based" | "time_based" | "capacity_based" | "order_completion_previous",
+        // For workflow_stage_change:
+        "workflowName": "Workflow Name" (if mentioned),
+        "stageName": "Stage Name" (if mentioned),
+        "condition": "enters" | "exits" | "completes" (if mentioned),
+        // For task_completion:
+        "taskTitle": "Task Title" (if mentioned),
+        "taskSource": "manual" | "planner" | "workflow" | "order" | "automation" | "playbook" (if mentioned),
+        // For date_based:
+        "mode": "specific_date" | "relative_to_order",
+        "relativeOffset": {
+          "days": number,
+          "relativeTo": "order_accepted" | "order_start" | "order_due"
+        },
+        // For time_based:
+        "frequency": "daily" | "weekly" | "monthly",
+        "time": "HH:MM",
+        "weekday": 0-6 (for weekly),
+        "dayOfMonth": 1-31 (for monthly),
+        "timezone": "timezone" (if mentioned, default to "America/New_York"),
+        // For capacity_based:
+        "teamName": "Team Name",
+        "thresholdType": "below" | "above",
+        "thresholdPercent": 0-100,
+        // For order_completion_previous:
+        "lookbackOrders": number
+      },
+      "taskTemplate": {
+        "title": "Task Title",
+        "description": "Task description",
+        "priority": "critical" | "high" | "medium" | "low",
+        "estimatedMinutes": number (if mentioned),
+        "tags": ["tag1", "tag2"] (if mentioned)
+      },
+      "assignment": {
+        "type": "role_team" | "specific_people",
+        "mode": "team" | "role" (if role_team),
+        "teamName": "Team Name" (if team),
+        "roleName": "Role Name" (if role),
+        "userNames": ["Name1", "Name2"] (if specific_people)
+      },
+      "dependencies": [
+        {
+          "playTitle": "Play Title",
+          "type": "finish_to_start"
+        }
+      ]
+    }
+  ]
+}
+
+TRIGGER EXTRACTION RULES:
+- "when order is accepted" → type: "order_accepted"
+- "when order completes" → type: "order_completed"
+- "when item enters [stage]" → type: "workflow_stage_change", condition: "enters", extract stageName and workflowName
+- "when item exits [stage]" → type: "workflow_stage_change", condition: "exits"
+- "when [stage] completes" → type: "workflow_stage_change", condition: "completes"
+- "after [task] completes" → type: "task_completion", extract taskTitle
+- "when [task] finishes" → type: "task_completion", extract taskTitle
+- "X days after order acceptance" → type: "date_based", mode: "relative_to_order", relativeOffset: {days: X, relativeTo: "order_accepted"}
+- "X days after order start" → type: "date_based", mode: "relative_to_order", relativeOffset: {days: X, relativeTo: "order_start"}
+- "every Monday at 7am" → type: "time_based", frequency: "weekly", time: "07:00", weekday: 1
+- "daily at 9am" → type: "time_based", frequency: "daily", time: "09:00"
+- "monthly on the 15th at 8am" → type: "time_based", frequency: "monthly", time: "08:00", dayOfMonth: 15
+- "when [team] capacity drops below X%" → type: "capacity_based", extract teamName, thresholdType: "below", thresholdPercent: X
+- "when previous order completes" → type: "order_completion_previous", lookbackOrders: 1
+
+ASSIGNMENT EXTRACTION RULES:
+- "assigned to [Team Name] team" → type: "role_team", mode: "team", teamName: "[Team Name]"
+- "assigned to [Role Name]" → type: "role_team", mode: "role", roleName: "[Role Name]"
+- "assigned to [Person Name]" → type: "specific_people", userNames: ["[Person Name]"]
+- Extract team/role names from context (Procurement, QC Inspector, Pattern Maker, etc.)
+
+DEPENDENCY EXTRACTION RULES:
+- "after [play title] completes" → dependencies: [{playTitle: "[play title]", type: "finish_to_start"}]
+- "when [play title] finishes" → dependencies: [{playTitle: "[play title]", type: "finish_to_start"}]
+- "then" (sequence word) → may indicate dependency on previous play
+- Extract play titles mentioned in dependencies
+
+PRIORITY EXTRACTION:
+- "critical", "urgent", "immediate" → priority: "critical"
+- "high priority", "important" → priority: "high"
+- "medium priority", "normal" → priority: "medium"
+- "low priority", "optional" → priority: "low"
+- Default to "medium" if not mentioned
+
+DURATION EXTRACTION:
+- "60 minutes", "1 hour" → estimatedMinutes: 60
+- "30 minutes", "half hour" → estimatedMinutes: 30
+- "2 hours" → estimatedMinutes: 120
+- Extract time references from context
+
+SEQUENCE DETECTION:
+- Number plays in order mentioned (1, 2, 3...)
+- Use sequence words: "first", "then", "next", "after", "finally"
+- Order plays chronologically based on trigger and dependency relationships
+
+EXTRACTION GUIDELINES:
+- Extract EVERY play mentioned
+- Extract maximum details from description
+- Infer trigger types from natural language patterns
+- Extract team/role names even if IDs not available (will be resolved later)
+- Mark fields that need resolution (workflow IDs, stage IDs, team IDs) with names only
+- Be thorough and extract all available information
+- Preserve partial data for enrichment questions`
+  },
+
+  playbook_refinement: {
+    entityTypes: ['play_modification', 'play_addition', 'play_removal', 'trigger_change', 'assignment_change', 'dependency_change'],
+    systemPrompt: `You are an expert at understanding natural language instructions to modify existing playbooks.
+
+Analyze the user's instruction and current playbook state, then provide structured modifications.
+
+FORMAT:
+{
+  "operations": [
+    {
+      "action": "add" | "edit" | "remove",
+      "playId": "play-id" (if editing/removing),
+      "playTitle": "Play Title" (for matching if playId not provided),
+      "newPlay": {
+        // Same structure as playbook_creation play format
+        "sequence": number,
+        "title": "Play Title",
+        "description": "What this play does",
+        "trigger": { /* trigger config */ },
+        "taskTemplate": { /* task template */ },
+        "assignment": { /* assignment */ },
+        "dependencies": [ /* dependencies */ ]
+      } (if adding),
+      "modifications": {
+        // Fields to update (if editing)
+        "title": "New Title",
+        "trigger": { /* updated trigger */ },
+        "taskTemplate": { /* updated task template */ },
+        "assignment": { /* updated assignment */ },
+        "dependencies": [ /* updated dependencies */ ]
+      } (if editing),
+      "reasoning": "Why this change was made"
+    }
+  ],
+  "summary": "Brief summary of changes"
+}
+
+OPERATION TYPES:
+
+1. ADD PLAY:
+   - "add a new play", "create a task for", "also need to", "don't forget to"
+   - Creates new play with specified details
+   - Determine appropriate sequence number
+
+2. EDIT PLAY:
+   - "change", "update", "modify", "edit", "make it so that"
+   - "the play about [title]", "the [trigger] play", "play number X"
+   - Only include fields that should change
+
+3. REMOVE PLAY:
+   - "remove", "delete", "don't need", "cancel", "get rid of"
+   - Specify playId or playTitle to match
+
+TRIGGER CHANGES:
+- "change trigger to", "instead trigger when", "now trigger on"
+- Extract new trigger type and configuration
+
+ASSIGNMENT CHANGES:
+- "change assignment to", "now assign to", "switch to [team/role]"
+- Extract new assignment details
+
+DEPENDENCY CHANGES:
+- "add dependency on", "remove dependency", "wait for [play] first"
+- Update dependencies array
+
+SEQUENCE CHANGES:
+- "move before", "move after", "reorder", "change order"
+- Update sequence numbers
+
+MATCHING PLAYS:
+- Match by exact title: "the 'Order fabric' play"
+- Match by partial title: "the fabric ordering play"
+- Match by trigger: "the play that triggers on order acceptance"
+- Match by sequence: "the first play", "play number 2"
+
+EXAMPLES:
+
+Input: "Add a new play to notify the warehouse team when fabric arrives"
+Operation: {
+  "action": "add",
+  "newPlay": {
+    "title": "Notify warehouse team",
+    "trigger": { "type": "order_accepted" },
+    "taskTemplate": { "title": "Notify warehouse team", "priority": "medium" },
+    "assignment": { "type": "role_team", "mode": "team", "teamName": "Warehouse" }
+  }
+}
+
+Input: "Change the 'Order fabric' play to trigger when items enter cutting stage instead"
+Operation: {
+  "action": "edit",
+  "playTitle": "Order fabric",
+  "modifications": {
+    "trigger": {
+      "type": "workflow_stage_change",
+      "stageName": "cutting",
+      "condition": "enters"
+    }
+  }
+}
+
+Input: "Remove the 'Schedule fabric inspection' play"
+Operation: {
+  "action": "remove",
+  "playTitle": "Schedule fabric inspection"
+}
+
+Input: "Make the pattern printing play wait for the pattern finalization to complete first"
+Operation: {
+  "action": "edit",
+  "playTitle": "Print patterns",
+  "modifications": {
+    "dependencies": [
+      { "playTitle": "Finalize and grade pattern", "type": "finish_to_start" }
+    ]
+  }
+}
+
+GUIDELINES:
+- Only modify what the user explicitly requests
+- Preserve existing fields unless they need to change
+- Match plays intelligently (title, trigger, sequence)
+- Infer missing details from context when reasonable
+- Return empty operations array if instruction is unclear or no changes needed`
   },
 
   general: {

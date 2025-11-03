@@ -538,15 +538,26 @@ function createTask(params: {
 
 // Generate suggested tasks
 export function generateSuggestedTasks(): SuggestedTask[] {
+  const person7 = MOCK_USERS.find(u => u.id === "person-7")!
+  const person2 = MOCK_USERS.find(u => u.id === "person-2")!
+  const person5 = MOCK_USERS.find(u => u.id === "person-5")!
+  
   return [
     {
       id: "suggest-001",
       title: "Schedule fabric inspection for incoming shipment",
       description: "Quality check required for 500 yards of water-resistant fabric arriving Monday",
       rationale: "Incoming shipment detected in planner with no QA task assigned. Historical pattern shows early inspection prevents downstream issues.",
-      recommendedTeamId: "team-3",
+      recommendedAssignees: [{
+        taskId: '',
+        userId: person7.id,
+        userName: person7.name,
+        userAvatar: person7.avatar,
+        role: 'owner',
+        requiredAck: true
+      }],
+      recommendedTeamId: person7.teamId,
       recommendedTeamLabel: "Quality Assurance",
-      recommendedAssignee: { userId: "person-7", name: "Sarah Chen", avatar: MOCK_USERS[0].avatar },
       suggestedDueDate: addDays(BASE_DATE, 2).toISOString(),
       origin: "planner",
       expectedOutcome: "Fabric defects identified before cutting, preventing rework and maintaining production schedule.",
@@ -556,13 +567,24 @@ export function generateSuggestedTasks(): SuggestedTask[] {
         "Similar shipments required 2 hours inspection time",
       ],
       confidence: 0.89,
-      linkedContext: "Fabric Shipment • Receiving",
-      contextType: "planner_event",
-      contextId: "evt-fabric-001",
+      contexts: [{
+        id: 'ctx-suggest-001',
+        taskId: '',
+        type: "planner_event",
+        referenceId: "evt-fabric-001",
+        label: "Fabric Shipment • Receiving",
+        role: "primary"
+      }],
       priority: "high",
       estimatedMinutes: 120,
       tags: ["qa", "fabric", "inspection"],
       createdAt: BASE_DATE.toISOString(),
+      // Backward compatibility
+      recommendedAssignee: {
+        userId: person7.id,
+        name: person7.name,
+        avatar: person7.avatar
+      }
     },
     {
       id: "suggest-002",

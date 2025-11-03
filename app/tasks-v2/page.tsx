@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { LayoutScaffold } from "@/components/grid-v2/LayoutScaffold"
 import { Button } from "@/components/ui/button"
@@ -22,11 +22,17 @@ import { cn } from "@/lib/utils"
 import { MOCK_TASKS, SUGGESTED_TASKS, SYSTEM_ANALYTICS, MOCK_TEAMS } from "@/lib/tasks-v2/mockData"
 import type { SuggestedTask } from "@/lib/tasks-v2/types"
 import { TaskCreationDrawer } from "@/components/tasks-v2/TaskCreationDrawer"
+import { TaskSuggestionsPanel } from "@/components/tasks-v2/TaskSuggestionsPanel"
+import { TaskOptimizationsPanel, type TaskOptimization } from "@/components/tasks-v2/TaskOptimizationsPanel"
 
 export default function TasksV2OverviewPage() {
   const router = useRouter()
   const [selectedTeam, setSelectedTeam] = useState<string>("all")
   const [showTaskCreation, setShowTaskCreation] = useState(false)
+  const [llmSuggestions, setLlmSuggestions] = useState<SuggestedTask[]>([])
+  const [llmOptimizations, setLlmOptimizations] = useState<TaskOptimization[]>([])
+  const [isLoadingLLM, setIsLoadingLLM] = useState(false)
+  const [lastAnalyzedAt, setLastAnalyzedAt] = useState<string | undefined>()
 
   const analytics = SYSTEM_ANALYTICS
 
@@ -48,17 +54,96 @@ export default function TasksV2OverviewPage() {
   const blockedTasks = filteredTasks.filter((t) => t.status === "blocked")
   const completedTasks = filteredTasks.filter((t) => t.status === "completed")
 
+  // Load LLM suggestions from API on mount (only if not already loaded)
+  useEffect(() => {
+    // Don't auto-refresh on mount - user can click refresh button
+    // This prevents expensive API calls on every page load
+  }, [])
+
+  const refreshLLMSuggestions = async () => {
+    setIsLoadingLLM(true)
+    try {
+      const response = await fetch('/api/tasks-v2/llm-suggest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timeHorizon: 7,
+          teamIds: selectedTeam !== 'all' ? [selectedTeam] : undefined,
+          strategy: 'optimized'
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        // Update state directly from API response
+        setLlmSuggestions(data.suggestions || [])
+        setLlmOptimizations(data.optimizations || [])
+        setLastAnalyzedAt(data.metadata?.contextCollectedAt || new Date().toISOString())
+      } else {
+        console.error('Failed to refresh suggestions:', data.error)
+      }
+    } catch (error) {
+      console.error('Error refreshing suggestions:', error)
+    } finally {
+      setIsLoadingLLM(false)
+    }
+  }
+
+  const handleApproveSuggestion = (suggestionId: string) => {
+    // Remove from UI (in production, would call API to mark as approved)
+    setLlmSuggestions(prev => prev.filter(s => s.id !== suggestionId))
+    // TODO: Call API to persist approval
+  }
+
+  const handleDismissSuggestion = (suggestionId: string) => {
+    // Remove from UI (in production, would call API to mark as dismissed)
+    setLlmSuggestions(prev => prev.filter(s => s.id !== suggestionId))
+    // TODO: Call API to persist dismissal
+  }
+
+  const handleApplyOptimization = (taskId: string) => {
+    // Remove from UI (in production, would call API to apply optimization)
+    setLlmOptimizations(prev => prev.filter(o => o.taskId !== taskId))
+    // TODO: Call API to apply optimization to task
+  }
+
+  const handleRejectOptimization = (taskId: string) => {
+    // Remove from UI (in production, would call API to mark as rejected)
+    setLlmOptimizations(prev => prev.filter(o => o.taskId !== taskId))
+    // TODO: Call API to persist rejection
+  }
+
+  // Combine static suggestions with LLM suggestions
+  const allSuggestions = useMemo(() => {
+    return [...filteredSuggestions, ...llmSuggestions]
+  }, [filteredSuggestions, llmSuggestions])
+
   return (
     <LayoutScaffold
       pageTitle="Taskmaster v2"
       pageSubtext="Unified task management across all teams"
       headerActions={
-        <Button
-          className="rounded-full bg-slate-900 px-4 text-white hover:bg-slate-800"
-          onClick={() => setShowTaskCreation(true)}
-        >
-          New task
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshLLMSuggestions}
+            disabled={isLoadingLLM}
+            className="rounded-full"
+          >
+            <Sparkles className={cn("h-4 w-4 mr-2", isLoadingLLM && "animate-pulse")} />
+            {isLoadingLLM ? "Analyzing..." : "Refresh AI"}
+          </Button>
+          <Button
+            className="rounded-full bg-slate-900 px-4 text-white hover:bg-slate-800"
+            onClick={() => setShowTaskCreation(true)}
+          >
+            New task
+          </Button>
+        </div>
       }
     >
       <div className="space-y-6 py-6">
@@ -180,15 +265,27 @@ export default function TasksV2OverviewPage() {
               <MetricCard
                 icon={<Sparkles className="h-5 w-5" />}
                 label="Suggestions"
-                value={filteredSuggestions.length}
-                subtitle={`${Math.round(analytics.averageSuggestionConfidence * 100)}% confidence`}
+                value={allSuggestions.length}
+                subtitle={`${llmSuggestions.length > 0 ? Math.round(llmSuggestions.reduce((sum, s) => sum + s.confidence, 0) / llmSuggestions.length * 100) : Math.round(analytics.averageSuggestionConfidence * 100)}% confidence`}
                 iconBg="bg-amber-100"
                 iconColor="text-amber-600"
               />
             </section>
 
-            {/* Suggested tasks */}
-            {filteredSuggestions.length > 0 && (
+            {/* AI Task Suggestions */}
+            {(llmSuggestions.length > 0 || isLoadingLLM) && (
+              <TaskSuggestionsPanel
+                suggestions={llmSuggestions}
+                isLoading={isLoadingLLM}
+                lastAnalyzedAt={lastAnalyzedAt}
+                onRefresh={refreshLLMSuggestions}
+                onApprove={handleApproveSuggestion}
+                onDismiss={handleDismissSuggestion}
+              />
+            )}
+
+            {/* Static Suggested tasks (fallback) */}
+            {filteredSuggestions.length > 0 && llmSuggestions.length === 0 && (
               <div className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50/30 p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -208,6 +305,18 @@ export default function TasksV2OverviewPage() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Task Optimizations */}
+            {(llmOptimizations.length > 0 || isLoadingLLM) && (
+              <TaskOptimizationsPanel
+                optimizations={llmOptimizations}
+                isLoading={isLoadingLLM}
+                lastAnalyzedAt={lastAnalyzedAt}
+                onRefresh={refreshLLMSuggestions}
+                onApply={handleApplyOptimization}
+                onReject={handleRejectOptimization}
+              />
             )}
 
             {/* Main content grid */}

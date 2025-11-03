@@ -14,7 +14,7 @@
  */
 
 import { contextRegistry, type EventFilters } from './contextRegistry'
-import { MOCK_TASKS, MOCK_TEAMS, SYSTEM_ANALYTICS } from '../mockData'
+import { MOCK_TASKS, MOCK_TEAMS, MOCK_USERS, SYSTEM_ANALYTICS } from '../mockData'
 import type { Task, TeamTaskAnalytics } from '../types'
 import { MOCK_CALENDAR_EVENTS, type CalendarEvent } from '@/lib/data/floorCalendar'
 import { MOCK_WORKFLOWS } from '@/lib/workflows-v3/mockData'
@@ -34,6 +34,10 @@ export interface LLMContext {
   playbooks: PlaybookContext
   teams: TeamContext
   orders: OrderContext
+  
+  // Reference data (available IDs for suggestions)
+  availableUsers: Array<{ id: string; name: string; teamId: string; role: string }>
+  availableTeams: Array<{ id: string; name: string }>
   
   // Metadata
   collectedAt: ISODateTime
@@ -247,6 +251,19 @@ export async function collectContextForLLM(
   const teams = await collectTeamContext(teamIds)
   const orders = await collectOrderContext(horizonEnd)
 
+  // 3. Collect available users and teams for reference
+  const allTeams = generateMockTeams()
+  const availableUsers = MOCK_USERS.map(u => ({
+    id: u.id,
+    name: u.name,
+    teamId: u.teamId,
+    role: u.role
+  }))
+  const availableTeams = allTeams.map(t => ({
+    id: t.id,
+    name: t.name
+  }))
+
   return {
     tasks,
     workflows,
@@ -254,6 +271,8 @@ export async function collectContextForLLM(
     playbooks,
     teams,
     orders,
+    availableUsers,
+    availableTeams,
     collectedAt: now.toISOString(),
     timeHorizon,
     totalEvents: recentEvents.length,

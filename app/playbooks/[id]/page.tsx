@@ -6,7 +6,10 @@ import { LayoutScaffold } from "@/components/grid-v2/LayoutScaffold"
 import { Button } from "@/components/ui/button"
 import { Plus, Save, X } from "lucide-react"
 import { PlayCard } from "@/components/playbooks/PlayCard"
+import { NaturalLanguageInput } from "@/components/playbooks/NaturalLanguageInput"
 import { MOCK_PLAYBOOKS } from "@/lib/playbooks/mockData"
+import { transformLLMResponseToPlaybook } from "@/lib/playbooks/llm-transformer"
+import { applyRefinementOperations } from "@/lib/playbooks/llm-enrichment/refinement-transformer"
 import type { Playbook, Play } from "@/lib/playbooks/types"
 
 export default function PlaybookBuilderPage() {
@@ -20,18 +23,66 @@ export default function PlaybookBuilderPage() {
 
   useEffect(() => {
     if (playbookId === "new") {
-      // Create new playbook
-      setPlaybook({
-        id: `playbook-${Date.now()}`,
-        name: "",
-        description: undefined,
-        plays: [],
-        active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy: "user-001",
-        lastModifiedBy: "user-001",
-      })
+      // Check if this is a Disco-generated playbook
+      const discoPlaybook = sessionStorage.getItem('disco-generated-playbook')
+      if (discoPlaybook) {
+        try {
+          const data = JSON.parse(discoPlaybook)
+          // Create playbook with Disco-generated data
+          const newPlaybook: Playbook = {
+            id: data.id || `playbook-${Date.now()}`,
+            name: data.name || "",
+            description: data.description,
+            plays: [],
+            active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdBy: "user-001",
+            lastModifiedBy: "user-001",
+          }
+          
+          setPlaybook(newPlaybook)
+          setShowDescription(!!data.description)
+          
+          // Store generated data to process after playbook is set
+          if (data.generatedData) {
+            // Use a ref or state to trigger generation after component mounts
+            window.dispatchEvent(new CustomEvent('disco-playbook-ready', { 
+              detail: { description: data.description || '', generatedData: data.generatedData } 
+            }))
+          }
+          
+          // Clear sessionStorage after using it
+          sessionStorage.removeItem('disco-generated-playbook')
+        } catch (e) {
+          console.error('Failed to parse Disco playbook data:', e)
+          // Fall through to create new playbook
+          setPlaybook({
+            id: `playbook-${Date.now()}`,
+            name: "",
+            description: undefined,
+            plays: [],
+            active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdBy: "user-001",
+            lastModifiedBy: "user-001",
+          })
+        }
+      } else {
+        // Create new playbook
+        setPlaybook({
+          id: `playbook-${Date.now()}`,
+          name: "",
+          description: undefined,
+          plays: [],
+          active: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdBy: "user-001",
+          lastModifiedBy: "user-001",
+        })
+      }
     } else {
       // Load existing playbook
       const existing = MOCK_PLAYBOOKS.find((pb) => pb.id === playbookId)
@@ -41,6 +92,20 @@ export default function PlaybookBuilderPage() {
       }
     }
   }, [playbookId])
+
+  // Listen for Disco-generated playbook data
+  useEffect(() => {
+    const handleDiscoPlaybookReady = (event: CustomEvent) => {
+      if (playbook && event.detail?.generatedData) {
+        handleGenerate(event.detail.description, event.detail.generatedData)
+      }
+    }
+
+    window.addEventListener('disco-playbook-ready', handleDiscoPlaybookReady as EventListener)
+    return () => {
+      window.removeEventListener('disco-playbook-ready', handleDiscoPlaybookReady as EventListener)
+    }
+  }, [playbook])
 
   const handleAddPlay = () => {
     if (!playbook) return
@@ -97,6 +162,72 @@ export default function PlaybookBuilderPage() {
     console.log("Saving playbook:", playbook)
     alert("Playbook saved! (mock)")
     router.push("/playbooks")
+  }
+
+  const handleRefine = async (instruction: string, operations: any) => {
+    if (!playbook) return
+
+    try {
+      console.log(`🔧 Applying refinement: "${instruction}"`)
+      console.log(`📋 Operations to apply:`, operations)
+      
+      // Apply refinement operations
+      const { updatedPlaybook, changes } = applyRefinementOperations(playbook, operations)
+
+      setPlaybook(updatedPlaybook)
+
+      console.log(`✅ Applied ${operations.length} refinement operations:`)
+      changes.forEach(change => console.log(`  - ${change}`))
+      
+      if (changes.some(c => c.startsWith('Failed'))) {
+        console.warn('⚠️ Some operations failed. Check errors above.')
+      }
+    } catch (error) {
+      console.error("Failed to apply refinement:", error)
+      alert("Failed to apply refinement. Please check the console for details.")
+    }
+  }
+
+  const handleGenerate = async (description: string, generatedData?: any) => {
+    if (!playbook || !generatedData) return
+
+    try {
+      // Format API response to match transformer input
+      const llmResponse = {
+        success: generatedData.success || true,
+        suggestedName: generatedData.suggestedName,
+        suggestedDescription: generatedData.suggestedDescription,
+        plays: generatedData.plays || []
+      }
+
+      // Transform LLM response to Playbook structure
+      const { playbook: playbookData, plays, issues } = transformLLMResponseToPlaybook(
+        llmResponse,
+        playbook.id,
+        playbook.createdBy
+      )
+
+      // Update playbook name and description if provided
+      const updatedPlaybook: Playbook = {
+        ...playbook,
+        name: playbookData.name || playbook.name || "Untitled Playbook",
+        description: playbookData.description || playbook.description,
+        plays: [...playbook.plays, ...plays],
+        updatedAt: new Date().toISOString(),
+      }
+
+      setPlaybook(updatedPlaybook)
+
+      if (issues.length > 0) {
+        console.warn("Transformation issues:", issues)
+      }
+
+      // Show success message
+      console.log(`✅ Added ${plays.length} plays to playbook`)
+    } catch (error) {
+      console.error("Failed to process generated playbook:", error)
+      alert("Failed to process generated playbook. Please check the console for details.")
+    }
   }
 
   if (!playbook) {
@@ -184,6 +315,13 @@ export default function PlaybookBuilderPage() {
             />
           </div>
         )}
+
+        {/* Natural Language Input - Always Available */}
+        <NaturalLanguageInput 
+          onGenerate={handleGenerate}
+          onRefine={handleRefine}
+          existingPlaybook={playbook}
+        />
 
         {/* Divider */}
         <div className="border-t border-slate-200 my-8" />

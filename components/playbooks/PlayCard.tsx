@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronDown, ChevronUp, GripVertical, Plus, X, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { detectMissingFields } from "@/lib/playbooks/missing-fields"
 import type { Play, PlayDependency, TaskPriority } from "@/lib/playbooks/types"
 import { TriggerBuilder } from "./TriggerBuilder"
 import { AssignmentPicker } from "./AssignmentPicker"
@@ -18,6 +20,11 @@ interface PlayCardProps {
 export function PlayCard({ play, allPlays, onChange, onRemove }: PlayCardProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [showDescription, setShowDescription] = useState(!!play.description)
+
+  // Detect missing fields
+  const missingFields = detectMissingFields(play)
+  const criticalMissing = missingFields.filter(m => m.severity === 'critical')
+  const hasMissingFields = missingFields.length > 0
 
   // Filter out current play from dependency options
   const availableDependencies = allPlays.filter((p) => p.id !== play.id)
@@ -58,13 +65,48 @@ export function PlayCard({ play, allPlays, onChange, onRemove }: PlayCardProps) 
         </button>
 
         <div className="flex-1 min-w-0">
-          <input
-            type="text"
-            value={play.title}
-            onChange={(e) => onChange({ ...play, title: e.target.value })}
-            placeholder="Play title (e.g., Order fabric from supplier)"
-            className="w-full text-lg font-semibold text-slate-900 placeholder-slate-300 bg-transparent border-none outline-none"
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={play.title}
+              onChange={(e) => onChange({ ...play, title: e.target.value })}
+              placeholder="Play title (e.g., Order fabric from supplier)"
+              className="flex-1 text-lg font-semibold text-slate-900 placeholder-slate-300 bg-transparent border-none outline-none"
+            />
+            {hasMissingFields && (
+              <div className="relative group">
+                <AlertCircle className={cn(
+                  "h-5 w-5",
+                  criticalMissing.length > 0 ? "text-rose-500" : "text-amber-500"
+                )} />
+                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10 w-64 bg-slate-900 text-white text-xs rounded-lg p-3 shadow-lg">
+                  <div className="font-semibold mb-2">Missing Fields:</div>
+                  <ul className="space-y-1">
+                    {missingFields.map((field, idx) => (
+                      <li key={idx}>
+                        <span className={cn(
+                          "font-medium",
+                          field.severity === 'critical' ? "text-rose-300" :
+                          field.severity === 'high' ? "text-orange-300" :
+                          "text-amber-300"
+                        )}>
+                          {field.severity.toUpperCase()}: 
+                        </span> {field.message}
+                        {field.suggestion && (
+                          <div className="text-slate-400 mt-0.5 ml-4">
+                            💡 {field.suggestion}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-2 pt-2 border-t border-slate-700 text-slate-400">
+                    {missingFields.length} {missingFields.length === 1 ? 'field' : 'fields'} need attention
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

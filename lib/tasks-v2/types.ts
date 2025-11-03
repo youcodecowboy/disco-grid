@@ -212,21 +212,40 @@ export interface SuggestedTask {
   title: string
   description?: string
   rationale: string
-  recommendedTeamId: UUID
-  recommendedTeamLabel: string
-  recommendedAssignee?: { userId: UUID; name: string; avatar?: string }
-  suggestedDueDate: ISODateTime
+  
+  // Assignments (people, not team directly - team is derived from assignees)
+  recommendedAssignees: TaskAssignment[] // Array of people to assign
+  recommendedTeamId?: UUID // Inferred from assignees, but provided for reference
+  recommendedTeamLabel?: string // For display
+  
+  // Optional fields matching TaskCreationInput
+  suggestedDueDate?: ISODateTime
+  dueWindow?: TaskDueWindow
+  priority: TaskPriority
+  tags?: string[]
+  checklist?: Array<{ label: string; sequence: number }> // Suggested checklist items
+  dependencies?: Array<{ taskId: UUID; type: TaskDependency['type'] }> // Suggested dependencies
+  workflowContext?: {
+    workflowId: UUID
+    workflowName: string
+    stageId?: UUID
+    stageName?: string
+  }
+  location?: string
+  
+  // Context linking
+  contexts: TaskContextLink[]
+  
+  // Metadata
   origin: "order" | "planner" | "signal" | "pattern" | "ai"
   expectedOutcome: string
   highlights: string[]
   confidence: number // 0-1
-  linkedContext: string
-  contextType: TaskContextType
-  contextId: UUID
-  priority: TaskPriority
-  estimatedMinutes?: number
-  tags?: string[]
   createdAt: ISODateTime
+  
+  // For backward compatibility
+  recommendedAssignee?: { userId: UUID; name: string; avatar?: string }
+  estimatedMinutes?: number
 }
 
 // Analytics Types

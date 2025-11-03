@@ -110,6 +110,8 @@ Your analysis should prioritize:
 
 ## Output Format
 
+**CRITICAL**: You MUST return COMPLETE, valid JSON. Ensure all arrays and objects are properly closed. Do not truncate your response.
+
 You MUST return valid JSON matching this exact structure:
 
 \`\`\`json
@@ -119,20 +121,44 @@ You MUST return valid JSON matching this exact structure:
       "title": "Task title (clear and actionable)",
       "description": "Detailed description of what needs to be done",
       "rationale": "Your reasoning for why this task is needed (2-3 sentences)",
+      "recommendedAssignees": [
+        {
+          "userId": "user-id",
+          "reason": "Why this person is best suited"
+        }
+      ],
       "recommendedTeamId": "team-id",
-      "recommendedAssignee": {
-        "userId": "user-id",
-        "reason": "Why this person is best suited"
-      },
       "suggestedDueDate": "2025-10-15T10:00:00Z",
       "priority": "critical|high|medium|low",
       "estimatedMinutes": 120,
       "tags": ["tag1", "tag2"],
-      "linkedContext": {
-        "type": "order|workflow|calendar|task",
-        "id": "entity-id",
-        "label": "Human-readable label"
+      "checklist": [
+        {
+          "label": "Checklist item 1",
+          "sequence": 0
+        }
+      ],
+      "dependencies": [
+        {
+          "taskId": "task-id",
+          "type": "finish_to_start"
+        }
+      ],
+      "workflowContext": {
+        "workflowId": "workflow-id",
+        "workflowName": "Workflow Name",
+        "stageId": "stage-id",
+        "stageName": "Stage Name"
       },
+      "location": "Location name",
+      "contexts": [
+        {
+          "type": "order|workflow|calendar|task",
+          "referenceId": "entity-id",
+          "label": "Human-readable label",
+          "role": "primary|supporting"
+        }
+      ],
       "confidence": 0.85,
       "expectedOutcome": "What will be achieved by completing this task",
       "highlights": [
@@ -173,34 +199,54 @@ You MUST return valid JSON matching this exact structure:
 }
 \`\`\`
 
-## Guidelines
+## Task Structure Guidelines
 
-1. **Suggestions**: Only suggest tasks that are genuinely needed and actionable. Base suggestions on:
+**IMPORTANT**: Tasks are assigned to PEOPLE, not teams directly. The team is derived from the first assignee's team membership.
+
+1. **Assignments**:
+   - MUST specify recommendedAssignees array with at least one person
+   - First assignee becomes the task "owner" (requiredAck: true)
+   - Additional assignees become "collaborators"
+   - Team is inferred from the first assignee's teamId
+   - Always include recommendedTeamId for reference (team of first assignee)
+
+2. **Optional Fields** (include when relevant):
+   - **checklist**: Suggested subtasks/checklist items (e.g., ["Prepare materials", "Test equipment"])
+   - **dependencies**: Tasks this depends on (use existing task IDs from context)
+   - **workflowContext**: If task relates to a workflow stage, include workflowId and stageId
+   - **location**: Physical location if applicable (e.g., "Warehouse A", "Production Floor 1")
+   - **tags**: Relevant tags for categorization
+
+3. **Context Links**:
+   - Link to related entities (orders, workflows, calendar events)
+   - Use "primary" role for main context, "supporting" for additional context
+
+4. **Suggestions**: Only suggest tasks that are genuinely needed and actionable. Base suggestions on:
    - Upcoming deadlines without assigned tasks
    - Workflow bottlenecks requiring intervention
    - Calendar events needing preparation
    - Patterns from playbook execution history
    - Capacity gaps or overload situations
 
-2. **Optimizations**: Suggest optimizations for existing tasks when:
+5. **Optimizations**: Suggest optimizations for existing tasks when:
    - Deadlines are at risk
    - Team capacity is imbalanced
    - Dependencies create delays
    - Priority mismatches exist
 
-3. **Confidence Scores**: 
+6. **Confidence Scores**: 
    - 0.9+ = High confidence, strong data support
    - 0.7-0.9 = Medium-high confidence, good data support
    - 0.5-0.7 = Medium confidence, some uncertainty
    - <0.5 = Low confidence, should not be auto-applied
 
-4. **Priority Assignment**:
+7. **Priority Assignment**:
    - Critical: Immediate deadlines, blockers, system failures
    - High: Important deadlines, high-value work
    - Medium: Standard work, normal priority
    - Low: Nice-to-have, can be deferred
 
-5. **Equal Weighting**: All data sources (tasks, workflows, calendar, playbooks, teams, orders) are equally important. Consider all sources when making suggestions.`
+8. **Equal Weighting**: All data sources (tasks, workflows, calendar, playbooks, teams, orders) are equally important. Consider all sources when making suggestions.`
 
   if (includeExamples && exampleCount > 0) {
     const examples = getExamples(exampleCount)
@@ -260,6 +306,18 @@ Based on the optimization weights:
 - Process Efficiency (${(weights.processEfficiency * 100).toFixed(0)}%): Focus on bottleneck identification and process improvements
 
 All data sources are equally weighted - consider tasks, workflows, calendar, playbooks, teams, and orders equally when making recommendations.
+
+## Available Users and Teams
+
+**IMPORTANT**: You MUST use ONLY these user IDs and team IDs when making suggestions. Do not invent or guess IDs.
+
+Available Users:
+${context.availableUsers.map(u => `- ${u.id} (${u.name}, ${u.role}, Team: ${u.teamId})`).join('\n')}
+
+Available Teams:
+${context.availableTeams.map(t => `- ${t.id} (${t.name})`).join('\n')}
+
+When assigning tasks, use userIds from the Available Users list above. The team will be automatically inferred from the user's teamId.
 
 Return your analysis as JSON matching the specified format.`
 }
